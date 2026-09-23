@@ -159,6 +159,21 @@ footer a { color: inherit; text-decoration: none; }
   .login-side { overflow: hidden; }
 }
 
+/* Full-width browse results and denser PG gallery */
+.listing-layout-full { grid-template-columns: minmax(0, 1fr); }
+.listing-preferences { margin-bottom: 14px; }
+.pg-listing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.browse-tabs .category-tab { margin-left: 0; border-radius: 22px; }
+.listing-toolbar > span { display: none; }
+
+@media (max-width: 1180px) and (min-width: 681px) {
+  .pg-listing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .pg-listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (min-width: 761px) and (max-width: 860px) {
   .brand-side { display: none; }
   .login-side { position: relative; inset: auto; min-height: 100dvh; padding: 90px 28px 46px; }

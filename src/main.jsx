@@ -51,7 +51,7 @@ function StudentSidebar({ active, onNavigate, menu, onClose, collapsed, onCollap
   const select = (name) => { onNavigate(name); onClose?.() }
   return <aside className={`sidebar student-sidebar ${menu ? 'show' : ''} ${collapsed ? 'collapsed' : ''}`}>
     <button className="sidebar-collapse" onClick={onCollapse} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>‹</button>
-    <nav>{navItems.map(([icon, name]) => name === 'Explore' ? <div className="explore-nav" key={name}><button className={['Explore', 'PGs', 'Flats', 'Rooms'].includes(active) ? 'active' : ''} onClick={() => setExploreOpen(!exploreOpen)}><b>{icon}</b><span>Explore</span><i>{exploreOpen ? '⌃' : '⌄'}</i></button>{exploreOpen && <div className="explore-subnav"><button className={active === 'PGs' ? 'selected' : ''} onClick={() => select('PGs')}><Icon name="grid" size={16}/><span>PGs</span></button><button className={active === 'Flats' ? 'selected' : ''} onClick={() => select('Flats')}><Icon name="building" size={16}/><span>Flats</span></button><button className={active === 'Rooms' ? 'selected' : ''} onClick={() => select('Rooms')}><Icon name="room" size={16}/><span>Rooms</span></button></div>}</div> : <button key={name} className={name === active ? 'active' : ''} onClick={() => select(name)}><b>{icon}</b><span>{name}</span></button>)}</nav>
+    <nav>{navItems.map(([icon, name]) => name === 'Explore' ? <div className="explore-nav" key={name}><button className={['Explore', 'PGs', 'Flats', 'Rooms'].includes(active) ? 'active' : ''} onClick={() => setExploreOpen(!exploreOpen)}><b>{icon}</b><span>Explore</span><i aria-hidden="true">{exploreOpen ? '▴' : '▾'}</i></button>{exploreOpen && <div className="explore-subnav"><button className={active === 'PGs' ? 'selected' : ''} onClick={() => select('PGs')}><Icon name="grid" size={16}/><span>PGs</span></button><button className={active === 'Flats' ? 'selected' : ''} onClick={() => select('Flats')}><Icon name="building" size={16}/><span>Flats</span></button><button className={active === 'Rooms' ? 'selected' : ''} onClick={() => select('Rooms')}><Icon name="room" size={16}/><span>Rooms</span></button></div>}</div> : <button key={name} className={name === active ? 'active' : ''} onClick={() => select(name)}><b>{icon}</b><span>{name}</span></button>)}</nav>
   </aside>
 }
 
@@ -64,7 +64,7 @@ function StudentDashboard({ onLogout, onNavigate }) {
   const [budget, setBudget] = useState('₹ 0 – ₹ 30,000')
   const [preferredFor, setPreferredFor] = useState('Anyone')
   const [amenities, setAmenities] = useState('Wi-Fi, AC, Attached Bath')
-  const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
+    const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
   const handleSearch = () => {
     onNavigate('AI Recommendations', {
       location: search || 'Indirapuram, Ghaziabad',
@@ -101,13 +101,78 @@ function StudentChrome({ active, onNavigate, children }) {
   return <div className={`student-pages ${collapsed ? 'sidebar-is-collapsed' : ''}`}><header className="student-header"><button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Open navigation"><Icon name="menu" size={21}/></button><a className="brand dash-brand" onClick={() => onNavigate('Home')} href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><label className="student-search"><Icon name="search" size={17}/><input placeholder="Search by location, property name or landmark..."/></label><div className="student-user"><span><Icon name="bell" size={20}/></span><b>A</b><i>Aman Verma<small>Student</small></i><em>⌄</em></div></header><StudentSidebar active={active} onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} collapsed={collapsed} onCollapse={() => setCollapsed(!collapsed)} /><main className="student-content">{children}</main></div>
 }
 
-function ListingCard({ name, type, index, onVisit }) {
+function ListingCard({ name, type, index, onVisit, onDetails }) {
   const price = type === 'Flats' ? [18000,12000,25000,14500,28000,20000,16500,22000,19500,11000,24000,30000][index] : type === 'Rooms' ? [9000,7500,8500,11000,12000,6000,13500,5500,7000,10000,9500,8000][index] : [7000,6500,8000,5500,9000,7500,8500,6800,7200,6200,7800,8800][index]
-  return <article className="listing-card"><div className={`listing-photo photo-${index % 6}`}><span>{index % 3 === 0 ? 'Verified' : index % 3 === 1 ? 'Popular' : 'Near Metro'}</span><button>♡</button></div><div className="listing-body"><h3>{name}</h3><p>⌖ &nbsp;{places[index % places.length]}</p><div className="listing-price">₹{price.toLocaleString()} <small>/ month</small><i>★ 4.{(index + 4) % 10} ({72 + index * 7})</i></div><div className="listing-tags"><span>{type === 'PGs' ? 'With Food' : 'Furnished'}</span><span>Wi-Fi</span><span>{index % 2 ? 'AC' : 'Attached Bath'}</span></div><div className="listing-actions"><button>View Details</button><button onClick={onVisit}>Book a Visit</button></div></div></article>
+  return <article className="listing-card"><div className={`listing-photo photo-${index % 6}`}><span>{index % 3 === 0 ? 'Verified' : index % 3 === 1 ? 'Popular' : 'Near Metro'}</span><button>♡</button></div><div className="listing-body"><h3>{name}</h3><p>⌖ &nbsp;{places[index % places.length]}</p><div className="listing-price">₹{price.toLocaleString()} <small>/ month</small><i>★ 4.{(index + 4) % 10} ({72 + index * 7})</i></div><div className="listing-tags"><span>{type === 'PGs' ? 'With Food' : 'Furnished'}</span><span>Wi-Fi</span><span>{index % 2 ? 'AC' : 'Attached Bath'}</span></div><div className="listing-actions"><button onClick={() => onDetails({ name, index, location: places[index % places.length], price, type })}>View Details</button><button onClick={onVisit}>Book a Visit</button></div></div></article>
 }
 
-function ListingsPage({ type, onNavigate }) {
-  return <StudentChrome active={type} onNavigate={onNavigate}><section className="browse-heading"><div><h1>{type} in Indirapuram</h1><p>Explore verified {type.toLowerCase()} for rent with real photos, genuine listings and neighborhood insights.</p></div><aside>Safe. Affordable. Verified.<br/><em>A better space for a brighter you ♡</em></aside></section><div className="browse-tabs"><button className="active">All {type}</button>{type === 'PGs' ? <><button>Girls PG</button><button>Boys PG</button><button>Co-Living</button><button>With Food</button></> : type === 'Flats' ? <><button>1 BHK</button><button>2 BHK</button><button>3 BHK</button><button>4 BHK+</button></> : <><button>Private Room</button><button>Shared Room</button><button>With AC</button><button>Near Metro</button></>}<button>☷ More Filters</button></div><section className="listing-layout"><div><div className="listing-toolbar"><strong>Showing 12 {type} in Indirapuram</strong><span><button>Sort by: Relevance　⌄</button><button className="active">▦ Grid</button></span></div><div className="listing-grid">{listingNames[type].map((name, index) => <ListingCard key={name} name={name} type={type} index={index} onVisit={() => onNavigate('Book a Visit')}/>)}</div></div><aside className="refine"><h2>Explore {type} Around You</h2><div className="fake-map"><b>⌂</b><b>⌖</b><b>⌂</b><b>⌖</b><span>Indirapuram<br/><small>High Safety Score</small></span></div><h2>Refine Your Search <a href="#">Reset</a></h2><label>Budget Range<strong>₹0 – ₹50,000</strong><input type="range"/></label><h4>{type === 'PGs' ? 'Preferred For' : type === 'Flats' ? 'BHK Type' : 'Room Type'}</h4><div className="checks"><label><input type="checkbox" defaultChecked/> Girls</label><label><input type="checkbox"/> Boys</label><label><input type="checkbox"/> Any</label></div><h4>Amenities</h4><div className="checks"><label><input type="checkbox" defaultChecked/> AC</label><label><input type="checkbox"/> Wi-Fi</label><label><input type="checkbox"/> Parking</label><label><input type="checkbox"/> Security</label></div><button className="apply-filter">☷ &nbsp; Apply Filters</button></aside></section><InfoStrip /></StudentChrome>
+function ListingsPage({ type, onNavigate, savedNames, onToggleSaved }) {
+  /* return <StudentChrome active={type} onNavigate={onNavigate}><section className="browse-heading"><div><h1>{type} in Indirapuram</h1><p>Explore verified {type.toLowerCase()} for rent with real photos, genuine listings and neighborhood insights.</p></div><aside>Safe. Affordable. Verified.<br/><em>A better space for a brighter you ♡</em></aside></section><div className="browse-tabs"><button className="active">All {type}</button>{type === 'PGs' ? <><button>Girls PG</button><button>Boys PG</button><button>Co-Living</button><button>With Food</button></> : type === 'Flats' ? <><button>1 BHK</button><button>2 BHK</button><button>3 BHK</button><button>4 BHK+</button></> : <><button>Private Room</button><button>Shared Room</button><button>With AC</button><button>Near Metro</button></>}<button>☷ More Filters</button></div><section className="listing-layout"><div><div className="listing-toolbar"><strong>Showing 12 {type} in Indirapuram</strong><span><button>Sort by: Relevance　⌄</button><button className="active">▦ Grid</button></span></div><div className="listing-grid">{listingNames[type].map((name, index) => <ListingCard key={name} name={name} type={type} index={index} onVisit={() => onNavigate('Book a Visit')}/>)}</div></div><aside className="refine"><h2>Explore {type} Around You</h2><div className="fake-map"><b>⌂</b><b>⌖</b><b>⌂</b><b>⌖</b><span>Indirapuram<br/><small>High Safety Score</small></span></div><h2>Refine Your Search <a href="#">Reset</a></h2><label>Budget Range<strong>₹0 – ₹50,000</strong><input type="range"/></label><h4>{type === 'PGs' ? 'Preferred For' : type === 'Flats' ? 'BHK Type' : 'Room Type'}</h4><div className="checks"><label><input type="checkbox" defaultChecked/> Girls</label><label><input type="checkbox"/> Boys</label><label><input type="checkbox"/> Any</label></div><h4>Amenities</h4><div className="checks"><label><input type="checkbox" defaultChecked/> AC</label><label><input type="checkbox"/> Wi-Fi</label><label><input type="checkbox"/> Parking</label><label><input type="checkbox"/> Security</label></div><button className="apply-filter">☷ &nbsp; Apply Filters</button></aside></section><InfoStrip /></StudentChrome> */
+  const [showFilters, setShowFilters] = useState(false)
+  const [selectedProperty, setSelectedProperty] = useState(null)
+  const [selectedFilters, setSelectedFilters] = useState({
+    location: 'Indirapuram, Ghaziabad',
+    propertyType: type === 'Flats' ? 'Flat' : type === 'Rooms' ? 'Room' : 'PG',
+    budget: '₹ 0 – ₹ 30,000',
+    preferredFor: 'Anyone',
+    amenities: 'Wi-Fi, AC, Attached Bath'
+  })
+  const headingType = type === 'PGs' ? 'PGs' : type === 'Flats' ? 'Flats' : 'Rooms'
+  const pageHeading = headingType
+  const tabOptions = type === 'PGs' ? ['All PGs', 'Girls PG', 'Boys PG', 'Co-Living', 'With Food'] : type === 'Flats' ? ['All Flats', '1 BHK', '2 BHK', '3 BHK', '4 BHK+'] : ['All Rooms', 'Private Room', 'Shared Room', 'With AC', 'Near Metro']
+  const [selectedTab, setSelectedTab] = useState(tabOptions[0])
+  useEffect(() => {
+    const heartButtons = document.querySelectorAll('.listing-grid .listing-photo button')
+    const handleHeart = (event) => {
+      const card = event.currentTarget.closest('.listing-card')
+      const name = card?.querySelector('h3')?.textContent
+      if (!name) return
+      onToggleSaved(name)
+      event.currentTarget.textContent = savedNames.includes(name) ? '♡' : '♥'
+    }
+    heartButtons.forEach((button) => {
+      const name = button.closest('.listing-card')?.querySelector('h3')?.textContent
+      button.textContent = savedNames.includes(name) ? '♥' : '♡'
+      button.addEventListener('click', handleHeart)
+    })
+    return () => heartButtons.forEach((button) => button.removeEventListener('click', handleHeart))
+  }, [savedNames, onToggleSaved])
+
+  useEffect(() => {
+    const tabs = document.querySelectorAll('.browse-tabs button')
+    const handleTabClick = (event) => {
+      setSelectedTab(event.currentTarget.textContent.trim())
+      tabs.forEach((tab) => tab.classList.toggle('active', tab === event.currentTarget))
+    }
+    tabs.forEach((tab) => tab.addEventListener('click', handleTabClick))
+    return () => tabs.forEach((tab) => tab.removeEventListener('click', handleTabClick))
+  }, [type])
+
+  useEffect(() => {
+    if (!showFilters) return undefined
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const modalRoot = createRoot(host)
+    modalRoot.render(<PreferencesModal values={selectedFilters} title={`Filter ${type}`} onClose={() => setShowFilters(false)} onSave={(nextFilters) => { setSelectedFilters((current) => ({ ...current, ...nextFilters })); setShowFilters(false) }} />)
+    return () => {
+      modalRoot.unmount()
+      host.remove()
+    }
+  }, [showFilters, selectedFilters, type])
+
+  useEffect(() => {
+    if (!selectedProperty) return undefined
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const modalRoot = createRoot(host)
+    modalRoot.render(<PropertyDetailsModal property={selectedProperty} onClose={() => setSelectedProperty(null)} onBookVisit={() => { setSelectedProperty(null); onNavigate('Book a Visit') }} />)
+    return () => {
+      modalRoot.unmount()
+      host.remove()
+    }
+  }, [selectedProperty, onNavigate])
+
+  return <StudentChrome active={type} onNavigate={onNavigate}><section className="browse-heading"><div><h1>{pageHeading}</h1><p>Explore verified {type.toLowerCase()} for rent with real photos, genuine listings and neighborhood insights.</p></div><aside>Safe. Affordable. Verified.<br/><em>A better space for a brighter you ♡</em></aside></section><div className="browse-tabs"><button className="active">All {type}</button>{type === 'PGs' ? <><button>Girls PG</button><button>Boys PG</button><button>Co-Living</button><button className="category-tab">With Food</button></> : type === 'Flats' ? <><button>1 BHK</button><button>2 BHK</button><button>3 BHK</button><button className="category-tab">4 BHK+</button></> : <><button>Private Room</button><button>Shared Room</button><button>With AC</button><button className="category-tab">Near Metro</button></>}</div><section className="listing-layout listing-layout-full"><div><section className="preferences listing-preferences"><h2>Your Preferences <a href="#" onClick={(event) => { event.preventDefault(); setShowFilters(true) }}>✎ Edit Preferences</a></h2><p>We use your preferences to give better recommendations.</p><div><span>⌖<b>{selectedFilters.location}</b></span><span>⌂<b>{selectedFilters.propertyType}</b></span><span>₹<b>Budget<br/>{selectedFilters.budget}</b></span><span>♧<b>Preferred For<br/>{selectedFilters.preferredFor}</b></span><span>▱<b>Amenities<br/>{selectedFilters.amenities}</b></span></div></section><div className="listing-toolbar"><strong>Showing 12 {type} in Indirapuram</strong><span><button>Sort by: Relevance　⌄</button><button className="active">▦ Grid</button></span></div><div className={`listing-grid ${type === 'PGs' ? 'pg-listing-grid' : ''}`}>{listingNames[type].map((name, index) => <ListingCard key={name} name={name} type={type} index={index} onVisit={() => onNavigate('Book a Visit')} onDetails={setSelectedProperty}/>)}</div></div></section><InfoStrip /></StudentChrome>
 }
 
 function ExplorePage({ onNavigate }) {
@@ -115,7 +180,7 @@ function ExplorePage({ onNavigate }) {
   return <StudentChrome active="Explore" onNavigate={onNavigate}><section className="explore-heading"><div><h1>Explore Indirapuram</h1><p>Discover PGs, flats and rooms around you with an interactive map.</p></div><aside>Explore<br/><em>Safe Neighborhoods<br/>Brighter Opportunities ♡</em></aside></section><div className="explore-filters"><button className={selected === 'All' ? 'active' : ''} onClick={() => setSelected('All')}><Icon name="grid" size={14}/> All</button>{['PGs','Flats','Rooms'].map(type => <button key={type} className={selected === type ? 'active' : ''} onClick={() => { setSelected(type); onNavigate(type)}}>{type === 'PGs' ? <Icon name="home" size={14}/> : type === 'Flats' ? <Icon name="building" size={14}/> : <Icon name="room" size={14}/>} {type}</button>)}<label>Price Range <b>Any　⌄</b></label><label>Property Type <b>Any　⌄</b></label><button>☷ More Filters</button></div><section className="explore-layout"><div className="large-map"><input placeholder="⌕  Search this area"/><b className="map-center">⌂<small>Indirapuram<br/>High Safety Score</small></b><i className="map-marker a">⌂</i><i className="map-marker b">⌖</i><i className="map-marker c">⌂</i><i className="map-marker d">⌖</i><div className="map-view">Map View<br/><button>▦ Default</button><button>Satellite</button></div></div><aside className="explore-results"><h2>124 properties found <button>Sort by: Relevance　⌄</button></h2>{listingNames.PGs.slice(0,5).map((name, i) => <article key={name}><div className={`tiny-photo photo-${i}`}/><span><strong>{i === 1 ? '2 BHK Apartment' : name}</strong><small>⌖ &nbsp;{places[i]}<br/>★ 4.{i + 4} ({76 + i * 12})<br/><b>₹{[7000,18000,6500,25000,9000][i].toLocaleString()} </b>/ month</small></span><button onClick={() => onNavigate('Book a Visit')}>View Details</button></article>)}</aside></section><InfoStrip /></StudentChrome>
 }
 
-function PreferencesModal({ values, onClose, onSave }) {
+function PreferencesModal({ values, onClose, onSave, title = 'Edit Your Preferences' }) {
   const [draft, setDraft] = useState({
     location: values.location,
     budget: values.budget,
@@ -217,8 +282,11 @@ function VisitPage({ onNavigate }) {
   return <StudentChrome active="Book a Visit" onNavigate={onNavigate}><section className="visit-heading"><h1>{confirmed ? 'Visit Confirmed!' : 'Book a Visit'}</h1><p>{confirmed ? 'Your visit request is on its way to the PG owner.' : "Schedule a visit to see the property in person. It's free, easy and helps you make a better decision."}</p></section>{confirmed ? <section className="confirmation">✓<h2>Booking request confirmed</h2><p>We have reserved your selected time. You will receive confirmation shortly.</p><button onClick={() => onNavigate('Home')}>Back to Dashboard</button></section> : <><div className="steps"><b>1 <span>Select Date & Time</span></b><b>2 <span>Your Details</span></b><b>3 <span>Confirm Booking</span></b></div><section className="visit-layout"><article className="visit-property"><div className="visit-photo"><span>✓ Verified PG</span></div><h2>Sunrise PG for Girls <i>★ 4.8 (128 reviews)</i></h2><p>⌖ Niti Khand, Indirapuram, Ghaziabad</p><h1>₹7,000 <small>/ month</small></h1><div className="visit-tags"><span>Girls Only</span><span>With Food</span><span>⌁ Wi-Fi</span><span>AC</span></div><hr/><h3>About this property</h3><p>A safe and comfortable PG for girls with modern amenities, homely food and great connectivity to metro and markets.</p><a href="#">View Full Details →</a></article><article className="visit-form"><h2>Select Date & Time</h2><p>Choose a convenient date and time to visit the property.</p><div className="calendar-slots"><section><h3>September 2025</h3><div className="week">Sun　Mon　Tue　Wed　Thu　Fri　Sat</div><div className="days">1　2　3　4　5　6<br/>7　8　9　10　11　12　13<br/>14　15　16　17　<b>18</b>　19　20<br/>21　22　23　24　25　26　27<br/>28　29　30</div></section><section><h3>Available Time Slots</h3><div className="slots">{['10:00 AM','11:00 AM','12:00 PM','01:00 PM','02:00 PM','03:00 PM','04:00 PM','05:00 PM','06:00 PM','07:00 PM'].map(time => <button className={slot === time ? 'active' : ''} onClick={() => setSlot(time)} key={time}>{time}</button>)}</div></section></div><hr/><h2>Your Details</h2><div className="details-inputs"><label>Full Name<input defaultValue="Aman Verma"/></label><label>Mobile Number<input defaultValue="+91 9876543210"/></label><label>Email Address<input defaultValue="amanverma@gmail.com"/></label></div><label className="message">Any Message (Optional)<textarea defaultValue="I would like to visit and know more about the food facilities and room availability."/></label></article><aside className="visit-summary"><h2>Visit Summary</h2><div><div className="summary-photo"/><h3>Sunrise PG for Girls<small>★ 4.8 (128 reviews)<br/>⌖ Niti Khand, Indirapuram<br/><b>₹7,000</b> / month</small></h3></div><p>▣　Selected Date <b>Thursday, 18 September 2025</b></p><p>◷　Selected Time <b>{slot} – 01:30 PM</b></p><p>♙　Your Name <b>Aman Verma</b></p><p>✉　Email Address <b>amanverma@gmail.com</b></p><section><h3>ⓘ Important Notes</h3><p>✓ The PG owner will confirm your visit shortly.</p><p>✓ You will receive a confirmation notification.</p><p>✓ Be on time for a better experience.</p></section><button onClick={() => setConfirmed(true)}>▣　 Confirm Booking</button><button onClick={() => onNavigate('Home')}>Cancel</button></aside></section></>}<InfoStrip /></StudentChrome>
 }
 
-function SavedPage({ onNavigate }) {
-  const [saved, setSaved] = useState(listingNames.PGs.slice(0, 3).concat(listingNames.Flats.slice(0, 3), listingNames.Rooms.slice(0, 2)))
+function SavedPage({ onNavigate, saved, onRemove }) {
+  const setSaved = (nextSaved) => {
+    const removed = saved.find((item) => !nextSaved.includes(item))
+    if (removed) onRemove(removed)
+  }
   return <StudentChrome active="Saved Properties" onNavigate={onNavigate}><section className="saved-title"><div><h1>♥ &nbsp;Saved Properties</h1><p>All the properties you've saved for later. Compare, revisit and book when you're ready.</p></div><aside>Good Choices<br/><em>Brighter Tomorrows ♡</em></aside></section><div className="saved-tabs"><button className="active">▣ All Saved ({saved.length})</button><button>⌂ PGs (4)</button><button>▥ Flats (3)</button><button>⌁ Rooms (1)</button><button>＋ Compare Properties (0)</button></div><section className="saved-layout"><div><div className="listing-toolbar"><strong>Saved properties</strong><span><button>Sort by: Recently Saved　⌄</button><button className="active">▦ Grid</button></span></div><div className="listing-grid saved-grid">{saved.map((name, index) => <article className="listing-card" key={name}><div className={`listing-photo photo-${index % 6}`}><span>{index % 3 === 1 ? 'Flat' : index % 3 === 2 ? 'Room' : 'PG'}</span><button onClick={() => setSaved(saved.filter((item) => item !== name))}>♥</button></div><div className="listing-body"><h3>{name}</h3><p>⌖ &nbsp;{places[index % places.length]}</p><div className="listing-price">₹{[7000,18000,6500,9000,25000,6000,7500,8500][index].toLocaleString()} <small>/ month</small><i>★ 4.{index + 3} ({58 + index * 12})</i></div><div className="listing-tags"><span>With Food</span><span>Wi-Fi</span><span>AC</span></div><div className="listing-actions"><button>View Details</button><button onClick={() => onNavigate('Book a Visit')}>Book a Visit</button></div></div></article>)}</div></div><aside className="saved-side"><section><h2>🔖 Your Saved Properties</h2><b>{saved.length}</b><p>Properties saved</p></section><section><h2>⚖️ Compare & Choose Better</h2><p>Select multiple properties to compare features, prices and amenities.</p><button>Compare Properties　→</button></section><section><h2>Quick Actions</h2><p>◷　View Recently Viewed　›</p><p>✧　Get AI Recommendations　›</p><p>⚙　Update Your Preferences　›</p></section></aside></section><InfoStrip /></StudentChrome>
 }
 
@@ -276,6 +344,8 @@ function App() {
     amenities: 'Wi-Fi, AC, Attached Bath'
   }
   const [searchFilters, setSearchFilters] = useState(defaultSearchFilters)
+  const [savedProperties, setSavedProperties] = useState(listingNames.PGs.slice(0, 3).concat(listingNames.Flats.slice(0, 3), listingNames.Rooms.slice(0, 2)))
+  const toggleSavedProperty = (name) => setSavedProperties((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
   const studentNavigate = (destination, filters) => {
     if (filters) {
       setSearchFilters((current) => ({ ...current, ...filters }))
@@ -284,13 +354,13 @@ function App() {
     setPage(routes[destination] || 'dashboard')
   }
   if (page === 'dashboard') return <StudentDashboard onLogout={() => setPage('login')} onNavigate={studentNavigate} />
-  if (page === 'pgs') return <ListingsPage type="PGs" onNavigate={studentNavigate} />
-  if (page === 'flats') return <ListingsPage type="Flats" onNavigate={studentNavigate} />
-  if (page === 'rooms') return <ListingsPage type="Rooms" onNavigate={studentNavigate} />
+  if (page === 'pgs') return <ListingsPage type="PGs" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
+  if (page === 'flats') return <ListingsPage type="Flats" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
+  if (page === 'rooms') return <ListingsPage type="Rooms" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
   if (page === 'explore') return <ExplorePage onNavigate={studentNavigate} />
   if (page === 'recommendations') return <RecommendationsPage onNavigate={studentNavigate} filters={searchFilters} />
   if (page === 'visit') return <VisitPage onNavigate={studentNavigate} />
-  if (page === 'saved') return <SavedPage onNavigate={studentNavigate} />
+  if (page === 'saved') return <SavedPage onNavigate={studentNavigate} saved={savedProperties} onRemove={toggleSavedProperty} />
   if (page === 'bookings') return <BookingsPage onNavigate={studentNavigate} />
   if (page === 'profile') return <ProfilePage onNavigate={studentNavigate} />
   if (page === 'settings') return <SettingsPage onNavigate={studentNavigate} onLogout={() => setPage('login')} />
