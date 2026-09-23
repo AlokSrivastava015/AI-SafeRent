@@ -282,19 +282,54 @@ function LegacyVisitPage({ onNavigate }) {
 function VisitPage({ onNavigate, onConfirm, onCancel }) {
   const [slot, setSlot] = useState('01:00 PM')
   const [selectedDate, setSelectedDate] = useState(18)
+  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 8, 1))
+  const [visitorDetails, setVisitorDetails] = useState({
+    fullName: 'Aman Verma',
+    mobileNumber: '+91 9876543210',
+    emailAddress: 'amanverma@gmail.com',
+    message: 'I would like to visit and know more about the food facilities and room availability.'
+  })
   const [confirmed, setConfirmed] = useState(false)
-  const monthDate = new Date(2026, 8, 1)
+  const monthDate = currentMonth
   const monthName = monthDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })
-  const firstDay = monthDate.getDay()
-  const daysInMonth = new Date(2026, 9, 0).getDate()
-  const selectedDateLabel = new Date(2026, 8, selectedDate).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay()
+  const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate()
+  const selectedDateLabel = new Date(monthDate.getFullYear(), monthDate.getMonth(), selectedDate).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const times = ['10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM']
+  const changeMonth = (direction) => {
+    setCurrentMonth((previousMonth) => {
+      const nextMonth = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + direction, 1)
+      setSelectedDate((currentDay) => Math.min(currentDay, new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()))
+      return nextMonth
+    })
+  }
+  const updateVisitorDetail = (field, value) => {
+    setVisitorDetails((current) => ({ ...current, [field]: value }))
+  }
   const confirmBooking = () => {
-    onConfirm({ name: 'Sunrise PG for Girls', status: 'Upcoming', price: '₹7,000', date: `${selectedDateLabel} at ${slot}`, location: 'Niti Khand, Indirapuram, Ghaziabad' })
+    onConfirm({
+      name: 'Sunrise PG for Girls',
+      status: 'Upcoming',
+      price: '₹7,000',
+      date: `${selectedDateLabel} at ${slot}`,
+      location: 'Niti Khand, Indirapuram, Ghaziabad',
+      guestName: visitorDetails.fullName,
+      guestEmail: visitorDetails.emailAddress,
+      guestPhone: visitorDetails.mobileNumber
+    })
     onNavigate('My Bookings')
   }
-  const cancelBooking = () => onCancel({ name: 'Sunrise PG for Girls', status: 'Cancelled', price: '₹7,000', date: `${selectedDateLabel} at ${slot}`, location: 'Niti Khand, Indirapuram, Ghaziabad' })
-  return <StudentChrome active="Book a Visit" onNavigate={onNavigate}><section className="visit-heading"><h1>{confirmed ? 'Visit Confirmed!' : 'Book a Visit'}</h1><p>{confirmed ? 'Your visit request is on its way to the PG owner.' : "Schedule a visit to see the property in person. It's free, easy and helps you make a better decision."}</p></section>{confirmed ? <section className="confirmation">Booking confirmed<h2>Booking request confirmed</h2><p>We have reserved {selectedDateLabel} at {slot} for your visit.</p><button onClick={() => onNavigate('My Bookings')}>View My Bookings</button></section> : <section className="visit-layout"><article className="visit-property"><div className="visit-photo"><span>Verified PG</span></div><h2>Sunrise PG for Girls <i>4.8 (128 reviews)</i></h2><p>Niti Khand, Indirapuram, Ghaziabad</p><h1>₹7,000 <small>/ month</small></h1><div className="visit-tags"><span>Girls Only</span><span>With Food</span><span>Wi-Fi</span><span>AC</span></div><hr/><h3>About this property</h3><p>A safe and comfortable PG for girls with modern amenities, homely food and great connectivity to metro and markets.</p><a href="#property-details">View Full Details</a></article><article className="visit-form"><h2>Select Date & Time</h2><p>Choose a convenient date and time to visit the property.</p><div className="calendar-slots"><section className="calendar"><header><button type="button" aria-label="Previous month">‹</button><h3>{monthName}</h3><button type="button" aria-label="Next month">›</button></header><div className="week">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}</div><div className="days">{Array.from({ length: firstDay }, (_, index) => <span className="empty-day" key={`empty-${index}`} />)}{Array.from({ length: daysInMonth }, (_, index) => { const day = index + 1; return <button type="button" className={selectedDate === day ? 'selected' : ''} onClick={() => setSelectedDate(day)} key={day}>{day}</button> })}</div></section><section><h3>Available Time Slots</h3><div className="slots">{times.map((time) => <button type="button" className={slot === time ? 'active' : ''} onClick={() => setSlot(time)} key={time}>{time}</button>)}</div></section></div><hr/><h2>Your Details</h2><div className="details-inputs"><label>Full Name<input defaultValue="Aman Verma" /></label><label>Mobile Number<input defaultValue="+91 9876543210" /></label><label>Email Address<input defaultValue="amanverma@gmail.com" /></label></div><label className="message">Any Message (Optional)<textarea defaultValue="I would like to visit and know more about the food facilities and room availability." /></label></article><aside className="visit-summary"><h2>Visit Summary</h2><div><div className="summary-photo" /><h3>Sunrise PG for Girls<small>4.8 (128 reviews)<br />Niti Khand, Indirapuram<br /><b>₹7,000</b> / month</small></h3></div><p>Selected Date <b>{selectedDateLabel}</b></p><p>Selected Time <b>{slot}</b></p><p>Your Name <b>Aman Verma</b></p><p>Email Address <b>amanverma@gmail.com</b></p><section><h3>Important Notes</h3><p>The PG owner will confirm your visit shortly.</p><p>You will receive a confirmation notification.</p><p>Be on time for a better experience.</p></section><button type="button" onClick={confirmBooking}>Confirm Booking</button><button type="button" onClick={cancelBooking}>Cancel Booking</button></aside></section>}<InfoStrip /></StudentChrome>
+  const cancelBooking = () => onCancel({
+    name: 'Sunrise PG for Girls',
+    status: 'Cancelled',
+    price: '₹7,000',
+    date: `${selectedDateLabel} at ${slot}`,
+    location: 'Niti Khand, Indirapuram, Ghaziabad',
+    guestName: visitorDetails.fullName,
+    guestEmail: visitorDetails.emailAddress,
+    guestPhone: visitorDetails.mobileNumber
+  })
+  return <StudentChrome active="Book a Visit" onNavigate={onNavigate}><section className="visit-heading"><h1>{confirmed ? 'Visit Confirmed!' : 'Book a Visit'}</h1><p>{confirmed ? 'Your visit request is on its way to the PG owner.' : "Schedule a visit to see the property in person. It's free, easy and helps you make a better decision."}</p></section>{confirmed ? <section className="confirmation">Booking confirmed<h2>Booking request confirmed</h2><p>We have reserved {selectedDateLabel} at {slot} for your visit.</p><button onClick={() => onNavigate('My Bookings')}>View My Bookings</button></section> : <section className="visit-layout"><article className="visit-property"><div className="visit-photo"><span>Verified PG</span></div><h2>Sunrise PG for Girls <i>4.8 (128 reviews)</i></h2><p>Niti Khand, Indirapuram, Ghaziabad</p><h1>₹7,000 <small>/ month</small></h1><div className="visit-tags"><span>Girls Only</span><span>With Food</span><span>Wi-Fi</span><span>AC</span></div><hr/><h3>About this property</h3><p>A safe and comfortable PG for girls with modern amenities, homely food and great connectivity to metro and markets.</p><a href="#property-details">View Full Details</a></article><article className="visit-form"><h2>Select Date & Time</h2><p>Choose a convenient date and time to visit the property.</p><div className="calendar-slots"><section className="calendar"><header><button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)}>‹</button><h3>{monthName}</h3><button type="button" aria-label="Next month" onClick={() => changeMonth(1)}>›</button></header><div className="week">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}</div><div className="days">{Array.from({ length: firstDay }, (_, index) => <span className="empty-day" key={`empty-${index}`} />)}{Array.from({ length: daysInMonth }, (_, index) => { const day = index + 1; return <button type="button" className={selectedDate === day ? 'selected' : ''} onClick={() => setSelectedDate(day)} key={day}>{day}</button> })}</div></section><section><h3>Available Time Slots</h3><div className="slots">{times.map((time) => <button type="button" className={slot === time ? 'active' : ''} onClick={() => setSlot(time)} key={time}>{time}</button>)}</div></section></div><hr/><h2>Your Details</h2><div className="details-inputs"><label>Full Name<input value={visitorDetails.fullName} onChange={(event) => updateVisitorDetail('fullName', event.target.value)} /></label><label>Mobile Number<input value={visitorDetails.mobileNumber} onChange={(event) => updateVisitorDetail('mobileNumber', event.target.value)} /></label><label>Email Address<input value={visitorDetails.emailAddress} onChange={(event) => updateVisitorDetail('emailAddress', event.target.value)} /></label></div><label className="message">Any Message (Optional)<textarea value={visitorDetails.message} onChange={(event) => updateVisitorDetail('message', event.target.value)} /></label></article><aside className="visit-summary"><h2>Visit Summary</h2><div><div className="summary-photo" /><h3>Sunrise PG for Girls<small>4.8 (128 reviews)<br />Niti Khand, Indirapuram<br /><b>₹7,000</b> / month</small></h3></div><p>Selected Date <b>{selectedDateLabel}</b></p><p>Selected Time <b>{slot}</b></p><p>Your Name <b>{visitorDetails.fullName}</b></p><p>Email Address <b>{visitorDetails.emailAddress}</b></p><p>Mobile Number <b>{visitorDetails.mobileNumber}</b></p>{visitorDetails.message && <p>Message <b>{visitorDetails.message}</b></p>}<section><h3>Important Notes</h3><p>The PG owner will confirm your visit shortly.</p><p>You will receive a confirmation notification.</p><p>Be on time for a better experience.</p></section><button type="button" onClick={confirmBooking}>Confirm Booking</button><button type="button" onClick={cancelBooking}>Cancel Booking</button></aside></section>}<InfoStrip /></StudentChrome>
 }
 
 function SavedPage({ onNavigate, saved, onRemove }) {
