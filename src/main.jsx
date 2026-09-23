@@ -32,7 +32,7 @@ const Icon = ({ name, size = 24 }) => {
 
 function Preloader() {
   return <div className="preloader" aria-label="Loading AI SafeRent">
-    <div className="loader-mark"><Icon name="home" size={38}/></div>
+    <div className="loader-mark"><Icon name="shield" size={38}/></div>
     <div className="loader-name">AI <span>SafeRent</span></div>
     <div className="loader-line"><i /></div>
   </div>
@@ -586,7 +586,7 @@ function App() {
     <main className="page-shell">
       <div className="image-overlay" />
       <section className="brand-side">
-        <a className="brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a>
+        <a className="brand" href="#"><span className="brand-mark login-brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a>
         <div className="hero-copy">
           <p className="handwritten">Same City<br/>New Opportunities <b>♡</b></p>
           <h1>More Than a Place<br/>A <em>Safer Tomorrow</em></h1>
@@ -608,7 +608,27 @@ function App() {
           <div className="form-options"><label className="remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}/><span>✓</span>Remember me</label><a href="#">Forgot password?</a></div>
           <button className="login-button" type="submit">Login <Icon name="arrow"/></button>
           <div className="or"><span />OR<span /></div>
-          <div className="socials"><button type="button"><b className="google">G</b>Continue with Google</button><button type="button"><b className="apple">●</b>Continue with Apple</button></div>
+          <div className="socials">
+            <button type="button" className="social-btn google-btn">
+              <span className="social-icon google-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img" aria-label="Google icon">
+                  <path fill="#EA4335" d="M24 9.5c3.2 0 6.1 1.1 8.3 3.2l6.2-6.2A23.9 23.9 0 0 0 24 0C14.8 0 6.8 5.6 2.7 13.7l7.8 6.1c1.8-5.6 6.8-9.3 13.5-9.3Z"/>
+                  <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3-.4-4.4H24v8.4h12.9c-.6 2.8-2.1 5.2-4.4 6.8l7.1 5.5c4.2-3.8 6.9-9.4 6.9-16.3Z"/>
+                  <path fill="#FBBC05" d="M24 48c6.1 0 11.3-2 15.1-5.4l-7.2-5.6c-2.1 1.4-4.7 2.2-7.9 2.2-6 0-11.2-4.1-13-9.5L2.5 31.7A23.8 23.8 0 0 0 24 48Z"/>
+                  <path fill="#34A853" d="M10.9 32.9C8.8 29.7 7.7 25.9 7.7 24c0-1.9.9-5.1 2.1-7.1L2.3 11.3A23.7 23.7 0 0 0 0 24c0 3.8.9 7.6 2.5 10.9l8.4-6Z"/>
+                </svg>
+              </span>
+              <span>Continue with Google</span>
+            </button>
+            <button type="button" className="social-btn apple-btn">
+              <span className="social-icon apple-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" aria-label="Apple icon">
+                  <path fill="currentColor" d="M15.4 12.3c0-2.3 1.9-3.4 2-3.5-1.1-1.7-2.8-1.9-3.4-1.9-1.4-.1-2.8.8-3.5.8-.8 0-2-.8-3.2-.8-1.7 0-3.2 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.8 1.2 1.9 2.5 3.2 2.4 1.3-.1 1.8-.8 3.4-.8 1.6 0 2.1.8 3.4.8 1.4 0 2.3-1.2 3.1-2.4.9-1.4 1.3-2.8 1.3-2.8-.1 0-2.8-1.1-4.2-3.4Zm-2.4-6.7c.6-.8 1.1-1.9 1-3-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2-.5 2.6-1.3Z"/>
+                </svg>
+              </span>
+              <span>Continue with Apple</span>
+            </button>
+          </div>
           <p className="signup-text">Don’t have an account? <a href="#">Sign Up</a></p>
         </form>
       </section>
