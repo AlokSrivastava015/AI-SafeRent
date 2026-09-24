@@ -32,7 +32,9 @@ const Icon = ({ name, size = 24 }) => {
     camera: <><path d="M4 7h3l1.5-2h7L17 7h3v12H4V7Z"/><circle cx="12" cy="13" r="3.5"/></>,
     wallet: <><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H19v16H6.5A2.5 2.5 0 0 1 4 17.5v-11Z"/><path d="M4 8h15M15 13h4"/><circle cx="15" cy="13" r=".5"/></>,
     zap: <path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z"/>,
-    help: <><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.8c-1.1 1-1.9 1.4-1.9 3M12 17h.01"/></>
+    help: <><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.8c-1.1 1-1.9 1.4-1.9 3M12 17h.01"/></>,
+    chevronLeft: <path d="m15 18-6-6 6-6"/>,
+    chevronRight: <path d="m9 18 6-6-6-6"/>
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
@@ -527,7 +529,7 @@ function SettingsPage({ onNavigate, onLogout }) {
 
 function InfoStrip() { return <section className="info-strip"><span>🛡️ <b>Verified Listings<small>Every property is manually verified</small></b></span><span>⌖ <b>Safe Neighborhoods<small>Check safety scores & reviews</small></b></span><span>▣ <b>Transparent Information<small>No hidden charges</small></b></span><span>▣ <b>Book Site Visits<small>Schedule visits easily</small></b></span></section> }
 
-const ownerNav = [[<Icon name="grid" size={18}/>, 'Dashboard'], [<Icon name="building" size={18}/>, 'My Properties'], [<Icon name="sparkle" size={18}/>, 'Add Property'], [<Icon name="calendar" size={18}/>, 'Booking'], [<Icon name="people" size={18}/>, 'Tenants'], [<Icon name="mail" size={18}/>, 'Messages'], [<Icon name="users" size={18}/>, 'Collabs'], [<Icon name="settings" size={18}/>, 'Settings']]
+const ownerNav = [[<Icon name="grid" size={18}/>, 'Dashboard'], [<Icon name="building" size={18}/>, 'My Properties'], [<Icon name="sparkle" size={18}/>, 'Add Property'], [<Icon name="calendar" size={18}/>, 'Booking'], [<Icon name="people" size={18}/>, 'Tenants'], [<Icon name="mail" size={18}/>, 'Messages'], [<Icon name="settings" size={18}/>, 'Settings']]
 const ownerProperties = [['Sunrise PG for Girls', 'Indirapuram, Ghaziabad', 'Girls Only', '₹ 7,000 / month', '3/10'], ['Comfort Stay PG', 'Vaishali, Ghaziabad', 'Boys Only', '₹ 6,500 / month', '5/12'], ['Urban Nest PG', 'Raj Nagar, Ghaziabad', 'Boys & Girls', '₹ 8,000 / month', '2/8']]
 const requests = [['A', 'Aman Singh', 'Requested visit', 'Sunrise PG for Girls', '10:30 AM', 'Pending'], ['N', 'Neha Sharma', 'Booked a room', 'Comfort Stay PG', 'Yesterday', 'Confirmed'], ['R', 'Rahul Verma', 'Requested visit', 'Urban Nest PG', '16 Sep', 'Pending'], ['S', 'Sneha Patel', 'Mess inquiry', 'Sunrise PG for Girls', '15 Sep', 'Responded']]
 
@@ -1319,7 +1321,630 @@ function AddPropertyPage({ onNavigate, onAddProperty }) {
   </section> 
 }
 
-function OwnerBookingsPage() { return <section><OwnerHero title="My Bookings" subtitle="Track, manage and stay connected with your tenants."/><section className="owner-page-stats"><article><b><Icon name="calendar" size={21}/></b><span><strong>18</strong><small>Total Bookings</small></span></article><article><b><Icon name="people" size={21}/></b><span><strong>12</strong><small>Active Tenants</small></span></article><article><b><Icon name="sparkle" size={21}/></b><span><strong>4</strong><small>Pending Confirmations</small></span></article><article><b><Icon name="building" size={21}/></b><span><strong>2</strong><small>Cancelled Bookings</small></span></article></section><section className="owner-table-card"><header><strong>All Bookings (18)</strong><button>Filter bookings</button></header><div className="booking-simple"><article><b>Ananya Singh</b><span>Sunshine PG<br/><small>01 Sep 2025 - 31 Aug 2026</small></span><em>Active</em><strong>₹7,500 / month</strong><button>View</button></article><article><b>Rahul Verma</b><span>Maple PG<br/><small>15 Aug 2025 - 14 Aug 2026</small></span><em>Active</em><strong>₹8,000 / month</strong><button>View</button></article><article><b>Sneha Tiwari</b><span>Comfort Stay<br/><small>10 Sep 2025 - 09 Mar 2026</small></span><em className="pending">Pending</em><strong>₹6,500 / month</strong><button>View</button></article></div></section></section> }
+const initialBookingsData = [
+  {
+    id: 1,
+    num: '#1',
+    tenantName: 'Ananya Singh',
+    tenantEmail: 'ananya@gmail.com',
+    tenantPhone: '+91 98765 43210',
+    avatar: '/student-hero.png',
+    avatarInitial: 'A',
+    avatarBg: '#8b5cf6',
+    propertyName: 'Sunshine PG',
+    propertyLocation: 'Indirapuram, Gzb',
+    propertyImg: '/student-hero.png',
+    startDate: '01 Sep 2025',
+    endDate: '31 Aug 2026',
+    status: 'Active',
+    rentAmount: 7500,
+    rentFormatted: '₹7,500 / month',
+    roomNo: 'Room 204 (Double Sharing)',
+    deposit: '₹7,500',
+    timeAgo: '2 days ago',
+    paymentStatus: 'Paid'
+  },
+  {
+    id: 2,
+    num: '#2',
+    tenantName: 'Rahul Verma',
+    tenantEmail: 'rahulv@gmail.com',
+    tenantPhone: '+91 91234 56789',
+    avatar: '/sunset-room.png',
+    avatarInitial: 'R',
+    avatarBg: '#3b82f6',
+    propertyName: 'Maple PG',
+    propertyLocation: 'Vaishali, Gzb',
+    propertyImg: '/sunset-room.png',
+    startDate: '15 Aug 2025',
+    endDate: '14 Aug 2026',
+    status: 'Active',
+    rentAmount: 8000,
+    rentFormatted: '₹8,000 / month',
+    roomNo: 'Room 102 (Single Room)',
+    deposit: '₹8,000',
+    timeAgo: '4 days ago',
+    paymentStatus: 'Paid'
+  },
+  {
+    id: 3,
+    num: '#3',
+    tenantName: 'Sneha Tiwari',
+    tenantEmail: 'sneha.t@gmail.com',
+    tenantPhone: '+91 99887 66554',
+    avatar: '/owner-welcome-bg.png',
+    avatarInitial: 'S',
+    avatarBg: '#ec4899',
+    propertyName: 'Comfort Stay',
+    propertyLocation: 'Raj Nagar, Gzb',
+    propertyImg: '/owner-welcome-bg.png',
+    startDate: '10 Sep 2025',
+    endDate: '09 Mar 2026',
+    status: 'Pending',
+    rentAmount: 6500,
+    rentFormatted: '₹6,500 / month',
+    roomNo: 'Room 305 (Triple Sharing)',
+    deposit: '₹6,500',
+    timeAgo: '5 days ago',
+    paymentStatus: 'Pending Verification'
+  },
+  {
+    id: 4,
+    num: '#4',
+    tenantName: 'Aditya Kumar',
+    tenantEmail: 'aditya.k@gmail.com',
+    tenantPhone: '+91 97654 32109',
+    avatar: '/student-hero.png',
+    avatarInitial: 'A',
+    avatarBg: '#10b981',
+    propertyName: 'Urban Nest',
+    propertyLocation: 'Kaushambi, Gzb',
+    propertyImg: '/owner-property-hero-bg.png',
+    startDate: '01 Aug 2025',
+    endDate: '31 Jul 2026',
+    status: 'Active',
+    rentAmount: 9000,
+    rentFormatted: '₹9,000 / month',
+    roomNo: 'Room 108 (Premium Single)',
+    deposit: '₹9,000',
+    timeAgo: '1 week ago',
+    paymentStatus: 'Paid'
+  },
+  {
+    id: 5,
+    num: '#5',
+    tenantName: 'Priya Mehta',
+    tenantEmail: 'priya.m@gmail.com',
+    tenantPhone: '+91 88991 23456',
+    avatar: '/sunset-room.png',
+    avatarInitial: 'P',
+    avatarBg: '#f59e0b',
+    propertyName: 'Bliss PG',
+    propertyLocation: 'Indirapuram, Gzb',
+    propertyImg: '/sunset-room.png',
+    startDate: '12 Jul 2025',
+    endDate: '11 Jan 2026',
+    status: 'Completed',
+    rentAmount: 7000,
+    rentFormatted: '₹7,000 / month',
+    roomNo: 'Room 201 (Double Sharing)',
+    deposit: '₹7,000 (Refunded)',
+    timeAgo: '2 weeks ago',
+    paymentStatus: 'Completed'
+  },
+  {
+    id: 6,
+    num: '#6',
+    tenantName: 'Karan Arora',
+    tenantEmail: 'karan.a@gmail.com',
+    tenantPhone: '+91 85296 74123',
+    avatar: '/owner-welcome-bg.png',
+    avatarInitial: 'K',
+    avatarBg: '#ef4444',
+    propertyName: 'Green View PG',
+    propertyLocation: 'Vasundhara, Gzb',
+    propertyImg: '/owner-welcome-bg.png',
+    startDate: '05 Jun 2025',
+    endDate: '05 Sep 2025',
+    status: 'Cancelled',
+    rentAmount: 6000,
+    rentFormatted: '₹6,000 / month',
+    roomNo: 'Room 404 (Double Sharing)',
+    deposit: '₹6,000 (Cancelled)',
+    timeAgo: '3 weeks ago',
+    paymentStatus: 'Cancelled'
+  }
+]
+
+function OwnerBookingsPage({ onNavigate }) {
+  const [bookings, setBookings] = useState(initialBookingsData)
+  const [activeTab, setActiveTab] = useState('All')
+  const [dateRange, setDateRange] = useState('01 Aug 2025 - 31 Dec 2025')
+  const [showDateMenu, setShowDateMenu] = useState(false)
+  const [propertyFilter, setPropertyFilter] = useState('All')
+  const [showFilterMenu, setShowFilterMenu] = useState(false)
+  const [viewBooking, setViewBooking] = useState(null)
+  const [actionMenuId, setActionMenuId] = useState(null)
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (msg) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3500)
+  }
+
+  // Calculate status counts
+  const activeCount = bookings.filter(b => b.status === 'Active').length
+  const pendingCount = bookings.filter(b => b.status === 'Pending').length
+  const completedCount = bookings.filter(b => b.status === 'Completed').length
+  const cancelledCount = bookings.filter(b => b.status === 'Cancelled').length
+  const totalCount = bookings.length
+
+  // Filter bookings
+  const filteredBookings = bookings.filter(b => {
+    const matchesTab = activeTab === 'All' || b.status === activeTab
+    const matchesProperty = propertyFilter === 'All' || b.propertyName === propertyFilter
+    return matchesTab && matchesProperty
+  })
+
+  const updateBookingStatus = (id, newStatus) => {
+    setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b))
+    setActionMenuId(null)
+    if (viewBooking && viewBooking.id === id) {
+      setViewBooking({ ...viewBooking, status: newStatus })
+    }
+    showToast(`Booking #${id} status updated to "${newStatus}"!`)
+  }
+
+  const cancelBooking = (id) => {
+    updateBookingStatus(id, 'Cancelled')
+  }
+
+  const propertyOptions = ['All', 'Sunshine PG', 'Maple PG', 'Comfort Stay', 'Urban Nest', 'Bliss PG', 'Green View PG']
+  const dateOptions = ['01 Aug 2025 - 31 Dec 2025', 'All Time (2025 - 2026)', 'This Month (Sep 2026)', 'Last 6 Months']
+
+  // Donut chart angles
+  const pActive = totalCount ? (activeCount / totalCount) * 100 : 0
+  const pPending = totalCount ? (pendingCount / totalCount) * 100 : 0
+  const pCompleted = totalCount ? (completedCount / totalCount) * 100 : 0
+  const pCancelled = totalCount ? (cancelledCount / totalCount) * 100 : 0
+
+  const stop1 = pActive
+  const stop2 = stop1 + pPending
+  const stop3 = stop2 + pCompleted
+
+  const donutGradient = totalCount === 0 ? '#e2e8f0' : `conic-gradient(
+    #10b981 0% ${stop1}%,
+    #f59e0b ${stop1}% ${stop2}%,
+    #3b82f6 ${stop2}% ${stop3}%,
+    #ef4444 ${stop3}% 100%
+  )`
+
+  // Recent bookings list (4 items)
+  const recentBookings = bookings.slice(0, 4)
+
+  return (
+    <section className="booking-page-container">
+      <OwnerHero 
+        title="My Bookings" 
+        subtitle="Track, manage and stay connected with your tenants."
+      />
+
+      {toastMessage && <div className="owner-status-banner">✓ {toastMessage}</div>}
+
+      {/* Top Tabs & Toolbar Controls */}
+      <div className="booking-page-toolbar">
+        <div className="booking-tabs-list">
+          <button 
+            type="button" 
+            className={`booking-tab-item ${activeTab === 'All' ? 'active' : ''}`}
+            onClick={() => setActiveTab('All')}
+          >
+            All Bookings ({totalCount})
+          </button>
+          <button 
+            type="button" 
+            className={`booking-tab-item ${activeTab === 'Active' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Active')}
+          >
+            Active ({activeCount})
+          </button>
+          <button 
+            type="button" 
+            className={`booking-tab-item ${activeTab === 'Pending' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Pending')}
+          >
+            Pending ({pendingCount})
+          </button>
+          <button 
+            type="button" 
+            className={`booking-tab-item ${activeTab === 'Completed' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Completed')}
+          >
+            Completed ({completedCount})
+          </button>
+          <button 
+            type="button" 
+            className={`booking-tab-item ${activeTab === 'Cancelled' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Cancelled')}
+          >
+            Cancelled ({cancelledCount})
+          </button>
+        </div>
+
+        <div className="booking-top-controls">
+          {/* Date range picker button */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              type="button" 
+              className="booking-date-btn"
+              onClick={() => { setShowDateMenu(!showDateMenu); setShowFilterMenu(false); }}
+            >
+              <Icon name="calendar" size={15} />
+              <span>{dateRange}</span>
+              <i>▾</i>
+            </button>
+            {showDateMenu && (
+              <div className="booking-popover">
+                <h4>Select Date Range</h4>
+                {dateOptions.map((d) => (
+                  <button 
+                    key={d} 
+                    type="button" 
+                    className={`booking-popover-item ${dateRange === d ? 'selected' : ''}`}
+                    onClick={() => { setDateRange(d); setShowDateMenu(false); showToast(`Date range set to ${d}`); }}
+                  >
+                    <span>{d}</span>
+                    {dateRange === d && <b>✓</b>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Filter button */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              type="button" 
+              className={`booking-filter-btn ${propertyFilter !== 'All' ? 'active-filter' : ''}`}
+              onClick={() => { setShowFilterMenu(!showFilterMenu); setShowDateMenu(false); }}
+            >
+              <Icon name="sparkle" size={15} />
+              <span>Filter{propertyFilter !== 'All' ? `: ${propertyFilter}` : ''}</span>
+              <i>▾</i>
+            </button>
+            {showFilterMenu && (
+              <div className="booking-popover">
+                <h4>Filter by Property</h4>
+                {propertyOptions.map((p) => (
+                  <button 
+                    key={p} 
+                    type="button" 
+                    className={`booking-popover-item ${propertyFilter === p ? 'selected' : ''}`}
+                    onClick={() => { setPropertyFilter(p); setShowFilterMenu(false); }}
+                  >
+                    <span>{p === 'All' ? 'All Properties' : p}</span>
+                    {propertyFilter === p && <b>✓</b>}
+                  </button>
+                ))}
+                {propertyFilter !== 'All' && (
+                  <button 
+                    type="button" 
+                    style={{ marginTop: '8px', color: '#e11d48', background: '#fff1f2', width: '100%', padding: '6px', border: 0, borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+                    onClick={() => { setPropertyFilter('All'); setShowFilterMenu(false); }}
+                  >
+                    Reset Filter
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid: Bookings Table (Left) + Overview & Recent Bookings (Right) */}
+      <div className="owner-bookings-layout">
+        {/* Left Column: Bookings Table */}
+        <section className="owner-table-card bookings-table-card">
+          <table className="booking-table">
+            <thead>
+              <tr>
+                <th className="booking-num-col">#</th>
+                <th>Tenant Details</th>
+                <th>Property</th>
+                <th>Booking Period</th>
+                <th>Status</th>
+                <th>Rent Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredBookings.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px 16px', color: '#68799f' }}>
+                    <strong>No bookings found for the selected filter.</strong>
+                  </td>
+                </tr>
+              ) : (
+                filteredBookings.map((b) => (
+                  <tr key={b.id}>
+                    <td className="booking-num-col">{b.num}</td>
+                    <td>
+                      <div className="booking-tenant-cell">
+                        <div 
+                          className="booking-tenant-avatar" 
+                          style={{ backgroundImage: `url(${b.avatar})`, backgroundColor: b.avatarBg }}
+                        >
+                          {!b.avatar && b.avatarInitial}
+                        </div>
+                        <div className="booking-tenant-info">
+                          <strong>{b.tenantName}</strong>
+                          <small>{b.tenantEmail}</small>
+                          <small>{b.tenantPhone}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="booking-property-cell">
+                        <div 
+                          className="booking-property-thumb" 
+                          style={{ backgroundImage: `url(${b.propertyImg})` }}
+                        />
+                        <div className="booking-property-info">
+                          <strong>{b.propertyName}</strong>
+                          <small>{b.propertyLocation}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="booking-period-cell">
+                        <strong>{b.startDate}</strong>
+                        <small>- {b.endDate}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`booking-status-pill status-${b.status.toLowerCase()}`}>
+                        {b.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="booking-rent-cell">
+                        <strong>{b.rentFormatted}</strong>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="booking-actions-cell">
+                        <button 
+                          type="button" 
+                          className="booking-view-btn"
+                          onClick={() => setViewBooking(b)}
+                        >
+                          View
+                        </button>
+                        <button 
+                          type="button" 
+                          className={`booking-more-btn ${actionMenuId === b.id ? 'active' : ''}`}
+                          onClick={() => setActionMenuId(actionMenuId === b.id ? null : b.id)}
+                          aria-label="More actions"
+                        >
+                          ⋮
+                        </button>
+
+                        {/* 3-dot dropdown menu */}
+                        {actionMenuId === b.id && (
+                          <div className="booking-actions-menu">
+                            <button type="button" onClick={() => { setViewBooking(b); setActionMenuId(null); }}>
+                              👁 View Details
+                            </button>
+                            <button type="button" onClick={() => { if (onNavigate) onNavigate('Messages'); setActionMenuId(null); }}>
+                              💬 Message Tenant
+                            </button>
+                            {b.status !== 'Active' && (
+                              <button type="button" onClick={() => updateBookingStatus(b.id, 'Active')}>
+                                ✓ Mark Active
+                              </button>
+                            )}
+                            {b.status !== 'Completed' && (
+                              <button type="button" onClick={() => updateBookingStatus(b.id, 'Completed')}>
+                                ✓ Mark Completed
+                              </button>
+                            )}
+                            {b.status !== 'Pending' && (
+                              <button type="button" onClick={() => updateBookingStatus(b.id, 'Pending')}>
+                                ⏳ Mark Pending
+                              </button>
+                            )}
+                            <button type="button" className="danger" onClick={() => cancelBooking(b.id)}>
+                              ✕ Cancel Booking
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </section>
+
+        {/* Right Column: 2 Cards */}
+        <aside className="booking-sidebar">
+          {/* Card 1: Booking Overview */}
+          <div className="booking-overview-card">
+            <h3>Booking Overview</h3>
+            <div className="donut-container">
+              <div 
+                className="donut-chart-wrap" 
+                style={{ background: donutGradient }}
+              >
+                <div className="donut-hole">
+                  <strong>{totalCount}</strong>
+                  <small>Total</small>
+                </div>
+              </div>
+
+              <div className="donut-legend">
+                <div className="donut-legend-item">
+                  <span className="donut-legend-dot dot-active" />
+                  <span>{activeCount} Active</span>
+                </div>
+                <div className="donut-legend-item">
+                  <span className="donut-legend-dot dot-pending" />
+                  <span>{pendingCount} Pending</span>
+                </div>
+                <div className="donut-legend-item">
+                  <span className="donut-legend-dot dot-completed" />
+                  <span>{completedCount} Completed</span>
+                </div>
+                <div className="donut-legend-item">
+                  <span className="donut-legend-dot dot-cancelled" />
+                  <span>{cancelledCount} Cancelled</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Recent Bookings */}
+          <div className="recent-bookings-card">
+            <div className="recent-bookings-header">
+              <h3>Recent Bookings</h3>
+              <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('All'); }}>
+                View all
+              </a>
+            </div>
+
+            <div className="recent-bookings-list">
+              {recentBookings.map((rb) => (
+                <div 
+                  key={rb.id} 
+                  className="recent-booking-item"
+                  onClick={() => setViewBooking(rb)}
+                >
+                  <div className="recent-booking-left">
+                    <div 
+                      className="recent-booking-avatar" 
+                      style={{ backgroundImage: `url(${rb.avatar})`, backgroundColor: rb.avatarBg }}
+                    >
+                      {!rb.avatar && rb.avatarInitial}
+                    </div>
+                    <div className="recent-booking-info">
+                      <strong>{rb.tenantName}</strong>
+                      <small>{rb.propertyName}</small>
+                    </div>
+                  </div>
+
+                  <div className="recent-booking-right">
+                    <span className={`booking-status-pill status-${rb.status.toLowerCase()}`}>
+                      {rb.status}
+                    </span>
+                    <time>{rb.timeAgo}</time>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* View Booking Details Modal */}
+      {viewBooking && (
+        <div 
+          className="property-listing-backdrop" 
+          role="dialog" 
+          aria-modal="true" 
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setViewBooking(null) }}
+        >
+          <div className="property-listing-modal booking-details-modal">
+            <button 
+              className="property-listing-close" 
+              type="button" 
+              onClick={() => setViewBooking(null)} 
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <header className="listing-modal-heading" style={{ borderBottom: 0, padding: '10px 0 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div 
+                  className="booking-tenant-avatar" 
+                  style={{ width: '48px', height: '48px', flexBasis: '48px', backgroundImage: `url(${viewBooking.avatar})`, backgroundColor: viewBooking.avatarBg }}
+                />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', color: '#0c1c54' }}>{viewBooking.tenantName}</h2>
+                  <p style={{ margin: '2px 0 0', color: '#68799f', fontSize: '12px' }}>
+                    {viewBooking.tenantEmail} · {viewBooking.tenantPhone}
+                  </p>
+                </div>
+                <span className={`booking-status-pill status-${viewBooking.status.toLowerCase()}`} style={{ marginLeft: 'auto' }}>
+                  {viewBooking.status}
+                </span>
+              </div>
+            </header>
+
+            <div className="booking-modal-meta">
+              <div className="booking-meta-item">
+                <label>Property</label>
+                <strong>{viewBooking.propertyName}</strong>
+                <small style={{ color: '#6a7b9e' }}>{viewBooking.propertyLocation}</small>
+              </div>
+              <div className="booking-meta-item">
+                <label>Allocated Space</label>
+                <strong>{viewBooking.roomNo}</strong>
+              </div>
+              <div className="booking-meta-item">
+                <label>Booking Duration</label>
+                <strong>{viewBooking.startDate} - {viewBooking.endDate}</strong>
+              </div>
+              <div className="booking-meta-item">
+                <label>Monthly Rent</label>
+                <strong style={{ color: '#4f3cf3' }}>{viewBooking.rentFormatted}</strong>
+              </div>
+              <div className="booking-meta-item">
+                <label>Security Deposit</label>
+                <strong>{viewBooking.deposit}</strong>
+              </div>
+              <div className="booking-meta-item">
+                <label>Payment Status</label>
+                <strong style={{ color: viewBooking.paymentStatus === 'Paid' ? '#059669' : '#d97706' }}>
+                  ✓ {viewBooking.paymentStatus}
+                </strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px', flexWrap: 'wrap' }}>
+              {viewBooking.status !== 'Active' && (
+                <button 
+                  type="button" 
+                  style={{ padding: '9px 15px', borderRadius: '8px', border: '1px solid #10b981', color: '#059669', background: '#ecfdf5', fontWeight: 700, cursor: 'pointer' }}
+                  onClick={() => updateBookingStatus(viewBooking.id, 'Active')}
+                >
+                  ✓ Mark as Active
+                </button>
+              )}
+              {viewBooking.status !== 'Cancelled' && (
+                <button 
+                  type="button" 
+                  style={{ padding: '9px 15px', borderRadius: '8px', border: '1px solid #fed7d7', color: '#dc2626', background: '#fff5f5', fontWeight: 700, cursor: 'pointer' }}
+                  onClick={() => updateBookingStatus(viewBooking.id, 'Cancelled')}
+                >
+                  Cancel Booking
+                </button>
+              )}
+              <button 
+                type="button" 
+                style={{ padding: '9px 16px', borderRadius: '8px', border: 0, color: '#fff', background: '#4f3cf3', fontWeight: 700, cursor: 'pointer' }}
+                onClick={() => { setViewBooking(null); if (onNavigate) onNavigate('Messages'); }}
+              >
+                💬 Message Tenant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
 
 function OwnerTenantsPage({ onNavigate }) { return <section><OwnerHero title="My Tenants" subtitle="Manage your current and past tenants with ease."/><section className="owner-page-stats"><article><b><Icon name="people" size={21}/></b><span><strong>42</strong><small>Total Tenants</small></span></article><article><b><Icon name="check" size={21}/></b><span><strong>28</strong><small>Active Tenants</small></span></article><article><b><Icon name="arrow" size={21}/></b><span><strong>8</strong><small>Moving Out Soon</small></span></article><article><b><Icon name="home" size={21}/></b><span><strong>6</strong><small>Past Tenants</small></span></article></section><section className="tenant-layout"><div className="owner-table-card"><header><strong>All Tenants (42)</strong><button>All Properties</button></header><div className="tenant-row selected"><b>A</b><span><strong>Ananya Singh</strong><small>+91 98765 43210 · Sunshine PG</small></span><em>Active</em></div><div className="tenant-row"><b>R</b><span><strong>Rahul Verma</strong><small>+91 98765 43210 · Maple PG</small></span><em>Active</em></div><div className="tenant-row"><b>S</b><span><strong>Sneha Tiwari</strong><small>+91 98765 43210 · Comfort Stay</small></span><em className="moving">Moving Out</em></div></div><aside className="tenant-profile"><h2>Tenant Profile</h2><b>A</b><h3>Ananya Singh</h3><em>Active</em><p>Phone: +91 98765 43210</p><p>Email: ananya@gmail.com</p><hr/><p>Property: Sunshine PG</p><p>Room No: 101</p><p>Monthly Rent: ₹7,500</p><button onClick={() => onNavigate('Messages')}>Message</button><button>View Agreement</button></aside></section></section> }
 
@@ -1349,6 +1974,7 @@ function OwnerCollabsPage() {
 
 function OwnerDashboard({ onLogout }) {
   const [menu, setMenu] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState('Dashboard')
   const [properties, setProperties] = useState(initialOwnerProperties)
@@ -1379,14 +2005,45 @@ function OwnerDashboard({ onLogout }) {
     showToast(`Property "${newProp.name}" published successfully!`)
   }
 
-  return <div className="owner-dashboard">
-    <aside className={`owner-sidebar ${menu ? 'show' : ''}`}>
-      <a className="brand owner-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a>
-      <button className="owner-profile"><b>R</b><span>Rohit Sharma<small>PG Owner</small></span><i>⌄</i></button>
-      <nav>{ownerNav.map(([icon, label]) => <button key={label} className={active === label ? 'active' : ''} onClick={() => {setActive(label); setMenu(false)}}><b>{icon}</b>{label}</button>)}</nav>
+  return <div className={`owner-dashboard ${collapsed ? 'owner-is-collapsed' : ''}`}>
+    <aside className={`owner-sidebar ${collapsed ? 'collapsed' : ''} ${menu ? 'show' : ''}`}>
+      <div className="owner-sidebar-header">
+        <a className="brand owner-brand" href="#">
+          <span className="brand-mark"><Icon name="home" size={28}/></span>
+          {!collapsed && <span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span>}
+        </a>
+        <button 
+          className="owner-collapse-toggle" 
+          onClick={() => setCollapsed(!collapsed)} 
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={16}/>
+        </button>
+      </div>
+
+      <button className="owner-profile" title="Rohit Sharma (PG Owner)">
+        <b>R</b>
+        {!collapsed && <span>Rohit Sharma<small>PG Owner</small></span>}
+        {!collapsed && <i>⌄</i>}
+      </button>
+
+      <nav>
+        {ownerNav.map(([icon, label]) => (
+          <button 
+            key={label} 
+            className={`owner-nav-btn ${active === label ? 'active' : ''}`} 
+            onClick={() => { setActive(label); setMenu(false); }}
+            title={label}
+          >
+            <b>{icon}</b>
+            <span className="nav-label">{label}</span>
+          </button>
+        ))}
+      </nav>
     </aside>
-    <main className="owner-main">
-      <header className="owner-header">
+    <main className={`owner-main ${collapsed ? 'sidebar-collapsed' : ''}`}>
+      <header className={`owner-header ${collapsed ? 'sidebar-collapsed' : ''}`}>
         <button className="owner-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Icon name="menu" size={20}/></button>
         <label className="global-search"><Icon name="search" size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search properties, tenants or messages..."/></label>
         <div className="owner-tools"><span className="owner-bell"><Icon name="bell" size={18}/><i /></span><span className="owner-avatar">R</span><button onClick={onLogout}><b>Rohit Sharma</b><small>PG Owner · Sign out</small></button><i>⌄</i></div>
@@ -1553,7 +2210,7 @@ function OwnerDashboard({ onLogout }) {
       </>}
       {active === 'My Properties' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
       {active === 'Add Property' && <AddPropertyPage onNavigate={setActive} onAddProperty={handleAddProperty}/>} 
-      {active === 'Booking' && <OwnerBookingsPage/>} 
+      {active === 'Booking' && <OwnerBookingsPage onNavigate={setActive}/>} 
       {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} 
       {active === 'Messages' && <OwnerMessagesPage/>} 
       {active === 'Collabs' && <OwnerCollabsPage/>} 
