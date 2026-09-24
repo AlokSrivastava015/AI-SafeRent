@@ -535,7 +535,354 @@ function OwnerHero({ title, subtitle, action, onAction }) {
   return <section className="owner-page-hero"><div><h1>{title}</h1><p>{subtitle}</p><em>Good tenants build great communities ♡</em></div>{action && <button onClick={onAction}>{action}</button>}</section>
 }
 
-function OwnerPropertiesPage({ onNavigate }) { return <section><OwnerHero title="My Properties" subtitle="Manage your PGs, rooms and flats all in one place." action="Add New Property" onAction={() => onNavigate('Add Property')}/><section className="owner-page-stats"><article><b>5</b>Total Properties</article><article><b>42</b>Total Tenants</article><article><b>18</b>Active Bookings</article><article><b>4.6</b>Average Rating</article></section><div className="owner-page-toolbar"><strong>All Properties (5)</strong><input placeholder="Search your properties"/><button>Filter</button></div><section className="owner-property-grid"><article><div className="owner-property-image"><span>Active</span></div><h2>Sunrise PG for Boys</h2><p>Indirapuram, Ghaziabad</p><small>12 Rooms · 24 Tenants · Wi-Fi · Meals</small><strong>₹7,500 / month</strong><footer><button>View Details</button><button>Edit</button></footer></article><article><div className="owner-property-image image-1"><span>Active</span></div><h2>Maple Girls PG</h2><p>Vaishali, Ghaziabad</p><small>8 Rooms · 16 Tenants · Wi-Fi · Meals</small><strong>₹8,000 / month</strong><footer><button>View Details</button><button>Edit</button></footer></article><article><div className="owner-property-image image-2"><span>Active</span></div><h2>Comfort Stay PG</h2><p>Raj Nagar, Ghaziabad</p><small>6 Rooms · 10 Tenants · Wi-Fi · Meals</small><strong>₹6,500 / month</strong><footer><button>View Details</button><button>Edit</button></footer></article><article className="add-property-card"><b>＋</b><h2>List Another Property</h2><p>Reach more verified tenants and grow your business.</p><button onClick={() => onNavigate('Add Property')}>Add New Property</button></article></section></section> }
+const initialOwnerProperties = [
+  { id: 1, name: 'Sunrise PG for Boys', location: 'Indirapuram, Ghaziabad', type: 'Boys Only', price: 7500, priceFormatted: '₹7,500 / month', rooms: '12 Rooms', tenants: '24 Tenants', amenities: 'Wi-Fi · Meals · Power Backup', imageClass: 'image-0', img: '/student-hero.png', status: 'Active' },
+  { id: 2, name: 'Maple Girls PG', location: 'Vaishali, Ghaziabad', type: 'Girls Only', price: 8000, priceFormatted: '₹8,000 / month', rooms: '8 Rooms', tenants: '16 Tenants', amenities: 'Wi-Fi · AC · Meals', imageClass: 'image-1', img: '/student-hero.png', status: 'Active' },
+  { id: 3, name: 'Comfort Stay PG', location: 'Raj Nagar, Ghaziabad', type: 'Boys Only', price: 6500, priceFormatted: '₹6,500 / month', rooms: '6 Rooms', tenants: '10 Tenants', amenities: 'Wi-Fi · Meals · Laundry', imageClass: 'image-2', img: '/student-hero.png', status: 'Active' },
+  { id: 4, name: 'Greenwood Luxury Co-Living', location: 'Sector 62, Noida', type: 'Co-Living', price: 9500, priceFormatted: '₹9,500 / month', rooms: '15 Rooms', tenants: '30 Tenants', amenities: 'AC · Gym · Wi-Fi · Meals', imageClass: 'image-3', img: '/sunset-room.png', status: 'Active' },
+  { id: 5, name: 'Royal Orchid PG for Girls', location: 'Vasundhara, Ghaziabad', type: 'Girls Only', price: 8500, priceFormatted: '₹8,500 / month', rooms: '10 Rooms', tenants: '20 Tenants', amenities: 'Wi-Fi · 3 Meals · Security', imageClass: 'image-4', img: '/owner-welcome-bg.png', status: 'Active' },
+  { id: 6, name: 'Urban Haven Studio Rooms', location: 'Crossing Republik, Ghaziabad', type: 'Co-Living', price: 7000, priceFormatted: '₹7,000 / month', rooms: '5 Studios', tenants: '10 Tenants', amenities: 'Attached Bath · Wi-Fi · Balcony', imageClass: 'image-5', img: '/owner-property-hero-bg.png', status: 'Active' },
+  { id: 7, name: 'Starlight Executive Boys PG', location: 'Kaushambi, Ghaziabad', type: 'Boys Only', price: 6800, priceFormatted: '₹6,800 / month', rooms: '14 Rooms', tenants: '28 Tenants', amenities: 'Power Backup · Laundry · Wi-Fi', imageClass: 'image-6', img: '/student-hero.png', status: 'Active' }
+]
+
+function OwnerPropertiesPage({ onNavigate }) {
+  const [properties, setProperties] = useState(initialOwnerProperties)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState('All')
+  const [showFilterMenu, setShowFilterMenu] = useState(false)
+  const [viewProperty, setViewProperty] = useState(null)
+  const [editProperty, setEditProperty] = useState(null)
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (msg) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3500)
+  }
+
+  const filterOptions = [
+    { label: 'All Properties', value: 'All' },
+    { label: 'Girls Only PG', value: 'Girls Only' },
+    { label: 'Boys Only PG', value: 'Boys Only' },
+    { label: 'Co-Living Spaces', value: 'Co-Living' },
+    { label: 'Under ₹7,500 / mo', value: 'Under7500' },
+    { label: 'With Meals Included', value: 'Meals' }
+  ]
+
+  const filteredProperties = properties.filter((item) => {
+    const q = searchTerm.trim().toLowerCase()
+    const matchesSearch = !q || 
+      item.name.toLowerCase().includes(q) || 
+      item.location.toLowerCase().includes(q) || 
+      item.amenities.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q) ||
+      item.priceFormatted.toLowerCase().includes(q)
+
+    let matchesFilter = true
+    if (selectedFilter === 'Under7500') {
+      matchesFilter = item.price <= 7500
+    } else if (selectedFilter === 'Meals') {
+      matchesFilter = item.amenities.includes('Meals')
+    } else if (selectedFilter !== 'All') {
+      matchesFilter = item.type === selectedFilter
+    }
+
+    return matchesSearch && matchesFilter
+  })
+
+  const saveEditedProperty = (updated) => {
+    setProperties(properties.map(p => p.id === updated.id ? updated : p))
+    setEditProperty(null)
+    showToast(`Property "${updated.name}" updated successfully!`)
+  }
+
+  return <section>
+    <OwnerHero 
+      title="My Properties" 
+      subtitle="Manage your PGs, rooms and flats all in one place." 
+      action="Add New Property" 
+      onAction={() => onNavigate('Add Property')}
+    />
+    
+    <section className="owner-page-stats">
+      <article><b><Icon name="building" size={21}/></b><span><strong>{properties.length}</strong><small>Total Properties</small></span></article>
+      <article><b><Icon name="people" size={21}/></b><span><strong>138</strong><small>Total Tenants</small></span></article>
+      <article><b><Icon name="calendar" size={21}/></b><span><strong>18</strong><small>Active Bookings</small></span></article>
+      <article><b><Icon name="star" size={21}/></b><span><strong>4.8</strong><small>Average Rating</small></span></article>
+    </section>
+
+    {toastMessage && <div className="owner-status-banner">✓ {toastMessage}</div>}
+
+    <div className="owner-page-toolbar">
+      <strong>All Properties ({filteredProperties.length} of {properties.length} Listings)</strong>
+      
+      <div className="owner-toolbar-search">
+        <Icon name="search" size={16}/>
+        <input 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+          placeholder="Search properties by name, location, amenities..."
+        />
+        {searchTerm && (
+          <button type="button" className="toolbar-clear-btn" onClick={() => setSearchTerm('')} aria-label="Clear search">×</button>
+        )}
+      </div>
+
+      <div className="owner-toolbar-filter-wrap">
+        <button 
+          type="button" 
+          className={`owner-filter-toggle-btn ${selectedFilter !== 'All' ? 'active-filter' : ''}`}
+          onClick={() => setShowFilterMenu(!showFilterMenu)}
+        >
+          <Icon name="sparkle" size={15}/> 
+          <span>Filter{selectedFilter !== 'All' ? `: ${selectedFilter}` : ''}</span>
+          <i>▾</i>
+        </button>
+        
+        {showFilterMenu && (
+          <div className="owner-filter-dropdown">
+            <div className="filter-dropdown-header">Filter Properties</div>
+            {filterOptions.map((opt) => (
+              <button 
+                key={opt.value} 
+                type="button"
+                className={selectedFilter === opt.value ? 'selected' : ''}
+                onClick={() => { setSelectedFilter(opt.value); setShowFilterMenu(false) }}
+              >
+                <span>{opt.label}</span>
+                {selectedFilter === opt.value && <b>✓</b>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {(searchTerm || selectedFilter !== 'All') && (
+      <div className="owner-active-filters">
+        <span>Active filters:</span>
+        {searchTerm && <button type="button" onClick={() => setSearchTerm('')}>Search: "{searchTerm}" ✕</button>}
+        {selectedFilter !== 'All' && <button type="button" onClick={() => setSelectedFilter('All')}>Category: {filterOptions.find(f => f.value === selectedFilter)?.label || selectedFilter} ✕</button>}
+        <button type="button" className="clear-all-link" onClick={() => { setSearchTerm(''); setSelectedFilter('All') }}>Reset All</button>
+      </div>
+    )}
+
+    {filteredProperties.length === 0 ? (
+      <div className="owner-empty-grid">
+        <b>⌕</b>
+        <h3>No matching properties found</h3>
+        <p>No listings matched your search "{searchTerm}" and active filters.</p>
+        <button type="button" onClick={() => { setSearchTerm(''); setSelectedFilter('All') }}>Reset Search &amp; Filters</button>
+      </div>
+    ) : (
+      <section className="owner-property-grid">
+        {filteredProperties.map((prop) => (
+          <article key={prop.id}>
+            <div className={`owner-property-image ${prop.imageClass}`}>
+              <span>{prop.status}</span>
+            </div>
+            <h2>{prop.name}</h2>
+            <p><Icon name="pin" size={12}/> {prop.location}</p>
+            <small><Icon name="people" size={12}/> {prop.rooms} · {prop.tenants} · {prop.amenities}</small>
+            <strong>{prop.priceFormatted}</strong>
+            <div className="owner-property-actions">
+              <button type="button" onClick={() => setViewProperty(prop)}>View Details</button>
+              <button type="button" onClick={() => setEditProperty(prop)}>Edit</button>
+            </div>
+          </article>
+        ))}
+      </section>
+    )}
+
+    {/* View Details Modal */}
+    {viewProperty && (
+      <div className="property-listing-backdrop" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) setViewProperty(null) }}>
+        <div className="property-listing-modal owner-preview-modal">
+          <button className="property-listing-close" type="button" onClick={() => setViewProperty(null)} aria-label="Close">×</button>
+          <div className="owner-detail-banner" style={{ backgroundImage: `url(${viewProperty.img})` }}>
+            <span className="detail-status-badge">✓ {viewProperty.status} Listing</span>
+          </div>
+          <div className="owner-detail-body">
+            <h2>{viewProperty.name}</h2>
+            <p className="detail-loc"><Icon name="pin" size={14}/> {viewProperty.location}</p>
+            <div className="detail-meta-row">
+              <span><Icon name="people" size={14}/> {viewProperty.type}</span>
+              <span><Icon name="building" size={14}/> {viewProperty.rooms}</span>
+              <span><Icon name="people" size={14}/> {viewProperty.tenants}</span>
+              <span><Icon name="sparkle" size={14}/> {viewProperty.amenities}</span>
+            </div>
+            <div className="detail-price-box">
+              <strong>{viewProperty.priceFormatted}</strong>
+              <small>Verified Safe PG · 100% On-time Tenant Occupancy</small>
+            </div>
+            <div className="owner-detail-actions">
+              <button type="button" onClick={() => { setViewProperty(null); onNavigate('Booking') }}>View Bookings</button>
+              <button type="button" onClick={() => { const p = viewProperty; setViewProperty(null); setEditProperty(p) }}>Edit Property</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Edit Property Modal */}
+    {editProperty && (
+      <OwnerEditPropertyDialog 
+        property={editProperty} 
+        onClose={() => setEditProperty(null)} 
+        onSave={saveEditedProperty} 
+      />
+    )}
+  </section>
+}
+
+function OwnerEditPropertyDialog({ property, onClose, onSave }) {
+  const [formData, setFormData] = useState({
+    name: property.name,
+    location: property.location,
+    type: property.type,
+    price: property.price,
+    rooms: property.rooms,
+    tenants: property.tenants,
+    amenities: property.amenities,
+    status: property.status
+  })
+
+  const amenityList = ['Wi-Fi', 'Meals', 'AC', 'Power Backup', 'Laundry', 'Gym', 'Attached Bath', 'Security']
+
+  const toggleAmenity = (name) => {
+    const current = formData.amenities.split(' · ')
+    const updated = current.includes(name) ? current.filter(i => i !== name) : [...current, name]
+    setFormData({ ...formData, amenities: updated.join(' · ') })
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSave({
+      ...property,
+      ...formData,
+      priceFormatted: `₹${Number(formData.price).toLocaleString('en-IN')} / month`
+    })
+  }
+
+  return (
+    <div className="property-listing-backdrop" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="property-listing-modal owner-edit-modal">
+        <button className="property-listing-close" type="button" onClick={onClose} aria-label="Close">×</button>
+        <header className="listing-modal-heading">
+          <div>
+            <span className="listing-step-icon">✎</span>
+            <span>
+              <h2>Edit Property Listing</h2>
+              <p>Update pricing, availability, amenities and details for "{property.name}".</p>
+            </span>
+          </div>
+        </header>
+
+        <form onSubmit={handleSubmit} className="owner-edit-form">
+          <div className="listing-section">
+            <h3><b>1</b><span>⌂</span> Property Information</h3>
+            <div className="listing-fields">
+              <label className="listing-wide">
+                Property Name *
+                <input 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                  required 
+                />
+              </label>
+              <label className="listing-wide">
+                Location &amp; Address *
+                <input 
+                  value={formData.location} 
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
+                  required 
+                />
+              </label>
+              <label>
+                Listing Type *
+                <select 
+                  value={formData.type} 
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                >
+                  <option value="Boys Only">Boys Only</option>
+                  <option value="Girls Only">Girls Only</option>
+                  <option value="Co-Living">Co-Living</option>
+                </select>
+              </label>
+              <label>
+                Listing Status *
+                <select 
+                  value={formData.status} 
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Occupied">Fully Occupied</option>
+                  <option value="Maintenance">Under Maintenance</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className="listing-section">
+            <h3><b>2</b><span>₹</span> Rent &amp; Room Capacity</h3>
+            <div className="listing-fields">
+              <label>
+                Monthly Rent (₹) *
+                <input 
+                  type="number" 
+                  value={formData.price} 
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })} 
+                  required 
+                />
+              </label>
+              <label>
+                Total Rooms *
+                <input 
+                  value={formData.rooms} 
+                  onChange={(e) => setFormData({ ...formData, rooms: e.target.value })} 
+                  required 
+                />
+              </label>
+              <label>
+                Tenants Count *
+                <input 
+                  value={formData.tenants} 
+                  onChange={(e) => setFormData({ ...formData, tenants: e.target.value })} 
+                  required 
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="listing-section">
+            <h3><b>3</b><span>⚙</span> Amenities</h3>
+            <div className="listing-amenities" style={{ borderTop: 0, marginTop: 0, paddingTop: 0 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {amenityList.map((item) => {
+                  const isChecked = formData.amenities.includes(item)
+                  return (
+                    <label key={item} className={isChecked ? 'selected' : ''} style={{ cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked} 
+                        onChange={() => toggleAmenity(item)} 
+                      />
+                      {item}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          <footer className="listing-modal-footer">
+            <button type="button" onClick={onClose}>Cancel</button>
+            <button type="submit">Save Changes ✓</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 function PropertyListingModal({ onClose, onPublish }) {
   const [amenities, setAmenities] = useState(['Wi-Fi', 'Furnished Room', 'Attached Bathroom', 'Meals', 'Power Backup'])
@@ -559,9 +906,9 @@ function PropertyListingModal({ onClose, onPublish }) {
 
 function AddPropertyPage({ onNavigate }) { const [submitted, setSubmitted] = useState(false); const [showListing, setShowListing] = useState(false); return <section><OwnerHero title="Add New Property" subtitle="List your PG, room or flat and connect with verified tenants."/><div className="owner-success"><b>{submitted ? '✓' : '＋'}</b><h2>{submitted ? 'Property saved successfully' : 'Start a new listing'}</h2><p>{submitted ? 'Your draft is ready to review from My Properties.' : 'Add property details, photos, amenities and rent to reach verified tenants.'}</p>{submitted ? <button onClick={() => onNavigate('My Properties')}>View My Properties</button> : <button onClick={() => setShowListing(true)}>Create Property Listing</button>}</div>{showListing && <PropertyListingModal onClose={() => setShowListing(false)} onPublish={() => { setShowListing(false); setSubmitted(true) }} />}</section> }
 
-function OwnerBookingsPage() { return <section><OwnerHero title="My Bookings" subtitle="Track, manage and stay connected with your tenants."/><section className="owner-page-stats"><article><b>18</b>Total Bookings</article><article><b>12</b>Active Tenants</article><article><b>4</b>Pending Confirmations</article><article><b>2</b>Cancelled Bookings</article></section><section className="owner-table-card"><header><strong>All Bookings (18)</strong><button>Filter bookings</button></header><div className="booking-simple"><article><b>Ananya Singh</b><span>Sunshine PG<br/><small>01 Sep 2025 - 31 Aug 2026</small></span><em>Active</em><strong>₹7,500 / month</strong><button>View</button></article><article><b>Rahul Verma</b><span>Maple PG<br/><small>15 Aug 2025 - 14 Aug 2026</small></span><em>Active</em><strong>₹8,000 / month</strong><button>View</button></article><article><b>Sneha Tiwari</b><span>Comfort Stay<br/><small>10 Sep 2025 - 09 Mar 2026</small></span><em className="pending">Pending</em><strong>₹6,500 / month</strong><button>View</button></article></div></section></section> }
+function OwnerBookingsPage() { return <section><OwnerHero title="My Bookings" subtitle="Track, manage and stay connected with your tenants."/><section className="owner-page-stats"><article><b><Icon name="calendar" size={21}/></b><span><strong>18</strong><small>Total Bookings</small></span></article><article><b><Icon name="people" size={21}/></b><span><strong>12</strong><small>Active Tenants</small></span></article><article><b><Icon name="sparkle" size={21}/></b><span><strong>4</strong><small>Pending Confirmations</small></span></article><article><b><Icon name="building" size={21}/></b><span><strong>2</strong><small>Cancelled Bookings</small></span></article></section><section className="owner-table-card"><header><strong>All Bookings (18)</strong><button>Filter bookings</button></header><div className="booking-simple"><article><b>Ananya Singh</b><span>Sunshine PG<br/><small>01 Sep 2025 - 31 Aug 2026</small></span><em>Active</em><strong>₹7,500 / month</strong><button>View</button></article><article><b>Rahul Verma</b><span>Maple PG<br/><small>15 Aug 2025 - 14 Aug 2026</small></span><em>Active</em><strong>₹8,000 / month</strong><button>View</button></article><article><b>Sneha Tiwari</b><span>Comfort Stay<br/><small>10 Sep 2025 - 09 Mar 2026</small></span><em className="pending">Pending</em><strong>₹6,500 / month</strong><button>View</button></article></div></section></section> }
 
-function OwnerTenantsPage({ onNavigate }) { return <section><OwnerHero title="My Tenants" subtitle="Manage your current and past tenants with ease."/><section className="owner-page-stats"><article><b>42</b>Total Tenants</article><article><b>28</b>Active Tenants</article><article><b>8</b>Moving Out Soon</article><article><b>6</b>Past Tenants</article></section><section className="tenant-layout"><div className="owner-table-card"><header><strong>All Tenants (42)</strong><button>All Properties</button></header><div className="tenant-row selected"><b>A</b><span><strong>Ananya Singh</strong><small>+91 98765 43210 · Sunshine PG</small></span><em>Active</em></div><div className="tenant-row"><b>R</b><span><strong>Rahul Verma</strong><small>+91 98765 43210 · Maple PG</small></span><em>Active</em></div><div className="tenant-row"><b>S</b><span><strong>Sneha Tiwari</strong><small>+91 98765 43210 · Comfort Stay</small></span><em className="moving">Moving Out</em></div></div><aside className="tenant-profile"><h2>Tenant Profile</h2><b>A</b><h3>Ananya Singh</h3><em>Active</em><p>Phone: +91 98765 43210</p><p>Email: ananya@gmail.com</p><hr/><p>Property: Sunshine PG</p><p>Room No: 101</p><p>Monthly Rent: ₹7,500</p><button onClick={() => onNavigate('Messages')}>Message</button><button>View Agreement</button></aside></section></section> }
+function OwnerTenantsPage({ onNavigate }) { return <section><OwnerHero title="My Tenants" subtitle="Manage your current and past tenants with ease."/><section className="owner-page-stats"><article><b><Icon name="people" size={21}/></b><span><strong>42</strong><small>Total Tenants</small></span></article><article><b><Icon name="check" size={21}/></b><span><strong>28</strong><small>Active Tenants</small></span></article><article><b><Icon name="arrow" size={21}/></b><span><strong>8</strong><small>Moving Out Soon</small></span></article><article><b><Icon name="home" size={21}/></b><span><strong>6</strong><small>Past Tenants</small></span></article></section><section className="tenant-layout"><div className="owner-table-card"><header><strong>All Tenants (42)</strong><button>All Properties</button></header><div className="tenant-row selected"><b>A</b><span><strong>Ananya Singh</strong><small>+91 98765 43210 · Sunshine PG</small></span><em>Active</em></div><div className="tenant-row"><b>R</b><span><strong>Rahul Verma</strong><small>+91 98765 43210 · Maple PG</small></span><em>Active</em></div><div className="tenant-row"><b>S</b><span><strong>Sneha Tiwari</strong><small>+91 98765 43210 · Comfort Stay</small></span><em className="moving">Moving Out</em></div></div><aside className="tenant-profile"><h2>Tenant Profile</h2><b>A</b><h3>Ananya Singh</h3><em>Active</em><p>Phone: +91 98765 43210</p><p>Email: ananya@gmail.com</p><hr/><p>Property: Sunshine PG</p><p>Room No: 101</p><p>Monthly Rent: ₹7,500</p><button onClick={() => onNavigate('Messages')}>Message</button><button>View Agreement</button></aside></section></section> }
 
 function OwnerMessagesPage() { const [text,setText] = useState(''); const [messages,setMessages] = useState(['Hi, is the room still available?','Hello Ananya, yes the room is still available.']); const send = () => { if (text.trim()) { setMessages([...messages, text]); setText('') } }; return <section><OwnerHero title="Messages" subtitle="Connect with tenants, answer queries and build long-term relationships."/><div className="owner-success"><b>3</b><h2>Messages inbox</h2><p>{messages.join(' · ')}</p><input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message"/><button onClick={send}>Send Message</button></div></section> }
 
@@ -571,10 +918,10 @@ function OwnerCollabsPage() {
   return <section>
     <OwnerHero title="Collabs" subtitle="Discover partnership opportunities, local collaboration requests, and growth leads for your PG business."/>
     <section className="owner-page-stats">
-      <article><b>12</b>Active Collaborations</article>
-      <article><b>06</b>New Partner Leads</article>
-      <article><b>04</b>Pending Proposals</article>
-      <article><b>9.4</b>Partnership Score</article>
+      <article><b><Icon name="people" size={21}/></b><span><strong>12</strong><small>Active Collaborations</small></span></article>
+      <article><b><Icon name="sparkle" size={21}/></b><span><strong>06</strong><small>New Partner Leads</small></span></article>
+      <article><b><Icon name="mail" size={21}/></b><span><strong>04</strong><small>Pending Proposals</small></span></article>
+      <article><b><Icon name="star" size={21}/></b><span><strong>9.4</strong><small>Partnership Score</small></span></article>
     </section>
     <section className="owner-table-card">
       <header><strong>Recent Collaboration Requests</strong><button>View all</button></header>
