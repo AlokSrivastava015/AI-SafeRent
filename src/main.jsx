@@ -938,14 +938,200 @@ function OwnerDashboard({ onLogout }) {
   const [menu, setMenu] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState('Dashboard')
+  const [properties, setProperties] = useState(initialOwnerProperties)
+  const [viewProperty, setViewProperty] = useState(null)
+  const [editProperty, setEditProperty] = useState(null)
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (msg) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3500)
+  }
+
+  const saveEditedProperty = (updated) => {
+    setProperties(properties.map(p => p.id === updated.id ? updated : p))
+    setEditProperty(null)
+    showToast(`Property "${updated.name}" updated successfully!`)
+  }
+
   return <div className="owner-dashboard">
-    <aside className={`owner-sidebar ${menu ? 'show' : ''}`}><a className="brand owner-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><button className="owner-profile"><b>R</b><span>Rohit Sharma<small>PG Owner</small></span><i>⌄</i></button><nav>{ownerNav.map(([icon, label]) => <button key={label} className={active === label ? 'active' : ''} onClick={() => {setActive(label); setMenu(false)}}><b>{icon}</b>{label}</button>)}</nav></aside>
-    <main className="owner-main"><header className="owner-header"><button className="owner-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Icon name="menu" size={20}/></button><label className="global-search"><Icon name="search" size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search properties, tenants or messages..."/></label><div className="owner-tools"><span className="owner-bell"><Icon name="bell" size={18}/><i /></span><span className="owner-avatar">R</span><button onClick={onLogout}><b>Rohit Sharma</b><small>PG Owner · Sign out</small></button><i>⌄</i></div></header>{active === 'Dashboard' && <><section className="owner-welcome"><div><span className="owner-eyebrow">OWNER OVERVIEW</span><h1>Welcome back, Rohit!</h1><p>Manage your properties, connect with tenants, and grow your business with AI SafeRent.</p></div><div className="today"><b><Icon name="calendar" size={18}/></b><span><strong>Thursday, 23 Sep 2026</strong><small>Here's what's happening with your properties today.</small></span></div></section>
-      <section className="owner-stats"><article><b><Icon name="building" size={19}/></b><strong>5<small>Total Properties</small></strong><em>↑ 25%</em></article><article><b><Icon name="calendar" size={19}/></b><strong>28<small>Total Bookings</small></strong><em>↑ 12%</em></article><article><b><Icon name="eyeOpen" size={19}/></b><strong>1,245<small>Profile Views</small></strong><em>↑ 40%</em></article><article><b><Icon name="star" size={19}/></b><strong>4.6<small>Average Rating</small></strong><em>↑ 0.3</em></article></section>
-      <section className="owner-mid"><section className="owner-properties owner-panel"><div className="owner-title"><div><h2>Your Properties</h2><p>Manage and update your property listings.</p></div><a href="#">View all <Icon name="arrow" size={13}/></a></div>{ownerProperties.map(([name, location, forWho, price, rooms], index) => <article key={name}><div className={`owner-property-image image-${index}`}></div><div className="owner-property-info"><strong>{name}</strong><p><Icon name="pin" size={12}/> {location}</p><small><Icon name="people" size={12}/> {forWho} <Icon name="wallet" size={12}/> {price} <Icon name="building" size={12}/> Available: {rooms}</small></div><em>Active</em><button>View</button><button>Edit</button><button className="more" aria-label="More options">⋮</button></article>)}</section><section className="requests owner-panel"><div className="owner-title"><h2>Recent Bookings &amp; Requests</h2><a href="#">View all <Icon name="arrow" size={13}/></a></div>{requests.map(([initial, name, request, place, date, status], index) => <article key={name}><b className={`request-initial i-${index}`}>{initial}</b><span><strong>{name}</strong><small>{request}<br/>{place}</small></span><time>{date}</time><em className={status.toLowerCase()}>{status}</em></article>)}</section></section>
-      <section className="owner-bottom"><article className="tips owner-panel"><h2>Tips to Get More Bookings</h2><div><span><Icon name="camera" size={19}/><b>Add more photos<small>Listings with photos get 3x more views.</small></b></span><span><Icon name="calendar" size={19}/><b>Keep availability updated<small>Updated listings rank higher.</small></b></span><span><Icon name="shield" size={19}/><b>Get verified<small>Build trust with tenants.</small></b></span><span><Icon name="zap" size={19}/><b>Respond quickly<small>Faster responses lead to more bookings.</small></b></span></div></article><article className="need-help owner-panel"><b><Icon name="help" size={22}/></b><span><h2>Need Help?</h2><p>Our support team is here to help you with any queries.</p><button>Contact Support <Icon name="arrow" size={14}/></button></span></article><article className="owner-promo"><div className="promo-icon"><Icon name="home" size={20}/></div><span className="promo-kicker">BUILD YOUR COMMUNITY</span><h3>More visibility.<br/><strong>Better tenants.</strong></h3><p>Keep your listings fresh and make every space count.</p><button onClick={() => setActive('My Properties')}>My Properties <Icon name="arrow" size={13}/></button></article></section>
-      <footer className="owner-footer"><a className="brand footer-brand" href="#"><span className="brand-mark"><Icon name="home" size={27}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><nav><a href="#">About</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Help</a></nav><span>© 2026 AI SafeRent. All rights reserved.</span></footer></>}
-      {active === 'My Properties' && <OwnerPropertiesPage onNavigate={setActive}/>} {active === 'Add Property' && <AddPropertyPage onNavigate={setActive}/>} {active === 'Booking' && <OwnerBookingsPage/>} {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} {active === 'Messages' && <OwnerMessagesPage/>} {active === 'Collabs' && <OwnerCollabsPage/>} {active === 'Settings' && <OwnerSettingsPage onLogout={onLogout}/>} 
+    <aside className={`owner-sidebar ${menu ? 'show' : ''}`}>
+      <a className="brand owner-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a>
+      <button className="owner-profile"><b>R</b><span>Rohit Sharma<small>PG Owner</small></span><i>⌄</i></button>
+      <nav>{ownerNav.map(([icon, label]) => <button key={label} className={active === label ? 'active' : ''} onClick={() => {setActive(label); setMenu(false)}}><b>{icon}</b>{label}</button>)}</nav>
+    </aside>
+    <main className="owner-main">
+      <header className="owner-header">
+        <button className="owner-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Icon name="menu" size={20}/></button>
+        <label className="global-search"><Icon name="search" size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search properties, tenants or messages..."/></label>
+        <div className="owner-tools"><span className="owner-bell"><Icon name="bell" size={18}/><i /></span><span className="owner-avatar">R</span><button onClick={onLogout}><b>Rohit Sharma</b><small>PG Owner · Sign out</small></button><i>⌄</i></div>
+      </header>
+
+      {toastMessage && <div className="owner-status-banner">✓ {toastMessage}</div>}
+
+      {active === 'Dashboard' && <>
+        <section className="owner-welcome">
+          <div>
+            <span className="owner-eyebrow">OWNER OVERVIEW</span>
+            <h1>Welcome back, Rohit!</h1>
+            <p>Manage your properties, connect with tenants, and grow your business with AI SafeRent.</p>
+          </div>
+          <div className="today">
+            <b><Icon name="calendar" size={18}/></b>
+            <span>
+              <strong>Thursday, 23 Sep 2026</strong>
+              <small>Here's what's happening with your properties today.</small>
+            </span>
+          </div>
+        </section>
+
+        <section className="owner-stats">
+          <article>
+            <b><Icon name="building" size={19}/></b>
+            <strong>{properties.length}<small>Total Properties</small></strong>
+            <em>↑ 25%</em>
+          </article>
+          <article>
+            <b><Icon name="calendar" size={19}/></b>
+            <strong>28<small>Total Bookings</small></strong>
+            <em>↑ 12%</em>
+          </article>
+          <article>
+            <b><Icon name="eyeOpen" size={19}/></b>
+            <strong>1,245<small>Profile Views</small></strong>
+            <em>↑ 40%</em>
+          </article>
+          <article>
+            <b><Icon name="star" size={19}/></b>
+            <strong>4.6<small>Average Rating</small></strong>
+            <em>↑ 0.3</em>
+          </article>
+        </section>
+
+        <section className="owner-mid">
+          <section className="owner-properties owner-panel">
+            <div className="owner-title">
+              <div>
+                <h2>Your Properties</h2>
+                <p>Manage and update your property listings.</p>
+              </div>
+              <a href="#" onClick={(e) => { e.preventDefault(); setActive('My Properties'); }}>View all <Icon name="arrow" size={13}/></a>
+            </div>
+            {properties.slice(0, 3).map((prop) => (
+              <article key={prop.id || prop.name}>
+                <div className={`owner-property-image ${prop.imageClass || 'image-0'}`}></div>
+                <div className="owner-property-info">
+                  <strong>{prop.name}</strong>
+                  <p><Icon name="pin" size={12}/> {prop.location}</p>
+                  <small>
+                    <Icon name="people" size={12}/> {prop.type} &nbsp; 
+                    <Icon name="wallet" size={12}/> {prop.priceFormatted} &nbsp; 
+                    <Icon name="building" size={12}/> Available: {prop.rooms}
+                  </small>
+                </div>
+                <em>{prop.status || 'Active'}</em>
+                <button type="button" onClick={() => setViewProperty(prop)}>View</button>
+                <button type="button" onClick={() => setEditProperty(prop)}>Edit</button>
+                <button className="more" aria-label="More options">⋮</button>
+              </article>
+            ))}
+          </section>
+
+          <section className="requests owner-panel">
+            <div className="owner-title">
+              <h2>Recent Bookings &amp; Requests</h2>
+              <a href="#" onClick={(e) => { e.preventDefault(); setActive('Booking'); }}>View all <Icon name="arrow" size={13}/></a>
+            </div>
+            {requests.map(([initial, name, request, place, date, status], index) => (
+              <article key={name}>
+                <b className={`request-initial i-${index}`}>{initial}</b>
+                <span><strong>{name}</strong><small>{request}<br/>{place}</small></span>
+                <time>{date}</time>
+                <em className={status.toLowerCase()}>{status}</em>
+              </article>
+            ))}
+          </section>
+        </section>
+
+        <section className="owner-bottom">
+          <article className="tips owner-panel">
+            <h2>Tips to Get More Bookings</h2>
+            <div>
+              <span><Icon name="camera" size={19}/><b>Add more photos<small>Listings with photos get 3x more views.</small></b></span>
+              <span><Icon name="calendar" size={19}/><b>Keep availability updated<small>Updated listings rank higher.</small></b></span>
+              <span><Icon name="shield" size={19}/><b>Get verified<small>Build trust with tenants.</small></b></span>
+              <span><Icon name="zap" size={19}/><b>Respond quickly<small>Faster responses lead to more bookings.</small></b></span>
+            </div>
+          </article>
+          <article className="need-help owner-panel">
+            <b><Icon name="help" size={22}/></b>
+            <span>
+              <h2>Need Help?</h2>
+              <p>Our support team is here to help you with any queries.</p>
+              <button type="button" onClick={() => setActive('Messages')}>Contact Support <Icon name="arrow" size={14}/></button>
+            </span>
+          </article>
+          <article className="owner-promo">
+            <div className="promo-icon"><Icon name="home" size={20}/></div>
+            <span className="promo-kicker">BUILD YOUR COMMUNITY</span>
+            <h3>More visibility.<br/><strong>Better tenants.</strong></h3>
+            <p>Keep your listings fresh and make every space count.</p>
+            <button type="button" onClick={() => setActive('My Properties')}>My Properties <Icon name="arrow" size={13}/></button>
+          </article>
+        </section>
+
+        <footer className="owner-footer">
+          <a className="brand footer-brand" href="#"><span className="brand-mark"><Icon name="home" size={27}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a>
+          <nav><a href="#">About</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Help</a></nav>
+          <span>© 2026 AI SafeRent. All rights reserved.</span>
+        </footer>
+
+        {/* View Details Modal in Dashboard */}
+        {viewProperty && (
+          <div className="property-listing-backdrop" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) setViewProperty(null) }}>
+            <div className="property-listing-modal owner-preview-modal">
+              <button className="property-listing-close" type="button" onClick={() => setViewProperty(null)} aria-label="Close">×</button>
+              <div className="owner-detail-banner" style={{ backgroundImage: `url(${viewProperty.img || '/student-hero.png'})` }}>
+                <span className="detail-status-badge">✓ {viewProperty.status || 'Active'} Listing</span>
+              </div>
+              <div className="owner-detail-body">
+                <h2>{viewProperty.name}</h2>
+                <p className="detail-loc"><Icon name="pin" size={14}/> {viewProperty.location}</p>
+                <div className="detail-meta-row">
+                  <span><Icon name="people" size={14}/> {viewProperty.type}</span>
+                  <span><Icon name="building" size={14}/> {viewProperty.rooms}</span>
+                  <span><Icon name="people" size={14}/> {viewProperty.tenants}</span>
+                  <span><Icon name="sparkle" size={14}/> {viewProperty.amenities}</span>
+                </div>
+                <div className="detail-price-box">
+                  <strong>{viewProperty.priceFormatted}</strong>
+                  <small>Verified Safe PG · 100% On-time Tenant Occupancy</small>
+                </div>
+                <div className="owner-detail-actions">
+                  <button type="button" onClick={() => { setViewProperty(null); setActive('Booking'); }}>View Bookings</button>
+                  <button type="button" onClick={() => { const p = viewProperty; setViewProperty(null); setEditProperty(p); }}>Edit Property</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Property Modal in Dashboard */}
+        {editProperty && (
+          <OwnerEditPropertyDialog 
+            property={editProperty} 
+            onClose={() => setEditProperty(null)} 
+            onSave={saveEditedProperty} 
+          />
+        )}
+      </>}
+      {active === 'My Properties' && <OwnerPropertiesPage onNavigate={setActive}/>} 
+      {active === 'Add Property' && <AddPropertyPage onNavigate={setActive}/>} 
+      {active === 'Booking' && <OwnerBookingsPage/>} 
+      {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} 
+      {active === 'Messages' && <OwnerMessagesPage/>} 
+      {active === 'Collabs' && <OwnerCollabsPage/>} 
+      {active === 'Settings' && <OwnerSettingsPage onLogout={onLogout}/>} 
     </main>
   </div>
 }
