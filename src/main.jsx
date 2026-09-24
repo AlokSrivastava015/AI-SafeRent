@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 
@@ -545,8 +545,10 @@ const initialOwnerProperties = [
   { id: 7, name: 'Starlight Executive Boys PG', location: 'Kaushambi, Ghaziabad', type: 'Boys Only', price: 6800, priceFormatted: '₹6,800 / month', rooms: '14 Rooms', tenants: '28 Tenants', amenities: 'Power Backup · Laundry · Wi-Fi', imageClass: 'image-6', img: '/student-hero.png', status: 'Active' }
 ]
 
-function OwnerPropertiesPage({ onNavigate }) {
-  const [properties, setProperties] = useState(initialOwnerProperties)
+function OwnerPropertiesPage({ onNavigate, properties: propsProperties, setProperties: propsSetProperties }) {
+  const [localProperties, setLocalProperties] = useState(initialOwnerProperties)
+  const properties = propsProperties || localProperties
+  const setProperties = propsSetProperties || setLocalProperties
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('All')
   const [showFilterMenu, setShowFilterMenu] = useState(false)
@@ -593,6 +595,13 @@ function OwnerPropertiesPage({ onNavigate }) {
     setProperties(properties.map(p => p.id === updated.id ? updated : p))
     setEditProperty(null)
     showToast(`Property "${updated.name}" updated successfully!`)
+  }
+
+  const deleteProperty = (id) => {
+    const propToDelete = properties.find(p => p.id === id)
+    setProperties(properties.filter(p => p.id !== id))
+    setEditProperty(null)
+    showToast(`Property "${propToDelete?.name || 'Listing'}" deleted successfully!`)
   }
 
   return <section>
@@ -729,12 +738,13 @@ function OwnerPropertiesPage({ onNavigate }) {
         property={editProperty} 
         onClose={() => setEditProperty(null)} 
         onSave={saveEditedProperty} 
+        onDelete={deleteProperty}
       />
     )}
   </section>
 }
 
-function OwnerEditPropertyDialog({ property, onClose, onSave }) {
+function OwnerEditPropertyDialog({ property, onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
     name: property.name,
     location: property.location,
@@ -745,6 +755,7 @@ function OwnerEditPropertyDialog({ property, onClose, onSave }) {
     amenities: property.amenities,
     status: property.status
   })
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const amenityList = ['Wi-Fi', 'Meals', 'AC', 'Power Backup', 'Laundry', 'Gym', 'Attached Bath', 'Security']
 
@@ -763,6 +774,16 @@ function OwnerEditPropertyDialog({ property, onClose, onSave }) {
     })
   }
 
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      return
+    }
+    if (onDelete) {
+      onDelete(property.id)
+    }
+  }
+
   return (
     <div className="property-listing-backdrop" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="property-listing-modal owner-edit-modal">
@@ -772,7 +793,7 @@ function OwnerEditPropertyDialog({ property, onClose, onSave }) {
             <span className="listing-step-icon">✎</span>
             <span>
               <h2>Edit Property Listing</h2>
-              <p>Update pricing, availability, amenities and details for "{property.name}".</p>
+              <p>Update pricing, availability, amenities or remove "{property.name}".</p>
             </span>
           </div>
         </header>
@@ -874,9 +895,20 @@ function OwnerEditPropertyDialog({ property, onClose, onSave }) {
             </div>
           </div>
 
-          <footer className="listing-modal-footer">
-            <button type="button" onClick={onClose}>Cancel</button>
-            <button type="submit">Save Changes ✓</button>
+          <footer className="listing-modal-footer edit-modal-footer">
+            <div className="edit-footer-left">
+              <button 
+                type="button" 
+                className={`btn-delete-property ${confirmDelete ? 'confirm-active' : ''}`}
+                onClick={handleDelete}
+              >
+                🗑 {confirmDelete ? 'Click again to confirm delete' : 'Delete Property'}
+              </button>
+            </div>
+            <div className="edit-footer-right">
+              <button type="button" onClick={onClose}>Cancel</button>
+              <button type="submit">Save Changes ✓</button>
+            </div>
           </footer>
         </form>
       </div>
@@ -885,26 +917,407 @@ function OwnerEditPropertyDialog({ property, onClose, onSave }) {
 }
 
 function PropertyListingModal({ onClose, onPublish }) {
+  const fileInputRef = useRef(null)
+  const [dragOver, setDragOver] = useState(false)
   const [amenities, setAmenities] = useState(['Wi-Fi', 'Furnished Room', 'Attached Bathroom', 'Meals', 'Power Backup'])
-  useEffect(() => { const closeOnEscape = (event) => event.key === 'Escape' && onClose(); window.addEventListener('keydown', closeOnEscape); return () => window.removeEventListener('keydown', closeOnEscape) }, [onClose])
-  const toggleAmenity = (name) => setAmenities((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
-  const photos = ['/student-hero.png', '/sunset-room.png', '/student-hero.png']
-  const amenityNames = ['Wi-Fi', 'Furnished Room', 'Attached Bathroom', 'AC', 'Laundry', 'Meals', 'Parking', 'Lift', 'Power Backup', '24/7 Security']
+  const [mediaList, setMediaList] = useState([
+    { id: 'm-1', type: 'image', url: '/student-hero.png', name: 'Master Room.jpg' },
+    { id: 'm-2', type: 'image', url: '/sunset-room.png', name: 'Balcony View.jpg' },
+    { id: 'm-3', type: 'image', url: '/owner-welcome-bg.png', name: 'Living Space.jpg' }
+  ])
+  const [formData, setFormData] = useState({
+    name: '',
+    propertyType: 'PG',
+    listingFor: 'Boys Only',
+    address: '',
+    city: 'Indirapuram',
+    state: 'Ghaziabad',
+    pincode: '201014',
+    rent: '',
+    deposit: '',
+    rooms: '',
+    availableFrom: new Date().toISOString().split('T')[0],
+    description: '',
+    houseRules: ''
+  })
+
+  useEffect(() => {
+    const closeOnEscape = (event) => event.key === 'Escape' && onClose()
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
+
+  const toggleAmenity = (name) => {
+    setAmenities((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
+  }
+
+  const handleFiles = (files) => {
+    if (!files || files.length === 0) return
+    const newItems = Array.from(files).map((file) => ({
+      id: `media-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      type: file.type.startsWith('video/') ? 'video' : 'image',
+      url: URL.createObjectURL(file),
+      name: file.name
+    }))
+    setMediaList((prev) => [...prev, ...newItems])
+  }
+
+  const handleFileInputChange = (e) => {
+    handleFiles(e.target.files)
+  }
+
+  const removeMedia = (idToRemove) => {
+    setMediaList((prev) => prev.filter((item) => item.id !== idToRemove))
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setDragOver(false)
+    if (e.dataTransfer.files) {
+      handleFiles(e.dataTransfer.files)
+    }
+  }
+
+  const amenityNames = ['Wi-Fi', 'Furnished Room', 'Attached Bathroom', 'AC', 'Laundry', 'Meals', 'Parking', 'Lift', 'Power Backup', '24/7 Security', 'Gym', 'Balcony']
+
+  const handlePublishSubmit = (e) => {
+    e.preventDefault()
+    const rentVal = Number(formData.rent) || 7500
+    const newProp = {
+      id: Date.now(),
+      name: formData.name.trim() || 'Modern Luxury PG',
+      location: `${formData.city || 'Indirapuram'}, ${formData.state || 'Ghaziabad'}`,
+      fullAddress: formData.address || 'Main Road, Near Metro Station',
+      type: formData.listingFor || 'Boys Only',
+      propertyType: formData.propertyType || 'PG',
+      price: rentVal,
+      priceFormatted: `₹${rentVal.toLocaleString('en-IN')} / month`,
+      rooms: `${formData.rooms || '8'} Rooms`,
+      tenants: '0 Tenants',
+      amenities: amenities.join(' · ') || 'Wi-Fi · Meals · AC',
+      imageClass: 'image-0',
+      img: mediaList[0]?.url || '/student-hero.png',
+      media: mediaList,
+      status: 'Active',
+      description: formData.description || 'Modern and safe living accommodation with verified facilities.',
+      deposit: formData.deposit ? `₹${Number(formData.deposit).toLocaleString('en-IN')}` : '₹5,000',
+      rules: formData.houseRules || 'Standard community house rules apply.',
+      availableFrom: formData.availableFrom
+    }
+    onPublish(newProp, false)
+  }
+
+  const handleSaveDraft = () => {
+    const rentVal = Number(formData.rent) || 6500
+    const draftProp = {
+      id: Date.now(),
+      name: formData.name.trim() ? `${formData.name.trim()} (Draft)` : 'New PG Listing (Draft)',
+      location: `${formData.city || 'Indirapuram'}, ${formData.state || 'Ghaziabad'}`,
+      fullAddress: formData.address || '',
+      type: formData.listingFor || 'Boys Only',
+      propertyType: formData.propertyType || 'PG',
+      price: rentVal,
+      priceFormatted: `₹${rentVal.toLocaleString('en-IN')} / month`,
+      rooms: `${formData.rooms || '4'} Rooms`,
+      tenants: '0 Tenants',
+      amenities: amenities.join(' · ') || 'Wi-Fi · AC',
+      imageClass: 'image-0',
+      img: mediaList[0]?.url || '/student-hero.png',
+      media: mediaList,
+      status: 'Draft',
+      description: formData.description,
+      deposit: formData.deposit ? `₹${Number(formData.deposit).toLocaleString('en-IN')}` : '',
+      rules: formData.houseRules,
+      availableFrom: formData.availableFrom
+    }
+    onPublish(draftProp, true)
+  }
+
   return <div className="property-listing-backdrop" role="dialog" aria-modal="true" aria-labelledby="listing-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
     <div className="property-listing-modal">
       <button className="property-listing-close" type="button" aria-label="Close listing form" onClick={onClose}>×</button>
-      <header className="listing-modal-heading"><div><span className="listing-step-icon">1</span><span><h2 id="listing-title">Create Property Listing</h2><p>Share the details tenants need to find their next home.</p></span></div></header>
-      <form onSubmit={(event) => { event.preventDefault(); onPublish() }}>
-        <section className="listing-section"><h3><b>1</b><span>⌂</span> Basic Information</h3><p>Tell us the basic details about your property.</p><div className="listing-fields"><label>Property Name *<input placeholder="e.g. Sunshine PG" required /></label><label>Property Type *<select required defaultValue=""><option value="" disabled>Select type</option><option>PG</option><option>Room</option><option>Flat</option></select></label><fieldset><legend>Listing for *</legend><label><input type="radio" name="listing-for" defaultChecked /> PG</label><label><input type="radio" name="listing-for" /> Room</label><label><input type="radio" name="listing-for" /> Flat</label></fieldset><label className="listing-wide">Address *<input placeholder="Enter full address" required /></label><label>City *<input placeholder="e.g. Ghaziabad" required /></label><label>State *<input placeholder="e.g. Uttar Pradesh" required /></label><label>Pincode *<input placeholder="e.g. 201010" required /></label></div></section>
-        <section className="listing-section"><h3><b>2</b><span>▣</span> Photos &amp; Videos</h3><p>Add clear and attractive photos to get more tenants.</p><div className="listing-photos"><label className="listing-upload">⇧<strong>Drag &amp; drop photos here</strong><small>or click to upload<br/>Supports JPG, PNG (Max 10MB each)</small><input type="file" accept="image/png,image/jpeg" multiple /></label>{photos.map((photo, index) => <div className="listing-photo" key={`${photo}-${index}`} style={{ backgroundImage: `url(${photo})` }}><button type="button" aria-label="Remove photo">×</button></div>)}<button className="listing-add-photo" type="button">＋<small>Add More</small></button></div></section>
-        <section className="listing-section"><h3><b>3</b><span>▤</span> Property Details</h3><p>Set the facilities, pricing and availability.</p><div className="listing-fields"><label>Rent (per month) *<input placeholder="₹  Enter amount" required /></label><label>Security Deposit<input placeholder="₹  Enter amount" /></label><label>Total Rooms *<input placeholder="e.g. 10" required /></label><label>Available From *<input type="date" required /></label><label className="listing-description">Description *<textarea placeholder="Describe your property, nearby facilities, house rules, etc." required /></label><label className="listing-description">House Rules<textarea placeholder="e.g. No smoking, No alcohol, Visitors allowed till 10 PM, etc..." /></label></div><div className="listing-amenities"><h4><span>⚙</span> Amenities <small>Select the amenities available at your property.</small></h4><div>{amenityNames.map((name) => <label className={amenities.includes(name) ? 'selected' : ''} key={name}><input type="checkbox" checked={amenities.includes(name)} onChange={() => toggleAmenity(name)} />{name}</label>)}</div></div></section>
-        <footer className="listing-modal-footer"><button type="button" onClick={onClose}>Save as Draft</button><button type="submit">Publish Property　→</button></footer>
+      <header className="listing-modal-heading">
+        <div>
+          <span className="listing-step-icon">＋</span>
+          <span>
+            <h2 id="listing-title">Create Property Listing</h2>
+            <p>Share the photos, videos, and details tenants need to discover and book your property.</p>
+          </span>
+        </div>
+      </header>
+
+      <form onSubmit={handlePublishSubmit}>
+        <section className="listing-section">
+          <h3><b>1</b><span>⌂</span> Basic Information</h3>
+          <p>Tell us the essential identification and location details.</p>
+          <div className="listing-fields">
+            <label>
+              Property Name *
+              <input 
+                value={formData.name} 
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                placeholder="e.g. Royal Orchid PG for Boys" 
+                required 
+              />
+            </label>
+            <label>
+              Property Category *
+              <select 
+                value={formData.propertyType} 
+                onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
+                required
+              >
+                <option value="PG">PG (Paying Guest)</option>
+                <option value="Room">Private Single / Shared Room</option>
+                <option value="Flat">Furnished Flat / Apartment</option>
+              </select>
+            </label>
+            <fieldset>
+              <legend>Target Occupants *</legend>
+              <label>
+                <input 
+                  type="radio" 
+                  name="listing-for" 
+                  checked={formData.listingFor === 'Boys Only'} 
+                  onChange={() => setFormData({ ...formData, listingFor: 'Boys Only' })} 
+                /> Boys Only
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="listing-for" 
+                  checked={formData.listingFor === 'Girls Only'} 
+                  onChange={() => setFormData({ ...formData, listingFor: 'Girls Only' })} 
+                /> Girls Only
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="listing-for" 
+                  checked={formData.listingFor === 'Co-Living'} 
+                  onChange={() => setFormData({ ...formData, listingFor: 'Co-Living' })} 
+                /> Co-Living
+              </label>
+            </fieldset>
+            <label className="listing-wide">
+              Complete Address *
+              <input 
+                value={formData.address} 
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+                placeholder="Plot No., Building Name, Street / Sector" 
+                required 
+              />
+            </label>
+            <label>
+              City / Locality *
+              <input 
+                value={formData.city} 
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })} 
+                placeholder="e.g. Indirapuram" 
+                required 
+              />
+            </label>
+            <label>
+              State / Region *
+              <input 
+                value={formData.state} 
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })} 
+                placeholder="e.g. Ghaziabad" 
+                required 
+              />
+            </label>
+            <label>
+              Pincode *
+              <input 
+                value={formData.pincode} 
+                onChange={(e) => setFormData({ ...formData, pincode: e.target.value })} 
+                placeholder="e.g. 201014" 
+                required 
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="listing-section">
+          <h3><b>2</b><span>▣</span> Photos &amp; Videos</h3>
+          <p>Add attractive photos and videos to get 3x more inquiries and tenant visits.</p>
+          <div className="listing-photos">
+            <label 
+              className={`listing-upload ${dragOver ? 'drag-over' : ''}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              ⇧
+              <strong>Drag &amp; drop photos or videos here</strong>
+              <small>or click to browse from device<br/>Supports JPG, PNG, MP4, WebM (Max 25MB)</small>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept="image/*,video/*" 
+                multiple 
+                onChange={handleFileInputChange} 
+              />
+            </label>
+
+            {mediaList.map((media) => (
+              <div key={media.id} className="listing-photo">
+                {media.type === 'video' ? (
+                  <>
+                    <video src={media.url} muted playsInline autoPlay loop />
+                    <span className="media-video-badge">▶ Video</span>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ width: '100%', height: '100%', backgroundImage: `url(${media.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <span className="media-photo-badge">📷 Photo</span>
+                  </>
+                )}
+                <button type="button" onClick={() => removeMedia(media.id)} aria-label="Remove media">×</button>
+              </div>
+            ))}
+
+            <button 
+              className="listing-add-photo" 
+              type="button"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            >
+              ＋
+              <small>Add Media</small>
+            </button>
+          </div>
+        </section>
+
+        <section className="listing-section">
+          <h3><b>3</b><span>▤</span> Property Details &amp; Pricing</h3>
+          <p>Set rent, room capacity, availability, house rules, and amenities.</p>
+          <div className="listing-fields">
+            <label>
+              Monthly Rent (₹) *
+              <input 
+                type="number"
+                value={formData.rent} 
+                onChange={(e) => setFormData({ ...formData, rent: e.target.value })} 
+                placeholder="e.g. 7500" 
+                required 
+              />
+            </label>
+            <label>
+              Security Deposit (₹)
+              <input 
+                type="number"
+                value={formData.deposit} 
+                onChange={(e) => setFormData({ ...formData, deposit: e.target.value })} 
+                placeholder="e.g. 5000" 
+              />
+            </label>
+            <label>
+              Total Rooms Available *
+              <input 
+                value={formData.rooms} 
+                onChange={(e) => setFormData({ ...formData, rooms: e.target.value })} 
+                placeholder="e.g. 10 Rooms" 
+                required 
+              />
+            </label>
+            <label>
+              Available From *
+              <input 
+                type="date" 
+                value={formData.availableFrom} 
+                onChange={(e) => setFormData({ ...formData, availableFrom: e.target.value })} 
+                required 
+              />
+            </label>
+            <label className="listing-description">
+              Property Description *
+              <textarea 
+                value={formData.description} 
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                placeholder="Describe your property, nearest metro station/college, rooms features, and vibe..." 
+                required 
+              />
+            </label>
+            <label className="listing-description">
+              House Rules
+              <textarea 
+                value={formData.houseRules} 
+                onChange={(e) => setFormData({ ...formData, houseRules: e.target.value })} 
+                placeholder="e.g. Visitors permitted till 10 PM, Silent hours after 11 PM, Cleanliness mandatory..." 
+              />
+            </label>
+          </div>
+
+          <div className="listing-amenities">
+            <h4>
+              <span>⚙</span> 
+              Amenities 
+              <small>Select all included amenities &amp; facilities.</small>
+            </h4>
+            <div>
+              {amenityNames.map((name) => (
+                <label className={amenities.includes(name) ? 'selected' : ''} key={name}>
+                  <input 
+                    type="checkbox" 
+                    checked={amenities.includes(name)} 
+                    onChange={() => toggleAmenity(name)} 
+                  />
+                  {name}
+                </label>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="listing-modal-footer">
+          <button type="button" onClick={handleSaveDraft}>Save as Draft</button>
+          <button type="submit">Publish Property →</button>
+        </footer>
       </form>
     </div>
   </div>
 }
 
-function AddPropertyPage({ onNavigate }) { const [submitted, setSubmitted] = useState(false); const [showListing, setShowListing] = useState(false); return <section><OwnerHero title="Add New Property" subtitle="List your PG, room or flat and connect with verified tenants."/><div className="owner-success"><b>{submitted ? '✓' : '＋'}</b><h2>{submitted ? 'Property saved successfully' : 'Start a new listing'}</h2><p>{submitted ? 'Your draft is ready to review from My Properties.' : 'Add property details, photos, amenities and rent to reach verified tenants.'}</p>{submitted ? <button onClick={() => onNavigate('My Properties')}>View My Properties</button> : <button onClick={() => setShowListing(true)}>Create Property Listing</button>}</div>{showListing && <PropertyListingModal onClose={() => setShowListing(false)} onPublish={() => { setShowListing(false); setSubmitted(true) }} />}</section> }
+function AddPropertyPage({ onNavigate, onAddProperty }) { 
+  const [submittedProperty, setSubmittedProperty] = useState(null)
+  const [showListing, setShowListing] = useState(false)
+
+  const handlePublish = (newProp, isDraft = false) => {
+    if (onAddProperty) {
+      onAddProperty(newProp)
+    }
+    setSubmittedProperty(newProp)
+    setShowListing(false)
+  }
+
+  return <section>
+    <OwnerHero 
+      title="Add New Property" 
+      subtitle="List your PG, room or flat and connect with verified tenants across AI SafeRent."
+    />
+    <div className="owner-success">
+      <b>{submittedProperty ? '✓' : '＋'}</b>
+      <h2>{submittedProperty ? (submittedProperty.status === 'Draft' ? 'Property saved as draft!' : `Property "${submittedProperty.name}" published!`) : 'Start a new listing'}</h2>
+      <p>{submittedProperty ? 'Your listing is created and immediately visible in My Properties. You can manage or edit it anytime.' : 'Add property details, photos, amenities and rent to reach verified tenants.'}</p>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
+        {submittedProperty ? (
+          <>
+            <button type="button" onClick={() => onNavigate('My Properties')}>View in My Properties</button>
+            <button type="button" style={{ background: '#eef2ff', color: '#4432ea', border: '1px solid #c7d2fe' }} onClick={() => { setSubmittedProperty(null); setShowListing(true); }}>+ Add Another Property</button>
+          </>
+        ) : (
+          <button type="button" onClick={() => setShowListing(true)}>Create Property Listing</button>
+        )}
+      </div>
+    </div>
+    {showListing && (
+      <PropertyListingModal 
+        onClose={() => setShowListing(false)} 
+        onPublish={handlePublish} 
+      />
+    )}
+  </section> 
+}
 
 function OwnerBookingsPage() { return <section><OwnerHero title="My Bookings" subtitle="Track, manage and stay connected with your tenants."/><section className="owner-page-stats"><article><b><Icon name="calendar" size={21}/></b><span><strong>18</strong><small>Total Bookings</small></span></article><article><b><Icon name="people" size={21}/></b><span><strong>12</strong><small>Active Tenants</small></span></article><article><b><Icon name="sparkle" size={21}/></b><span><strong>4</strong><small>Pending Confirmations</small></span></article><article><b><Icon name="building" size={21}/></b><span><strong>2</strong><small>Cancelled Bookings</small></span></article></section><section className="owner-table-card"><header><strong>All Bookings (18)</strong><button>Filter bookings</button></header><div className="booking-simple"><article><b>Ananya Singh</b><span>Sunshine PG<br/><small>01 Sep 2025 - 31 Aug 2026</small></span><em>Active</em><strong>₹7,500 / month</strong><button>View</button></article><article><b>Rahul Verma</b><span>Maple PG<br/><small>15 Aug 2025 - 14 Aug 2026</small></span><em>Active</em><strong>₹8,000 / month</strong><button>View</button></article><article><b>Sneha Tiwari</b><span>Comfort Stay<br/><small>10 Sep 2025 - 09 Mar 2026</small></span><em className="pending">Pending</em><strong>₹6,500 / month</strong><button>View</button></article></div></section></section> }
 
@@ -952,6 +1365,18 @@ function OwnerDashboard({ onLogout }) {
     setProperties(properties.map(p => p.id === updated.id ? updated : p))
     setEditProperty(null)
     showToast(`Property "${updated.name}" updated successfully!`)
+  }
+
+  const deleteProperty = (id) => {
+    const propToDelete = properties.find(p => p.id === id)
+    setProperties(properties.filter(p => p.id !== id))
+    setEditProperty(null)
+    showToast(`Property "${propToDelete?.name || 'Listing'}" deleted successfully!`)
+  }
+
+  const handleAddProperty = (newProp) => {
+    setProperties((prev) => [newProp, ...prev])
+    showToast(`Property "${newProp.name}" published successfully!`)
   }
 
   return <div className="owner-dashboard">
@@ -1122,11 +1547,12 @@ function OwnerDashboard({ onLogout }) {
             property={editProperty} 
             onClose={() => setEditProperty(null)} 
             onSave={saveEditedProperty} 
+            onDelete={deleteProperty}
           />
         )}
       </>}
-      {active === 'My Properties' && <OwnerPropertiesPage onNavigate={setActive}/>} 
-      {active === 'Add Property' && <AddPropertyPage onNavigate={setActive}/>} 
+      {active === 'My Properties' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
+      {active === 'Add Property' && <AddPropertyPage onNavigate={setActive} onAddProperty={handleAddProperty}/>} 
       {active === 'Booking' && <OwnerBookingsPage/>} 
       {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} 
       {active === 'Messages' && <OwnerMessagesPage/>} 
