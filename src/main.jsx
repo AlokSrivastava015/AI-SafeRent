@@ -2995,27 +2995,19 @@ function OwnerDashboard({ onLogout }) {
     showToast(`Property "${newProp.name}" published successfully!`)
   }
 
-  return <div className={`owner-dashboard ${collapsed ? 'owner-is-collapsed' : ''}`}>
-    <aside className={`owner-sidebar ${collapsed ? 'collapsed' : ''} ${menu ? 'show' : ''}`}>
+  return <div className="owner-dashboard">
+    <aside className={`owner-sidebar ${menu ? 'show' : ''}`}>
       <div className="owner-sidebar-header">
         <a className="brand owner-brand" href="#">
           <span className="brand-mark"><Icon name="home" size={28}/></span>
-          {!collapsed && <span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span>}
+          <span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span>
         </a>
-        <button 
-          className="owner-collapse-toggle" 
-          onClick={() => setCollapsed(!collapsed)} 
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={16}/>
-        </button>
       </div>
 
       <button className="owner-profile" title="Rohit Sharma (PG Owner)">
         <b>R</b>
-        {!collapsed && <span>Rohit Sharma<small>PG Owner</small></span>}
-        {!collapsed && <i>⌄</i>}
+        <span>Rohit Sharma<small>PG Owner</small></span>
+        <i>⌄</i>
       </button>
 
       <nav>
@@ -3032,8 +3024,8 @@ function OwnerDashboard({ onLogout }) {
         ))}
       </nav>
     </aside>
-    <main className={`owner-main ${collapsed ? 'sidebar-collapsed' : ''}`}>
-      <header className={`owner-header ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <main className="owner-main">
+      <header className="owner-header">
         <button className="owner-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Icon name="menu" size={20}/></button>
         <label className="global-search"><Icon name="search" size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search properties, tenants or messages..."/></label>
         <div className="owner-tools"><span className="owner-bell"><Icon name="bell" size={18}/><i /></span><span className="owner-avatar">R</span><button onClick={onLogout}><b>Rohit Sharma</b><small>PG Owner · Sign out</small></button><i>⌄</i></div>
