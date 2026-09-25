@@ -114,37 +114,19 @@ function ListingCard({ name, type, index, onVisit, onDetails }) {
   return <article className="listing-card"><div className={`listing-photo photo-${index % 6}`}><span>{index % 3 === 0 ? 'Verified' : index % 3 === 1 ? 'Popular' : 'Near Metro'}</span><button>♡</button></div><div className="listing-body"><h3>{name}</h3><p>⌖ &nbsp;{places[index % places.length]}</p><div className="listing-price">₹{price.toLocaleString()} <small>/ month</small><i>★ 4.{(index + 4) % 10} ({72 + index * 7})</i></div><div className="listing-tags"><span>{type === 'PGs' ? 'With Food' : 'Furnished'}</span><span>Wi-Fi</span><span>{index % 2 ? 'AC' : 'Attached Bath'}</span></div><div className="listing-actions"><button onClick={() => onDetails(property)}>View Details</button><button onClick={() => onVisit(property)}>Book a Visit</button></div></div></article>
 }
 
-function ListingsPage({ type, onNavigate, savedNames, onToggleSaved }) {
-  /* return <StudentChrome active={type} onNavigate={onNavigate}><section className="browse-heading"><div><h1>{type} in Indirapuram</h1><p>Explore verified {type.toLowerCase()} for rent with real photos, genuine listings and neighborhood insights.</p></div><aside>Safe. Affordable. Verified.<br/><em>A better space for a brighter you ♡</em></aside></section><div className="browse-tabs"><button className="active">All {type}</button>{type === 'PGs' ? <><button>Girls PG</button><button>Boys PG</button><button>Co-Living</button><button>With Food</button></> : type === 'Flats' ? <><button>1 BHK</button><button>2 BHK</button><button>3 BHK</button><button>4 BHK+</button></> : <><button>Private Room</button><button>Shared Room</button><button>With AC</button><button>Near Metro</button></>}<button>☷ More Filters</button></div><section className="listing-layout"><div><div className="listing-toolbar"><strong>Showing 12 {type} in Indirapuram</strong><span><button>Sort by: Relevance　⌄</button><button className="active">▦ Grid</button></span></div><div className="listing-grid">{listingNames[type].map((name, index) => <ListingCard key={name} name={name} type={type} index={index} onVisit={() => onNavigate('Book a Visit')}/>)}</div></div><aside className="refine"><h2>Explore {type} Around You</h2><div className="fake-map"><b>⌂</b><b>⌖</b><b>⌂</b><b>⌖</b><span>Indirapuram<br/><small>High Safety Score</small></span></div><h2>Refine Your Search <a href="#">Reset</a></h2><label>Budget Range<strong>₹0 – ₹50,000</strong><input type="range"/></label><h4>{type === 'PGs' ? 'Preferred For' : type === 'Flats' ? 'BHK Type' : 'Room Type'}</h4><div className="checks"><label><input type="checkbox" defaultChecked/> Girls</label><label><input type="checkbox"/> Boys</label><label><input type="checkbox"/> Any</label></div><h4>Amenities</h4><div className="checks"><label><input type="checkbox" defaultChecked/> AC</label><label><input type="checkbox"/> Wi-Fi</label><label><input type="checkbox"/> Parking</label><label><input type="checkbox"/> Security</label></div><button className="apply-filter">☷ &nbsp; Apply Filters</button></aside></section><InfoStrip /></StudentChrome> */
+function BrowsePage({ onNavigate, type, savedNames = [], onToggleSaved }) {
+  const [selectedTab, setSelectedTab] = useState('All')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [selectedFilters, setSelectedFilters] = useState({
     location: 'Indirapuram, Ghaziabad',
-    propertyType: type === 'Flats' ? 'Flat' : type === 'Rooms' ? 'Room' : 'PG',
-    budget: '₹ 0 – ₹ 30,000',
+    budget: '₹ 8,000 – ₹ 20,000',
+    propertyType: type === 'PGs' ? 'PG' : type === 'Flats' ? 'Flat' : 'Room',
     preferredFor: 'Anyone',
-    amenities: 'Wi-Fi, AC, Attached Bath'
+    amenities: 'College / University, Metro / Bus, Restaurants / Cafes'
   })
-  const headingType = type === 'PGs' ? 'PGs' : type === 'Flats' ? 'Flats' : 'Rooms'
-  const pageHeading = headingType
-  const tabOptions = type === 'PGs' ? ['All PGs', 'Girls PG', 'Boys PG', 'Co-Living', 'With Food'] : type === 'Flats' ? ['All Flats', '1 BHK', '2 BHK', '3 BHK', '4 BHK+'] : ['All Rooms', 'Private Room', 'Shared Room', 'With AC', 'Near Metro']
-  const [selectedTab, setSelectedTab] = useState(tabOptions[0])
-  useEffect(() => {
-    const heartButtons = document.querySelectorAll('.listing-grid .listing-photo button')
-    const handleHeart = (event) => {
-      const card = event.currentTarget.closest('.listing-card')
-      const name = card?.querySelector('h3')?.textContent
-      if (!name) return
-      onToggleSaved(name)
-      event.currentTarget.textContent = savedNames.includes(name) ? '♡' : '♥'
-    }
-    heartButtons.forEach((button) => {
-      const name = button.closest('.listing-card')?.querySelector('h3')?.textContent
-      button.textContent = savedNames.includes(name) ? '♥' : '♡'
-      button.addEventListener('click', handleHeart)
-    })
-    return () => heartButtons.forEach((button) => button.removeEventListener('click', handleHeart))
-  }, [savedNames, onToggleSaved])
+
+  const pageHeading = type === 'PGs' ? 'Verified PGs for Rent' : type === 'Flats' ? 'Verified Flats for Rent' : 'Verified Rooms for Rent'
 
   useEffect(() => {
     const tabs = document.querySelectorAll('.browse-tabs button')
@@ -180,51 +162,965 @@ function ListingsPage({ type, onNavigate, savedNames, onToggleSaved }) {
     }
   }, [selectedProperty, onNavigate])
 
-  return <StudentChrome active={type} onNavigate={onNavigate}><section className="browse-heading"><div><h1>{pageHeading}</h1><p>Explore verified {type.toLowerCase()} for rent with real photos, genuine listings and neighborhood insights.</p></div><aside>Safe. Affordable. Verified.<br/><em>A better space for a brighter you ♡</em></aside></section><div className="browse-tabs"><button className="active">All {type}</button>{type === 'PGs' ? <><button>Girls PG</button><button>Boys PG</button><button>Co-Living</button><button className="category-tab">With Food</button></> : type === 'Flats' ? <><button>1 BHK</button><button>2 BHK</button><button>3 BHK</button><button className="category-tab">4 BHK+</button></> : <><button>Private Room</button><button>Shared Room</button><button>With AC</button><button className="category-tab">Near Metro</button></>}</div><section className="listing-layout listing-layout-full"><div><section className="preferences listing-preferences"><h2>Your Preferences <a href="#" onClick={(event) => { event.preventDefault(); setShowFilters(true) }}>✎ Edit Preferences</a></h2><p>We use your preferences to give better recommendations.</p><div><span>⌖<b>{selectedFilters.location}</b></span><span>⌂<b>{selectedFilters.propertyType}</b></span><span>₹<b>Budget<br/>{selectedFilters.budget}</b></span><span>♧<b>Preferred For<br/>{selectedFilters.preferredFor}</b></span><span>▱<b>Amenities<br/>{selectedFilters.amenities}</b></span></div></section><div className="listing-toolbar"><strong>Showing 12 {type} in Indirapuram</strong><span><button>Sort by: Relevance　⌄</button><button className="active">▦ Grid</button></span></div><div className={`listing-grid ${type === 'PGs' ? 'pg-listing-grid' : ''}`}>{listingNames[type].map((name, index) => <ListingCard key={name} name={name} type={type} index={index} onVisit={(property) => onNavigate('Book a Visit', undefined, property)} onDetails={setSelectedProperty}/>)}</div></div></section><InfoStrip /></StudentChrome>
+  return (
+    <StudentChrome active={type} onNavigate={onNavigate}>
+      <section className="browse-heading">
+        <div>
+          <h1>{pageHeading}</h1>
+          <p>Explore verified {type.toLowerCase()} for rent with real photos, genuine listings and neighborhood insights.</p>
+        </div>
+        <aside>Safe. Affordable. Verified.<br/><em>A better space for a brighter you ♡</em></aside>
+      </section>
+      <div className="browse-tabs">
+        <button className="active">All {type}</button>
+        {type === 'PGs' ? (
+          <>
+            <button>Girls PG</button>
+            <button>Boys PG</button>
+            <button>Co-Living</button>
+            <button className="category-tab">With Food</button>
+          </>
+        ) : type === 'Flats' ? (
+          <>
+            <button>1 BHK</button>
+            <button>2 BHK</button>
+            <button>3 BHK</button>
+            <button className="category-tab">4 BHK+</button>
+          </>
+        ) : (
+          <>
+            <button>Private Room</button>
+            <button>Shared Room</button>
+            <button>With AC</button>
+            <button className="category-tab">Near Metro</button>
+          </>
+        )}
+      </div>
+      <section className="listing-layout listing-layout-full">
+        <div>
+          <section className="preferences listing-preferences">
+            <h2>
+              <span>Your Preferences</span>
+              <button type="button" className="edit-preferences-btn" onClick={(event) => { event.preventDefault(); setShowFilters(true) }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                Edit Preferences
+              </button>
+            </h2>
+            <p>We use your preferences to give better recommendations.</p>
+            <div>
+              <span>⌖<b>{selectedFilters.location}</b></span>
+              <span>⌂<b>{selectedFilters.propertyType}</b></span>
+              <span>₹<b>Budget<br/>{selectedFilters.budget}</b></span>
+              <span>♧<b>Preferred For<br/>{selectedFilters.preferredFor}</b></span>
+              <span>▱<b>Amenities<br/>{selectedFilters.amenities}</b></span>
+            </div>
+          </section>
+          <div className="listing-toolbar">
+            <strong>Showing 12 {type} in Indirapuram</strong>
+            <span>
+              <button>Sort by: Relevance　⌄</button>
+              <button className="active">▦ Grid</button>
+            </span>
+          </div>
+          <div className={`listing-grid ${type === 'PGs' ? 'pg-listing-grid' : ''}`}>
+            {listingNames[type].map((name, index) => (
+              <ListingCard 
+                key={name} 
+                name={name} 
+                type={type} 
+                index={index} 
+                onVisit={(property) => onNavigate('Book a Visit', undefined, property)} 
+                onDetails={setSelectedProperty}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+      <InfoStrip />
+    </StudentChrome>
+  )
 }
+
+const ListingsPage = BrowsePage
 
 function ExplorePage({ onNavigate }) {
   const [selected, setSelected] = useState('All')
-  return <StudentChrome active="Explore" onNavigate={onNavigate}><section className="explore-heading"><div><h1>Explore Indirapuram</h1><p>Discover PGs, flats and rooms around you with an interactive map.</p></div><aside>Explore<br/><em>Safe Neighborhoods<br/>Brighter Opportunities ♡</em></aside></section><div className="explore-filters"><button className={selected === 'All' ? 'active' : ''} onClick={() => setSelected('All')}><Icon name="grid" size={14}/> All</button>{['PGs','Flats','Rooms'].map(type => <button key={type} className={selected === type ? 'active' : ''} onClick={() => { setSelected(type); onNavigate(type)}}>{type === 'PGs' ? <Icon name="home" size={14}/> : type === 'Flats' ? <Icon name="building" size={14}/> : <Icon name="room" size={14}/>} {type}</button>)}<label>Price Range <b>Any　⌄</b></label><label>Property Type <b>Any　⌄</b></label><button>☷ More Filters</button></div><section className="explore-layout"><div className="large-map"><input placeholder="⌕  Search this area"/><b className="map-center">⌂<small>Indirapuram<br/>High Safety Score</small></b><i className="map-marker a">⌂</i><i className="map-marker b">⌖</i><i className="map-marker c">⌂</i><i className="map-marker d">⌖</i><div className="map-view">Map View<br/><button>▦ Default</button><button>Satellite</button></div></div><aside className="explore-results"><h2>124 properties found <button>Sort by: Relevance　⌄</button></h2>{listingNames.PGs.slice(0,5).map((name, i) => <article key={name}><div className={`tiny-photo photo-${i}`}/><span><strong>{i === 1 ? '2 BHK Apartment' : name}</strong><small>⌖ &nbsp;{places[i]}<br/>★ 4.{i + 4} ({76 + i * 12})<br/><b>₹{[7000,18000,6500,25000,9000][i].toLocaleString()} </b>/ month</small></span><button onClick={() => onNavigate('Book a Visit')}>View Details</button></article>)}</aside></section><InfoStrip /></StudentChrome>
+  const [selectedProperty, setSelectedProperty] = useState(null)
+
+  useEffect(() => {
+    if (!selectedProperty) return undefined
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const modalRoot = createRoot(host)
+    modalRoot.render(
+      <PropertyDetailsModal 
+        property={selectedProperty} 
+        onClose={() => setSelectedProperty(null)} 
+        onBookVisit={() => { 
+          setSelectedProperty(null)
+          onNavigate('Book a Visit', undefined, selectedProperty) 
+        }} 
+      />
+    )
+    return () => {
+      modalRoot.unmount()
+      host.remove()
+    }
+  }, [selectedProperty, onNavigate])
+
+  const listingsToShow = selected === 'All' 
+    ? [...listingNames.PGs.slice(0, 2), ...listingNames.Flats.slice(0, 2), ...listingNames.Rooms.slice(0, 2)]
+    : listingNames[selected] || listingNames.PGs
+
+  return (
+    <StudentChrome active="Explore" onNavigate={onNavigate}>
+      <section className="explore-heading">
+        <div>
+          <h1>Explore Indirapuram</h1>
+          <p>Discover PGs, flats and rooms around you with an interactive map.</p>
+        </div>
+        <aside>Explore<br/><em>Safe Neighborhoods<br/>Brighter Opportunities ♡</em></aside>
+      </section>
+
+      <div className="explore-filters">
+        <button className={selected === 'All' ? 'active' : ''} onClick={() => setSelected('All')}>
+          <Icon name="grid" size={14}/> All
+        </button>
+        {['PGs', 'Flats', 'Rooms'].map((type) => (
+          <button 
+            key={type} 
+            className={selected === type ? 'active' : ''} 
+            onClick={() => { 
+              setSelected(type)
+              onNavigate(type)
+            }}
+          >
+            {type === 'PGs' ? <Icon name="home" size={14}/> : type === 'Flats' ? <Icon name="building" size={14}/> : <Icon name="room" size={14}/>} {type}
+          </button>
+        ))}
+        <label>Price Range <b>Any　⌄</b></label>
+        <label>Property Type <b>Any　⌄</b></label>
+        <button>☷ More Filters</button>
+      </div>
+
+      <section className="explore-layout">
+        <div className="large-map">
+          <input placeholder="⌕  Search this area"/>
+          <b className="map-center">⌂<small>Indirapuram<br/>High Safety Score</small></b>
+          <i className="map-marker a">⌂</i>
+          <i className="map-marker b">⌖</i>
+          <i className="map-marker c">⌂</i>
+          <i className="map-marker d">⌖</i>
+          <div className="map-view">
+            Map View<br/>
+            <button>▦ Default</button>
+            <button>Satellite</button>
+          </div>
+        </div>
+
+        <aside className="explore-results">
+          <h2>
+            {selected === 'All' ? '124' : '48'} properties found 
+            <button>Sort by: Relevance　⌄</button>
+          </h2>
+          {listingsToShow.slice(0, 5).map((name, i) => {
+            const propType = selected === 'All' ? (i < 2 ? 'PG' : i < 4 ? 'Flat' : 'Room') : selected.replace(/s$/, '')
+            const price = [7000, 18000, 6500, 25000, 9000][i] || 8000
+            const propertyItem = { name, index: i, location: places[i % places.length], price, type: propType }
+            return (
+              <article key={name}>
+                <div className={`tiny-photo photo-${i % 6}`}/>
+                <span>
+                  <strong>{name}</strong>
+                  <small>
+                    ⌖ &nbsp;{places[i % places.length]}<br/>
+                    ★ 4.{(i + 4) % 10} ({76 + i * 12})<br/>
+                    <b>₹{price.toLocaleString()} </b>/ month
+                  </small>
+                </span>
+                <button type="button" onClick={() => setSelectedProperty(propertyItem)}>View Details</button>
+              </article>
+            )
+          })}
+        </aside>
+      </section>
+
+      <InfoStrip />
+    </StudentChrome>
+  )
 }
 
-function PreferencesModal({ values, onClose, onSave, title = 'Edit Your Preferences' }) {
-  const [draft, setDraft] = useState({
-    location: values.location,
-    budget: values.budget,
-    propertyType: values.propertyType,
-    preferredFor: values.preferredFor,
-    amenities: values.amenities,
-    roomType: values.roomType || 'Single Room',
-    moveIn: values.moveIn || '1 Oct 2026',
-    duration: values.duration || '6 Months',
-    notes: values.notes || ''
-  })
-  const [amenityList, setAmenityList] = useState(values.amenities.split(', '))
-  const amenities = ['Wi-Fi', 'Meals', 'AC', 'Parking', 'Laundry', 'Attached Bath', 'Power Backup', 'Study Area', 'Other']
-  const updateDraft = (field, value) => setDraft((current) => ({ ...current, [field]: value }))
-  const toggleAmenity = (amenity) => setAmenityList((current) => current.includes(amenity) ? current.filter((item) => item !== amenity) : [...current, amenity])
-  const savePreferences = () => onSave({ ...draft, amenities: amenityList.join(', ') || 'No preference' })
-  const resetPreferences = () => {
-    setDraft({ ...draft, location: 'Indirapuram, Vaishali, Raj Nagar', budget: '₹ 5,000 – ₹ 15,000', propertyType: 'PG', preferredFor: 'No Preference', roomType: 'Single Room', moveIn: '1 Oct 2026', duration: '6 Months', notes: '' })
-    setAmenityList(['Wi-Fi', 'Meals'])
+function PreferencesModal({ values, onClose, onSave }) {
+  // 1. Location & Surroundings
+  const [location, setLocation] = useState(values.location || '')
+  const [distance, setDistance] = useState('')
+  const [nearby, setNearby] = useState([])
+  const [importance, setImportance] = useState(50)
+
+  // 2. Safety Preferences
+  const [safetyLevel, setSafetyLevel] = useState('')
+  const [safetySurroundings, setSafetySurroundings] = useState([])
+
+  // 3. Utilities Preferences
+  const [waterAvailability, setWaterAvailability] = useState('')
+  const [waterSource, setWaterSource] = useState('')
+  const [electricityAvailability, setElectricityAvailability] = useState('')
+  const [backupPreference, setBackupPreference] = useState('')
+
+  // 4. Connectivity Preferences
+  const [transport, setTransport] = useState([])
+  const [commute, setCommute] = useState(30)
+
+  // 5. Lifestyle Preferences
+  const [noiseLevel, setNoiseLevel] = useState('')
+  const [areaType, setAreaType] = useState('')
+  const [nightlife, setNightlife] = useState('')
+  const [foodOptions, setFoodOptions] = useState('')
+  const [socialEnv, setSocialEnv] = useState('')
+  const [greenSpaces, setGreenSpaces] = useState('')
+  const [crowdLevel, setCrowdLevel] = useState('')
+
+  // 6. Property Preferences
+  const [propertyType, setPropertyType] = useState(values.propertyType || '')
+  const [budgetRange, setBudgetRange] = useState({ min: 5000, max: 25000 })
+  const [furnishing, setFurnishing] = useState('')
+  const [roomSharing, setRoomSharing] = useState('')
+  const [foodPreference, setFoodPreference] = useState('')
+
+  // 7. Environment Preferences
+  const [airQuality, setAirQuality] = useState('')
+  const [envGreen, setEnvGreen] = useState('')
+  const [pollutionTolerance, setPollutionTolerance] = useState('')
+
+  // 8. Additional Preferences
+  const [notes, setNotes] = useState(values.notes || '')
+
+  const toggleItem = (list, setList, item) => {
+    if (list.includes(item)) {
+      setList(list.filter((i) => i !== item))
+    } else {
+      setList([...list, item])
+    }
   }
 
-  return <div className="preferences-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="preferences-modal preferences-page" role="dialog" aria-modal="true" aria-labelledby="preferences-title"><header className="preferences-modal-header"><div><span className="modal-icon"><Icon name="settings" size={20}/></span><div><h2 id="preferences-title">Edit Your Preferences</h2><p>Help us understand your needs better to give more accurate AI recommendations.</p></div></div><button type="button" className="modal-close" onClick={onClose} aria-label="Close preferences">×</button></header><div className="preferences-modal-body"><label className="modal-field location-field"><span><b><Icon name="pin" size={15}/> Location &amp; Surroundings</b><small>Where do you want to live?</small></span><input value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} placeholder="Search city, college or workplace..."/></label><div className="modal-grid"><label className="modal-field"><span><b><Icon name="sparkle" size={15}/> Budget Range <small>(per month)</small></b><small>Set your preferred monthly rent range</small></span><select value={draft.budget} onChange={(event) => updateDraft('budget', event.target.value)}><option>₹ 0 – ₹ 30,000</option><option>₹ 5,000 – ₹ 15,000</option><option>₹ 15,000 – ₹ 25,000</option><option>₹ 25,000 – ₹ 50,000</option></select></label><label className="modal-field"><span><b><Icon name="room" size={15}/> Room Type</b><small>Select your preferred room type</small></span><select value={draft.roomType} onChange={(event) => updateDraft('roomType', event.target.value)}><option>Single Room</option><option>Shared Room</option><option>1 BHK</option><option>2 BHK</option></select></label><label className="modal-field"><span><b><Icon name="people" size={15}/> Gender Preference</b><small>Choose your preferred accommodation</small></span><select value={draft.preferredFor} onChange={(event) => updateDraft('preferredFor', event.target.value)}><option>No Preference</option><option>Girls</option><option>Boys</option><option>Anyone</option></select></label></div><div className="modal-grid modal-grid-wide"><fieldset className="modal-field amenity-field"><legend><Icon name="settings" size={15}/> Safety, Utilities &amp; Amenities</legend><small>Select what matters most to you</small><div className="amenity-options">{amenities.map((amenity) => <label key={amenity} className={amenityList.includes(amenity) ? 'checked' : ''}><input type="checkbox" checked={amenityList.includes(amenity)} onChange={() => toggleAmenity(amenity)}/><span>{amenity}</span></label>)}</div></fieldset><label className="modal-field"><span><b><Icon name="home" size={15}/> Property Type</b><small>Select type of accommodation</small></span><div className="choice-options">{['Boys PG', 'Girls PG', 'Co-living', 'Hostel', 'Independent House', 'No Preference'].map((type) => <label key={type} className={draft.propertyType === type ? 'checked' : ''}><input type="radio" name="pg-type" checked={draft.propertyType === type} onChange={() => updateDraft('propertyType', type)}/><span>{type}</span></label>)}</div></label><div className="modal-stack"><label className="modal-field"><span><b><Icon name="calendar" size={15}/> Move-in Timeline</b><small>When are you planning to move in?</small></span><select value={draft.moveIn} onChange={(event) => updateDraft('moveIn', event.target.value)}><option>1 Oct 2026</option><option>1 Nov 2026</option><option>Within 3 months</option><option>Flexible</option></select></label><label className="modal-field"><span><b><Icon name="calendar" size={15}/> Stay Duration</b><small>Expected length of stay</small></span><select value={draft.duration} onChange={(event) => updateDraft('duration', event.target.value)}><option>6 Months</option><option>12 Months</option><option>More than 1 year</option><option>Flexible</option></select></label></div></div><label className="modal-field notes-field"><span><b><Icon name="mail" size={15}/> Additional Preferences <small>(Optional)</small></b><small>Share any preferences about your lifestyle, location, or needs</small></span><textarea maxLength="200" value={draft.notes} onChange={(event) => updateDraft('notes', event.target.value)} placeholder="Type your additional preferences here..."/><small className="character-count">{draft.notes.length}/200</small></label></div><footer className="preferences-modal-footer"><button type="button" className="reset-preferences" onClick={resetPreferences}>↻ Reset to Default</button><div><button type="button" className="cancel-preferences" onClick={onClose}>Cancel</button><button type="button" className="save-preferences" onClick={savePreferences}><Icon name="check" size={15}/> Save Preferences</button></div></footer></section></div>
+  const handleSave = () => {
+    onSave({
+      location: location || 'Indirapuram, Ghaziabad',
+      propertyType: propertyType ? propertyType.replace(/^🏠\s*/, '') : (values.propertyType || 'PG'),
+      budget: `₹ ${budgetRange.min.toLocaleString()} – ₹ ${budgetRange.max.toLocaleString()}`,
+      preferredFor: roomSharing || 'Single',
+      amenities: [...nearby, ...transport].length > 0 ? [...nearby, ...transport].slice(0, 3).join(', ') : 'Wi-Fi, AC, Attached Bath',
+      notes
+    })
+  }
+
+  const handleReset = () => {
+    setLocation('')
+    setDistance('')
+    setNearby([])
+    setImportance(50)
+    setSafetyLevel('')
+    setSafetySurroundings([])
+    setWaterAvailability('')
+    setWaterSource('')
+    setElectricityAvailability('')
+    setBackupPreference('')
+    setTransport([])
+    setCommute(30)
+    setNoiseLevel('')
+    setAreaType('')
+    setNightlife('')
+    setFoodOptions('')
+    setSocialEnv('')
+    setGreenSpaces('')
+    setCrowdLevel('')
+    setPropertyType('')
+    setBudgetRange({ min: 5000, max: 25000 })
+    setFurnishing('')
+    setRoomSharing('')
+    setFoodPreference('')
+    setAirQuality('')
+    setEnvGreen('')
+    setPollutionTolerance('')
+    setNotes('')
+  }
+
+  return (
+    <div className="pref-modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="pref-modal-container" role="dialog" aria-modal="true" aria-labelledby="pref-modal-title">
+        {/* Modal Header */}
+        <header className="pref-modal-header">
+          <div className="pref-header-left">
+            <div className="pref-header-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+              </svg>
+            </div>
+            <div>
+              <h2 id="pref-modal-title">Edit Your Preferences</h2>
+              <p>Help us understand your needs better to give more accurate AI recommendations.</p>
+            </div>
+          </div>
+          <button type="button" className="pref-modal-close" onClick={onClose} aria-label="Close preferences">✕</button>
+        </header>
+
+        {/* Modal Body */}
+        <div className="pref-modal-body">
+          <div className="pref-modal-grid">
+            
+            {/* COLUMN 1: Location & Lifestyle */}
+            <div className="pref-column">
+              {/* Card 1: Location & Surroundings */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon purple">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                  </span>
+                  <div>
+                    <h3>Location &amp; Surroundings</h3>
+                    <p>Where do you want to live?</p>
+                  </div>
+                </div>
+
+                <div className="pref-search-box">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Search city, college or workplace..."
+                  />
+                </div>
+
+                <div className="pref-field-group">
+                  <label className="pref-field-label">Preferred distance from location</label>
+                  <div className="pref-pills-row">
+                    {['Within 1 km', '1 – 3 km', '3 – 5 km', '5+ km'].map((dist) => (
+                      <button
+                        key={dist}
+                        type="button"
+                        className={`pref-pill-btn ${distance === dist ? 'active' : ''}`}
+                        onClick={() => setDistance(dist)}
+                      >
+                        {dist}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pref-field-group">
+                  <label className="pref-field-label">Nearby places <small>(Select what matters to you)</small></label>
+                  <div className="pref-checkbox-grid">
+                    {[
+                      { id: 'College / University', icon: '🎓' },
+                      { id: 'Metro / Bus', icon: '🚇' },
+                      { id: 'Hospital', icon: '🏥' },
+                      { id: 'Market / Grocery', icon: '🛒' },
+                      { id: 'Restaurants / Cafes', icon: '🍽️' },
+                      { id: 'Gym', icon: '🏋️' },
+                      { id: 'ATM / Bank', icon: '🏦' },
+                      { id: 'Parks', icon: '🌲' },
+                      { id: 'Pharmacy', icon: '💊' }
+                    ].map(({ id, icon }) => {
+                      const checked = nearby.includes(id)
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`pref-check-pill ${checked ? 'checked' : ''}`}
+                          onClick={() => toggleItem(nearby, setNearby, id)}
+                        >
+                          <span className="pref-checkbox-box">{checked ? '✓' : ''}</span>
+                          <span className="pref-pill-icon">{icon}</span>
+                          <span>{id}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="pref-field-group">
+                  <div className="pref-slider-header">
+                    <label className="pref-field-label">Importance</label>
+                  </div>
+                  <div className="pref-slider-wrap">
+                    <span className="pref-slider-bound">Low</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={importance}
+                      onChange={(e) => setImportance(Number(e.target.value))}
+                      className="pref-range-slider"
+                    />
+                    <span className="pref-slider-bound">High</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Card 2: Lifestyle Preferences */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon purple">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.8 20c.6-4 2.3-6 5.2-6s4.6 2 5.2 6M15 15c2.4.1 4 1.7 4.5 5"/></svg>
+                  </span>
+                  <div>
+                    <h3>Lifestyle Preferences</h3>
+                    <p>What kind of neighborhood do you prefer?</p>
+                  </div>
+                </div>
+
+                <div className="pref-lifestyle-list">
+                  {[
+                    { label: 'Noise Level', val: noiseLevel, set: setNoiseLevel, opts: ['Quiet', 'Moderate', 'Lively'] },
+                    { label: 'Area Type', val: areaType, set: setAreaType, opts: ['Residential', 'Mixed', 'Commercial'] },
+                    { label: 'Nightlife', val: nightlife, set: setNightlife, opts: ['Not important', 'Some', 'Important'] },
+                    { label: 'Food Options', val: foodOptions, set: setFoodOptions, opts: ['Restaurants', 'Street food', 'Both'] },
+                    { label: 'Social Environment', val: socialEnv, set: setSocialEnv, opts: ['Peaceful', 'Social', 'Very active'] },
+                    { label: 'Green Spaces', val: greenSpaces, set: setGreenSpaces, opts: ['Not important', 'Prefer', 'Essential'] },
+                    { label: 'Crowd Level', val: crowdLevel, set: setCrowdLevel, opts: ['Low', 'Moderate', 'High'] }
+                  ].map(({ label, val, set, opts }) => (
+                    <div className="pref-lifestyle-row" key={label}>
+                      <span className="pref-lifestyle-label">{label}</span>
+                      <div className="pref-pills-row compact">
+                        {opts.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            className={`pref-pill-btn ${val === opt ? 'active' : ''}`}
+                            onClick={() => set(opt)}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            {/* COLUMN 2: Safety, Utilities & Connectivity */}
+            <div className="pref-column">
+              {/* Card 3: Safety Preferences */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon purple">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 3 20 6v5c0 5-3.45 8.73-8 10-4.55-1.27-8-5-8-10V6l8-3Z"/></svg>
+                  </span>
+                  <div>
+                    <h3>Safety Preferences</h3>
+                    <p>How important is safety to you?</p>
+                  </div>
+                </div>
+
+                <div className="pref-pills-row">
+                  {['Low', 'Medium', 'High', 'Very High'].map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      className={`pref-pill-btn ${safetyLevel === lvl ? 'active' : ''}`}
+                      onClick={() => setSafetyLevel(lvl)}
+                    >
+                      {lvl === 'High' && '🛡️ '}
+                      {lvl}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pref-field-group">
+                  <label className="pref-field-label">Preferred surroundings <small>(Select all that apply)</small></label>
+                  <div className="pref-checkbox-grid two-col">
+                    {[
+                      { id: 'Well-lit streets', icon: '👁️' },
+                      { id: 'Low crime area', icon: '🛡️' },
+                      { id: 'CCTV availability', icon: '📹' },
+                      { id: 'Security guard', icon: '👮' },
+                      { id: 'Gated community', icon: '🏛️' },
+                      { id: 'Safe for late-night travel', icon: '🌙' }
+                    ].map(({ id, icon }) => {
+                      const checked = safetySurroundings.includes(id)
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`pref-check-pill ${checked ? 'checked' : ''}`}
+                          onClick={() => toggleItem(safetySurroundings, setSafetySurroundings, id)}
+                        >
+                          <span className="pref-checkbox-box">{checked ? '✓' : ''}</span>
+                          <span className="pref-pill-icon">{icon}</span>
+                          <span>{id}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </section>
+
+              {/* Card 4: Utilities Preferences */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon cyan">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                  </span>
+                  <div>
+                    <h3>Utilities Preferences</h3>
+                    <p>Your essential living requirements.</p>
+                  </div>
+                </div>
+
+                <div className="pref-split-grid">
+                  {/* Water Col */}
+                  <div>
+                    <h4 className="pref-subhead">💧 Water Availability</h4>
+                    <div className="pref-radio-list">
+                      {['24×7 required', 'Mostly available', 'Occasional shortage acceptable'].map((opt) => (
+                        <label key={opt} className="pref-radio-label">
+                          <input
+                            type="radio"
+                            name="water-avail"
+                            checked={waterAvailability === opt}
+                            onChange={() => setWaterAvailability(opt)}
+                          />
+                          <span>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <h4 className="pref-subhead">Water Source Preference</h4>
+                    <div className="pref-pills-grid two-col">
+                      {['Municipal', 'Borewell', 'Tanker backup', 'Any reliable source'].map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          className={`pref-pill-btn ${waterSource === opt ? 'active' : ''}`}
+                          onClick={() => setWaterSource(opt)}
+                        >
+                          <span className="pref-radio-dot">{waterSource === opt ? '•' : '○'}</span>
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Electricity Col */}
+                  <div>
+                    <h4 className="pref-subhead">⚡ Electricity Availability</h4>
+                    <div className="pref-radio-list">
+                      {['24×7 required', 'Short outages acceptable', 'Backup preferred'].map((opt) => (
+                        <label key={opt} className="pref-radio-label">
+                          <input
+                            type="radio"
+                            name="elec-avail"
+                            checked={electricityAvailability === opt}
+                            onChange={() => setElectricityAvailability(opt)}
+                          />
+                          <span>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <h4 className="pref-subhead">Electricity Backup</h4>
+                    <div className="pref-pills-grid two-col">
+                      {['Generator', 'Inverter', 'UPS', 'Not required'].map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          className={`pref-pill-btn ${backupPreference === opt ? 'active' : ''}`}
+                          onClick={() => setBackupPreference(opt)}
+                        >
+                          <span className="pref-radio-dot">{backupPreference === opt ? '•' : '○'}</span>
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Card 5: Connectivity Preferences */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon cyan">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 11.2 2 11.6 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+                  </span>
+                  <div>
+                    <h3>Connectivity Preferences</h3>
+                    <p>Which transportation options matter to you?</p>
+                  </div>
+                </div>
+
+                <div className="pref-field-group">
+                  <label className="pref-field-label">Preferred transport <small>(Select all that apply)</small></label>
+                  <div className="pref-checkbox-grid auto-fit">
+                    {[
+                      { id: 'Metro', icon: '🚆' },
+                      { id: 'Bus', icon: '🚌' },
+                      { id: 'Cab', icon: '🚕' },
+                      { id: 'Two-wheeler', icon: '🛵' },
+                      { id: 'Walkable', icon: '🚶' }
+                    ].map(({ id, icon }) => {
+                      const checked = transport.includes(id)
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`pref-check-pill ${checked ? 'checked' : ''}`}
+                          onClick={() => toggleItem(transport, setTransport, id)}
+                        >
+                          <span className="pref-checkbox-box">{checked ? '✓' : ''}</span>
+                          <span className="pref-pill-icon">{icon}</span>
+                          <span>{id}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="pref-field-group">
+                  <div className="pref-slider-header">
+                    <label className="pref-field-label">Maximum acceptable commute <small>(to college/workplace)</small></label>
+                    <strong className="pref-highlight-badge">{commute} minutes</strong>
+                  </div>
+                  <div className="pref-slider-wrap">
+                    <span className="pref-slider-bound">15 min</span>
+                    <input
+                      type="range"
+                      min="15"
+                      max="60"
+                      step="5"
+                      value={commute}
+                      onChange={(e) => setCommute(Number(e.target.value))}
+                      className="pref-range-slider"
+                    />
+                    <span className="pref-slider-bound">60 min</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* COLUMN 3: Property, Environment & Additional Preferences */}
+            <div className="pref-column">
+              {/* Card 6: Property Preferences */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon purple">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9Z"/></svg>
+                  </span>
+                  <div>
+                    <h3>Property Preferences</h3>
+                    <p>What kind of accommodation are you looking for?</p>
+                  </div>
+                </div>
+
+                <div className="pref-field-group">
+                  <label className="pref-field-label">Property type</label>
+                  <div className="pref-pills-grid three-col">
+                    {['PG', 'Private Room', 'Shared Room'].map((pt) => (
+                      <button
+                        key={pt}
+                        type="button"
+                        className={`pref-pill-btn ${propertyType.includes(pt) ? 'active' : ''}`}
+                        onClick={() => setPropertyType(pt)}
+                      >
+                        {pt === 'PG' && '🏠 '}
+                        {pt}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="pref-pills-grid four-col" style={{ marginTop: '6px' }}>
+                    {['1 BHK', '2 BHK', 'Flat', 'Studio'].map((pt) => (
+                      <button
+                        key={pt}
+                        type="button"
+                        className={`pref-pill-btn ${propertyType === pt ? 'active' : ''}`}
+                        onClick={() => setPropertyType(pt)}
+                      >
+                        {pt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pref-field-group">
+                  <div className="pref-slider-header">
+                    <label className="pref-field-label">Budget range <small>(per month)</small></label>
+                  </div>
+                  <div className="pref-budget-row">
+                    <span className="pref-budget-display">
+                      ₹ {budgetRange.min.toLocaleString()} – ₹ {budgetRange.max.toLocaleString()}
+                    </span>
+                    <div className="pref-slider-wrap" style={{ flex: 1 }}>
+                      <input
+                        type="range"
+                        min="3000"
+                        max="45000"
+                        step="1000"
+                        value={budgetRange.max}
+                        onChange={(e) => setBudgetRange((r) => ({ ...r, max: Math.max(r.min + 2000, Number(e.target.value)) }))}
+                        className="pref-range-slider"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pref-split-grid two-col" style={{ marginTop: '6px' }}>
+                  <div>
+                    <label className="pref-field-label">Furnishing</label>
+                    <div className="pref-select-wrap">
+                      <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)}>
+                        <option value="">Select Furnishing</option>
+                        <option>Fully furnished</option>
+                        <option>Semi-furnished</option>
+                        <option>Unfurnished</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="pref-field-label">Room sharing</label>
+                    <div className="pref-select-wrap">
+                      <select value={roomSharing} onChange={(e) => setRoomSharing(e.target.value)}>
+                        <option value="">Select Sharing</option>
+                        <option>Single</option>
+                        <option>Double sharing</option>
+                        <option>Triple sharing</option>
+                        <option>4+ sharing</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '6px' }}>
+                  <label className="pref-field-label">Food preference</label>
+                  <div className="pref-select-wrap">
+                    <select value={foodPreference} onChange={(e) => setFoodPreference(e.target.value)}>
+                      <option value="">Select Food</option>
+                      <option>Required</option>
+                      <option>Optional</option>
+                      <option>Self Cooking</option>
+                      <option>Not Required</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              {/* Card 7: Environment Preferences */}
+              <section className="pref-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon cyan">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M20.5 3.5C13 3.7 6.2 7 5 14.3c-.45 2.76.85 5.01 2.5 6.2 1.2-3.2 3.7-6.7 8.5-9.1-3.62 2.75-5.91 5.5-7.15 8.4 1.06.48 2.28.52 3.45.1C19.7 17.2 21.6 9.25 20.5 3.5Z"/></svg>
+                  </span>
+                  <div>
+                    <h3>Environment Preferences</h3>
+                    <p>Air quality and green surroundings.</p>
+                  </div>
+                </div>
+
+                <div className="pref-row-field">
+                  <span className="pref-row-label">Air quality</span>
+                  <div className="pref-pills-row">
+                    {['Good air quality required', 'Moderate acceptable', 'Not important'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`pref-pill-btn ${airQuality === opt ? 'active' : ''}`}
+                        onClick={() => setAirQuality(opt)}
+                      >
+                        {opt === 'Good air quality required' && '🍃 '}
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pref-row-field">
+                  <span className="pref-row-label">Green spaces</span>
+                  <div className="pref-pills-row">
+                    {['Park nearby', 'Green surroundings', 'Walking areas'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`pref-pill-btn ${envGreen === opt ? 'active' : ''}`}
+                        onClick={() => setEnvGreen(opt)}
+                      >
+                        {opt === 'Park nearby' && '🌲 '}
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pref-row-field">
+                  <span className="pref-row-label">Pollution tolerance</span>
+                  <div className="pref-pills-row">
+                    {['Low', 'Medium', 'High'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`pref-pill-btn ${pollutionTolerance === opt ? 'active' : ''}`}
+                        onClick={() => setPollutionTolerance(opt)}
+                      >
+                        {opt === 'Low' && '🍃 '}
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* Card 8: Additional Preferences (Optional) */}
+              <section className="pref-card pref-additional-card">
+                <div className="pref-card-header">
+                  <span className="pref-card-icon purple">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  </span>
+                  <div>
+                    <h3>Additional Preferences <small>(Optional)</small></h3>
+                    <p>Any special requirements or lifestyle notes.</p>
+                  </div>
+                </div>
+
+                <div className="pref-notes-wrap">
+                  <textarea
+                    maxLength={200}
+                    rows={2}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Type your additional preferences here..."
+                  />
+                  <span className="pref-char-counter">{notes.length}/200</span>
+                </div>
+              </section>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <footer className="pref-modal-footer">
+          <button type="button" className="pref-btn-secondary reset" onClick={handleReset}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset to Default
+          </button>
+          <div className="pref-footer-actions">
+            <button type="button" className="pref-btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="button" className="pref-btn-primary" onClick={handleSave}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m5 12 4 4 10-12"/></svg>
+              Save Preferences
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
+  )
 }
 
 function PropertyDetailsModal({ property, onClose, onBookVisit }) {
   const amenities = ['Wi-Fi', 'Meals Included', 'AC (Selected Room)', 'Attached Bathroom', 'Laundry', 'Common Kitchen', 'Study Area', '24/7 Security', 'Power Backup', 'RO Water', 'Refrigerator', 'Housekeeping']
-  return <div className="property-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="property-modal" role="dialog" aria-modal="true" aria-labelledby="property-modal-title"><button type="button" className="property-modal-close" onClick={onClose} aria-label="Close property details">×</button><div className="property-modal-main"><div className="property-gallery"><div className="property-gallery-main"><span>92% Match</span><i>‹</i><div className={`property-detail-image photo-${property.index % 6}`} /><i>›</i><small>1/10</small></div><div className="property-thumbnails">{[0, 1, 2, 3, 4].map((image) => <div className={`photo-${(property.index + image) % 6}`} key={image} />)}<b>+6<br/><small>More Photos</small></b></div><nav className="property-detail-tabs"><button className="active">Overview</button><button>Amenities</button><button>Location</button><button>Reviews</button></nav><section className="property-description"><h3>Property Description</h3><p>A safe and comfortable place for students and working professionals in {property.location}. This verified property offers modern amenities, reliable connectivity and a community-focused living experience.</p><h3>Amenities</h3><div className="detail-amenities">{amenities.map((amenity) => <span key={amenity}><Icon name="check" size={13}/>{amenity}</span>)}</div><div className="tenant-reviews"><div><h3>Reviews from Tenants (2)</h3><a href="#">View All Reviews</a></div><article><b>A</b><p><strong>Ananya Verma</strong><small>Stayed for 8 months</small><span>★ 4.8　2 months ago</span>“Very safe and comfortable PG. The food is good and the owner is really helpful.”</p></article><article><b>R</b><p><strong>Riya Singh</strong><small>Stayed for 6 months</small><span>★ 4.5　4 months ago</span>“Clean rooms, good facilities and peaceful environment.”</p></article></div></section></div><aside className="property-detail-side"><section className="property-summary"><h2 id="property-modal-title">{property.name}</h2><p>⌖ {property.location}</p><strong>₹{property.price.toLocaleString()} <small>/ month</small></strong><span>Includes meals</span><div className="detail-stats"><b>⌂<small>{property.type}<br/>Independent</small></b><b>♜<small>Meals Included<br/>Homely Food</small></b><b>⌁<small>Wi-Fi<br/>High Speed</small></b><b>⌖<small>0.8 km<br/>from Metro</small></b><b>⌁<small>2.5 km<br/>from College</small></b><b>◷<small>Safe & Secure<br/>Verified Property</small></b></div></section><section className="owner-contact"><h3>Contact Owner</h3><div><b>A</b><span><strong>Priya Sharma</strong><small>● Online</small></span></div><button>☎ Call Now</button><button>▣ Message</button></section><section className="detail-location"><h3>Location <a href="#">View on Map</a></h3><div><span>⌖</span><b>{property.location}<small>Metro Station</small></b></div></section><section className="property-highlights"><h3>Property Highlights</h3><p>◉ Prime location</p><p>◉ Student-friendly environment</p><p>◉ Hygienic & home-cooked meals</p><p>◉ 24/7 security and CCTV</p><p>◉ Close to metro, college and market</p></section></aside></div><footer className="property-modal-footer"><button type="button" onClick={onClose}>↗ Share</button><button type="button" onClick={onBookVisit}>▣ Book Now</button></footer></section></div>
+  return (
+    <div className="property-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="property-modal" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
+        <button type="button" className="property-modal-close" onClick={onClose} aria-label="Close property details">✕</button>
+        <div className="property-modal-main">
+          <div className="property-gallery">
+            <div className="property-gallery-main">
+              <span>92% Match</span>
+              <i>‹</i>
+              <div className={`property-detail-image photo-${property.index % 6}`} />
+              <i>›</i>
+              <small>1/10</small>
+            </div>
+            <div className="property-thumbnails">
+              {[0, 1, 2, 3, 4].map((image) => <div className={`photo-${(property.index + image) % 6}`} key={image} />)}
+              <b>+6<br/><small>More Photos</small></b>
+            </div>
+            <nav className="property-detail-tabs">
+              <button className="active">Overview</button>
+              <button>Amenities</button>
+              <button>Location</button>
+              <button>Reviews</button>
+            </nav>
+            <section className="property-description">
+              <h3>Property Description</h3>
+              <p>A safe and comfortable place for students and working professionals in {property.location}. This verified property offers modern amenities, reliable connectivity and a community-focused living experience.</p>
+              <h3>Amenities</h3>
+              <div className="detail-amenities">
+                {amenities.map((amenity) => <span key={amenity}><Icon name="check" size={13}/>{amenity}</span>)}
+              </div>
+              <div className="tenant-reviews">
+                <div><h3>Reviews from Tenants (2)</h3><a href="#">View All Reviews</a></div>
+                <article><b>A</b><p><strong>Ananya Verma</strong><small>Stayed for 8 months</small><span>★ 4.8　2 months ago</span>“Very safe and comfortable PG. The food is good and the owner is really helpful.”</p></article>
+                <article><b>R</b><p><strong>Riya Singh</strong><small>Stayed for 6 months</small><span>★ 4.5　4 months ago</span>“Clean rooms, good facilities and peaceful environment.”</p></article>
+              </div>
+            </section>
+          </div>
+          <aside className="property-detail-side">
+            <section className="property-summary">
+              <h2 id="property-modal-title">{property.name}</h2>
+              <p>⌖ {property.location}</p>
+              <strong>₹{property.price.toLocaleString()} <small>/ month</small></strong>
+              <span>Includes meals</span>
+              <div className="detail-stats">
+                <b>⌂<small>{property.type}<br/>Independent</small></b>
+                <b>♜<small>Meals Included<br/>Homely Food</small></b>
+                <b>⌁<small>Wi-Fi<br/>High Speed</small></b>
+                <b>⌖<small>0.8 km<br/>from Metro</small></b>
+                <b>⌁<small>2.5 km<br/>from College</small></b>
+                <b>◷<small>Safe & Secure<br/>Verified Property</small></b>
+              </div>
+            </section>
+            <section className="owner-contact">
+              <h3>Contact Owner</h3>
+              <div><b>A</b><span><strong>Priya Sharma</strong><small>● Online</small></span></div>
+              <button>☎ Call Now</button>
+              <button>▣ Message</button>
+            </section>
+            <section className="detail-location">
+              <h3>Location <a href="#">View on Map</a></h3>
+              <div><span>⌖</span><b>{property.location}<small>Metro Station</small></b></div>
+            </section>
+            <section className="property-highlights">
+              <h3>Property Highlights</h3>
+              <p>◉ Prime location</p>
+              <p>◉ Student-friendly environment</p>
+              <p>◉ Hygienic & home-cooked meals</p>
+              <p>◉ 24/7 security and CCTV</p>
+              <p>◉ Close to metro, college and market</p>
+            </section>
+          </aside>
+        </div>
+        <footer className="property-modal-footer">
+          <div className="property-footer-pricing">
+            <strong>₹{property.price.toLocaleString()} <small>/ month</small></strong>
+            <span>Includes meals • SafeRent Verified</span>
+          </div>
+          <div className="property-footer-actions">
+            <button type="button" className="property-share-btn" onClick={() => { if (navigator.clipboard) { navigator.clipboard.writeText(window.location.href); alert('Property link copied to clipboard!'); } else { alert('Link copied!'); } }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share
+            </button>
+            <button type="button" className="property-book-btn" onClick={onBookVisit}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Book Now
+            </button>
+          </div>
+        </footer>
+      </section>
+    </div>
+  )
 }
 
 function RecommendationsPage({ onNavigate, filters }) {
   const defaultFilters = {
     location: 'Indirapuram, Ghaziabad',
     propertyType: 'PG',
-    budget: '₹ 0 – ₹ 30,000',
-    preferredFor: 'Anyone',
-    amenities: 'Wi-Fi, AC, Attached Bath'
+    budget: '₹ 8,000 – ₹ 20,000',
+    preferredFor: 'Single',
+    amenities: 'College / University, Metro / Bus, Restaurants / Cafes'
   }
   const [selectedFilters, setSelectedFilters] = useState({ ...defaultFilters, ...filters })
   const [showPreferences, setShowPreferences] = useState(false)
@@ -233,7 +1129,7 @@ function RecommendationsPage({ onNavigate, filters }) {
 
   useEffect(() => {
     const openPreferences = (event) => {
-      const trigger = event.target.closest('.preferences h2 a')
+      const trigger = event.target.closest('.preferences h2 a, .preferences h2 button, .edit-preferences-btn')
       if (!trigger) return
       event.preventDefault()
       setShowPreferences(true)
@@ -281,7 +1177,98 @@ function RecommendationsPage({ onNavigate, filters }) {
     }
   }, [selectedProperty, onNavigate])
 
-  return <StudentChrome active="AI Recommendations" onNavigate={onNavigate}><section className="ai-title"><div><h1>AI Recommendations</h1><p>Get personalized property suggestions based on your preferences, budget and lifestyle.</p></div><aside>🤖 <b>Let AI do the searching for you!</b><em>“Right Homes, Brighter Tomorrows.”</em></aside></section><section className="ai-layout"><div><section className="preferences"><h2>Your Preferences <a href="#">✎ Edit Preferences</a></h2><p>We use your preferences to give better recommendations.</p><div><span>⌖<b>{selectedFilters.location}</b></span><span>⌂<b>{propertyTypeLabel}</b></span><span>₹<b>Budget<br/>{selectedFilters.budget}</b></span><span>♧<b>Preferred For<br/>{selectedFilters.preferredFor}</b></span><span>▱<b>Amenities<br/>{selectedFilters.amenities}</b></span></div></section><nav className="recommend-tabs"><button>Recommended for You</button></nav><h2 className="top-recs">Top AI Recommendations <small>Properties selected just for you based on AI analysis.</small></h2><section className="recommend-list">{[...listingNames.PGs.slice(0,2), '2 BHK Apartment'].map((name,i) => <article key={name}><div className={`recommend-photo photo-${i}`}/><div><h3>{name}</h3><p>⌖ &nbsp;{places[i]}</p><span>{propertyTypeLabel}　 {selectedFilters.preferredFor}　 With Food　 Near Metro</span><small>⌁ {selectedFilters.amenities}　♢ 24x7 Security</small></div><b>{[9.2,8.8,8.5][i]}<small>AI Match Score</small></b><strong>₹{[7000,6500,18000][i].toLocaleString()} <small>/ month</small><button onClick={() => onNavigate('Book a Visit')}>View Details</button></strong></article>)}</section></div><aside className="ai-side"><section><h2>💡 AI Insights</h2><p>🛡️ <b>Safe Neighborhoods</b><br/>These properties are in low-crime areas.</p><p>🚇 <b>Best Connectivity</b><br/>Close to metro stations and public transport.</p><p>₹ <b>Within Your Budget</b><br/>All recommended properties fit your budget.</p></section><section className="match-score"><h2>Your Preferences Match</h2><b>92%<small>Match</small></b><p>● Location　100%<br/>● Budget　90%<br/>● Amenities　85%<br/>● Safety　95%</p></section></aside></section><InfoStrip /></StudentChrome>
+  return (
+    <StudentChrome active="AI Recommendations" onNavigate={onNavigate}>
+      <section className="ai-title">
+        <div>
+          <h1>AI Recommendations</h1>
+          <p>Get personalized property suggestions based on your preferences, budget and lifestyle.</p>
+        </div>
+        <aside>🤖 <b>Let AI do the searching for you!</b><em>“Right Homes, Brighter Tomorrows.”</em></aside>
+      </section>
+
+      <section className="ai-layout">
+        <div className="ai-main-column">
+          <section className="preferences">
+            <h2>
+              <span>Your Preferences</span>
+              <button type="button" className="edit-preferences-btn" onClick={() => setShowPreferences(true)}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                Edit Preferences
+              </button>
+            </h2>
+            <p>We use your preferences to give better recommendations.</p>
+            <div>
+              <span>⌖<b>{selectedFilters.location}</b></span>
+              <span>⌂<b>{propertyTypeLabel}</b></span>
+              <span>₹<b>Budget<br/>{selectedFilters.budget}</b></span>
+              <span>♧<b>Preferred For<br/>{selectedFilters.preferredFor}</b></span>
+              <span>▱<b>Amenities<br/>{selectedFilters.amenities}</b></span>
+            </div>
+          </section>
+
+          <nav className="recommend-tabs">
+            <button>Recommended for You</button>
+          </nav>
+
+          <h2 className="top-recs">Top AI Recommendations <small>Properties selected just for you based on AI analysis.</small></h2>
+
+          <section className="recommend-list">
+            {[...listingNames.PGs.slice(0, 2), '2 BHK Apartment'].map((name, i) => (
+              <article key={name}>
+                <div className={`recommend-photo photo-${i}`}/>
+                <div>
+                  <h3>{name}</h3>
+                  <p>⌖ &nbsp;{places[i]}</p>
+                  <span>{propertyTypeLabel}　 {selectedFilters.preferredFor}　 With Food　 Near Metro</span>
+                  <small>⌁ {selectedFilters.amenities}　♢ 24x7 Security</small>
+                </div>
+                <b>{[9.2, 8.8, 8.5][i]}<small>AI Match Score</small></b>
+                <strong>
+                  ₹{[7000, 6500, 18000][i].toLocaleString()} <small>/ month</small>
+                  <button onClick={() => onNavigate('Book a Visit')}>View Details</button>
+                </strong>
+              </article>
+            ))}
+          </section>
+
+          {/* Your Preferences Match banner after the articles */}
+          <section className="match-score match-score-banner">
+            <div className="match-score-header">
+              <div className="match-score-left">
+                <h2>Your Preferences Match</h2>
+                <p>AI calculated match score against your search filters &amp; verified PG attributes.</p>
+              </div>
+              <div className="match-score-badge">
+                <span className="match-badge-pct">92%</span>
+                <span className="match-badge-lbl">Overall Match</span>
+              </div>
+            </div>
+            <div className="match-breakdown-grid">
+              <div className="match-bar-item">
+                <div className="match-bar-info"><span>📍 Location &amp; Connectivity</span><b>100%</b></div>
+                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '100%', background: '#4f46e5' }}/></div>
+              </div>
+              <div className="match-bar-item">
+                <div className="match-bar-info"><span>🛡️ Safety &amp; Surroundings</span><b>95%</b></div>
+                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '95%', background: '#10b981' }}/></div>
+              </div>
+              <div className="match-bar-item">
+                <div className="match-bar-info"><span>💰 Budget Alignment</span><b>90%</b></div>
+                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '90%', background: '#f59e0b' }}/></div>
+              </div>
+              <div className="match-bar-item">
+                <div className="match-bar-info"><span>⚡ Amenities &amp; Utilities</span><b>85%</b></div>
+                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '85%', background: '#8b5cf6' }}/></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <InfoStrip />
+    </StudentChrome>
+  )
 }
 
 function LegacyVisitPage({ onNavigate }) {
