@@ -1,6 +1,57 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, createContext, useContext } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
+import AIMapExplorer from './AIMapExplorer'
+
+export const initialUserProfile = {
+  name: 'Aman Verma',
+  email: 'amanverma@gmail.com',
+  phone: '+91 9876543210',
+  dob: '15 March 2005',
+  gender: 'Male',
+  location: 'Indirapuram, Ghaziabad, Uttar Pradesh',
+  college: 'ABES Institute of Technology',
+  course: 'B.Tech (Information Technology)',
+  year: '3rd Year',
+  role: 'Student',
+  bio: 'Looking for a safe and comfortable place to stay while I build my future.'
+}
+
+const StudentUserContext = createContext({
+  userProfile: initialUserProfile,
+  updateUserProfile: () => {}
+})
+
+export const useStudentUser = () => useContext(StudentUserContext)
+
+export function StudentUserProvider({ children }) {
+  const [userProfile, setUserProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ai_saferent_user_profile')
+      return saved ? JSON.parse(saved) : initialUserProfile
+    } catch (e) {
+      return initialUserProfile
+    }
+  })
+
+  const updateUserProfile = (newValues) => {
+    setUserProfile((prev) => {
+      const updated = { ...prev, ...newValues }
+      try {
+        localStorage.setItem('ai_saferent_user_profile', JSON.stringify(updated))
+      } catch (e) {}
+      return updated
+    })
+  }
+
+  return (
+    <StudentUserContext.Provider value={{ userProfile, updateUserProfile }}>
+      {children}
+    </StudentUserContext.Provider>
+  )
+}
+
+
 
 const Icon = ({ name, size = 24 }) => {
   const paths = {
@@ -34,7 +85,9 @@ const Icon = ({ name, size = 24 }) => {
     zap: <path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z"/>,
     help: <><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.8c-1.1 1-1.9 1.4-1.9 3M12 17h.01"/></>,
     chevronLeft: <path d="m15 18-6-6 6-6"/>,
-    chevronRight: <path d="m9 18 6-6-6-6"/>
+    chevronRight: <path d="m9 18 6-6-6-6"/>,
+    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></>,
+    phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 2.77h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 10c1.02 2.08 2.77 3.88 4.91 4.9l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2.03Z"></path></>
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
@@ -64,6 +117,7 @@ function StudentSidebar({ active, onNavigate, menu, onClose }) {
 }
 
 function StudentDashboard({ onLogout, onNavigate }) {
+  const { userProfile } = useStudentUser()
   const [menu, setMenu] = useState(false)
   const [liked, setLiked] = useState([])
   const [search, setSearch] = useState('Indirapuram, Ghaziabad')
@@ -71,7 +125,7 @@ function StudentDashboard({ onLogout, onNavigate }) {
   const [budget, setBudget] = useState('₹ 0 – ₹ 30,000')
   const [preferredFor, setPreferredFor] = useState('Anyone')
   const [amenities, setAmenities] = useState('Wi-Fi, AC, Attached Bath')
-    const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
+  const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
   const handleSearch = () => {
     onNavigate('AI Recommendations', {
       location: search || 'Indirapuram, Ghaziabad',
@@ -81,8 +135,12 @@ function StudentDashboard({ onLogout, onNavigate }) {
       amenities
     })
   }
+  const initial = userProfile?.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'A'
+  const firstName = userProfile?.name ? userProfile.name.trim().split(' ')[0] : 'Aman'
+  const displayRole = userProfile?.role ? `${userProfile.role}/Tenant` : 'Student/Tenant'
+
   return <div className="dashboard">
-    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account"><button className="notification" aria-label="Notifications"><Icon name="bell" size={18}/><i /></button><span className="avatar">A</span><span className="account-copy">Hi, Alok<small>Student/Tenant</small></span><span>⌄</span></div></header>
+    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><button className="notification" aria-label="Notifications"><Icon name="bell" size={18}/><i /></button><span className="avatar">{initial}</span><span className="account-copy">Hi, {firstName}<small>{displayRole}</small></span><span>⌄</span></div></header>
     <StudentSidebar active="Home" onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} />
     <main className="dash-main">
       <section className="dash-hero"><div className="dash-hero-copy"><span className="eyebrow">Verified Spaces. Happy Places.</span><h1>Safest places.<br/>Better spaces.<em>Yours to call home.</em></h1><p>PGs, Flats & Rooms for Students<br/>and Working Professionals.</p><div className="trust-row"><span><Icon name="shield" size={14}/> Safe</span><span><Icon name="check" size={14}/> Verified</span><span><Icon name="home" size={14}/> Affordable</span><span><Icon name="settings" size={14}/> Trusted</span></div></div></section>
@@ -104,8 +162,13 @@ const places = ['Niti Khand, Indirapuram','Vaishali, Ghaziabad','Shakti Khand, I
 const defaultVisitProperty = { name: 'Sunrise PG for Girls', type: 'PG', index: 0, location: 'Niti Khand, Indirapuram, Ghaziabad', price: 7000 }
 
 function StudentChrome({ active, onNavigate, children }) {
+  const { userProfile } = useStudentUser()
   const [menu, setMenu] = useState(false)
-  return <div className="student-pages"><header className="student-header"><button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Open navigation"><Icon name="menu" size={21}/></button><a className="brand dash-brand" onClick={() => onNavigate('Home')} href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><label className="student-search"><Icon name="search" size={17}/><input placeholder="Search by location, property name or landmark..."/></label><div className="student-user"><span><Icon name="bell" size={20}/></span><b>A</b><i>Aman Verma<small>Student</small></i><em>⌄</em></div></header><StudentSidebar active={active} onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} /><main className="student-content">{children}</main></div>
+  const initial = userProfile?.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'A'
+  const displayName = userProfile?.name || 'Aman Verma'
+  const displayRole = userProfile?.role || 'Student'
+
+  return <div className="student-pages"><header className="student-header"><button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Open navigation"><Icon name="menu" size={21}/></button><a className="brand dash-brand" onClick={() => onNavigate('Home')} href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><label className="student-search"><Icon name="search" size={17}/><input placeholder="Search by location, property name or landmark..."/></label><div className="student-user" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><span><Icon name="bell" size={20}/></span><b>{initial}</b><i>{displayName}<small>{displayRole}</small></i><em>⌄</em></div></header><StudentSidebar active={active} onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} /><main className="student-content">{children}</main></div>
 }
 
 function ListingCard({ name, type, index, onVisit, onDetails }) {
@@ -1263,6 +1326,17 @@ function RecommendationsPage({ onNavigate, filters }) {
               </div>
             </div>
           </section>
+
+          {/* Interactive Google Map Explorer after Your Preferences Match */}
+          <AIMapExplorer
+            selectedLocation={selectedFilters.location}
+            propertyType={propertyTypeLabel}
+            onSelectProperty={setSelectedProperty}
+            onBookVisit={(prop) => {
+              setSelectedProperty(null)
+              onNavigate('Book a Visit', undefined, prop)
+            }}
+          />
         </div>
       </section>
 
@@ -1278,15 +1352,27 @@ function LegacyVisitPage({ onNavigate }) {
 }
 
 function VisitPage({ onNavigate, onConfirm, onCancel, property = defaultVisitProperty }) {
+  const { userProfile } = useStudentUser()
   const [slot, setSlot] = useState('01:00 PM')
   const [selectedDate, setSelectedDate] = useState(18)
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 8, 1))
   const [visitorDetails, setVisitorDetails] = useState({
-    fullName: 'Aman Verma',
-    mobileNumber: '+91 9876543210',
-    emailAddress: 'amanverma@gmail.com',
+    fullName: userProfile?.name || 'Aman Verma',
+    mobileNumber: userProfile?.phone || '+91 9876543210',
+    emailAddress: userProfile?.email || 'amanverma@gmail.com',
     message: 'I would like to visit and know more about the food facilities and room availability.'
   })
+
+  useEffect(() => {
+    if (userProfile) {
+      setVisitorDetails((curr) => ({
+        ...curr,
+        fullName: userProfile.name || curr.fullName,
+        mobileNumber: userProfile.phone || curr.mobileNumber,
+        emailAddress: userProfile.email || curr.emailAddress
+      }))
+    }
+  }, [userProfile])
   const [confirmed, setConfirmed] = useState(false)
   const visitProperty = property || defaultVisitProperty
   const monthDate = currentMonth
@@ -1427,15 +1513,14 @@ function BookingsPageV2({ onNavigate, confirmedBookings = [] }) {
   </StudentChrome>
 }
 
-function LegacyProfilePage({ onNavigate }) {
-  return <StudentChrome active="Profile" onNavigate={onNavigate}><section className="profile-title"><div><h1>My Profile</h1><p>Manage your account, preferences and stay information all in one place.</p></div><aside>A Better<br/><em>You in a Safer Neighborhood ♡</em></aside></section><div className="profile-tabs"><button className="active">♙ Profile</button><button>⚙ Preferences</button><button>▣ Documents</button><button>♢ Security</button><button>♧ Notifications</button></div><section className="profile-layout"><aside className="profile-card"><b>A</b><h2>Aman Verma　✎</h2><p>Student</p><p>🎓 ABES Institute of Technology</p><p>⌖ Indirapuram, Ghaziabad</p><blockquote>“Looking for a safe and comfortable place to stay while I build my future.”</blockquote><div><span><b>12</b>Properties Viewed</span><span><b>5</b>Saved</span><span><b>2</b>Visits Booked</span></div><button>Edit Profile</button><button>View Public Profile</button></aside><div className="profile-main"><DataCard title="♙　Personal Information" rows={['Full Name|Aman Verma','Email Address|amanverma@gmail.com','Mobile Number|+91 9876543210','Date of Birth|15 March 2005','Gender|Male','Current Location|Indirapuram, Ghaziabad, Uttar Pradesh','College/University|ABES Institute of Technology','Course|B.Tech (Information Technology)','Year|3rd Year']}/><DataCard title="⚙　Preferences" rows={['Looking For|PG / Flat (Both)','Preferred Location|Indirapuram, Ghaziabad','Budget Range|₹5,000 - ₹15,000','Preferred For|Boys Only','Move-in Date|October 2025','Amenities Preference|Wi-Fi, AC, Attached Bath, Food','Lifestyle Preference|Study Friendly, Quiet Environment']}/></div><aside className="profile-side"><section><h2>🛡️ Profile Verification</h2><p>Your profile is 80% complete</p><meter min="0" max="100" value="80"/><b>80%</b><div>⚖️<strong>Verify your identity</strong><small>to build trust and get better matches.</small><button>↥　Upload ID Proof</button></div></section><section><h2>Quick Actions</h2><p>✎　Edit Profile　›</p><p>✧　Manage Preferences　›</p><p>▣　Upload Documents　›</p><p>🔒　Change Password　›</p><p>♧　Notification Settings　›</p></section></aside></section><section className="profile-lower"><DataCard title="▣　Documents" rows={['College ID|● Verified','Aadhaar Card|● Verified','Other Document|⊕ Add Now']}/><DataCard title="🔒　Security" rows={['Password|********　　✎ Edit','Two-Factor Authentication|Not Enabled　　Enable','Login Devices|2 Active Devices　　Manage']}/><DataCard title="◷　Account Activity" rows={['Login from Windows|Today, 10:24 AM','Updated Preferences|18 Sep 2025','Saved a Property|17 Sep 2025','Booked a Visit|15 Sep 2025']}/></section></StudentChrome>
-}
-
 function ProfilePage({ onNavigate }) {
+  const { userProfile, updateUserProfile } = useStudentUser()
   const [activeTab, setActiveTab] = useState('Profile')
   const [documents, setDocuments] = useState({ identity: null, address: null })
   const [status, setStatus] = useState('Upload your identity and address documents to verify your profile.')
+  const [editPersonalActive, setEditPersonalActive] = useState(false)
   const verificationProgress = Object.values(documents).filter(Boolean).length * 50
+
   const uploadDocument = (type, event) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -1447,12 +1532,124 @@ function ProfilePage({ onNavigate }) {
     setDocuments((current) => ({ ...current, [type]: file }))
     setStatus(`${file.name} uploaded. Add the other document to complete verification.`)
   }
-  const profileTabs = [['Profile', <Icon name="people" size={16}/>], ['Preferences', <Icon name="settings" size={16}/>], ['Documents', <Icon name="building" size={16}/>], ['Security', <Icon name="shield" size={16}/>], ['Notifications', <Icon name="bell" size={16}/>]]
-  const showEditMessage = () => setStatus('Profile editing is ready. Update your details in Settings.')
+
+  const profileTabs = [
+    ['Profile', <Icon name="people" size={16}/>],
+    ['Preferences', <Icon name="settings" size={16}/>],
+    ['Documents', <Icon name="building" size={16}/>],
+    ['Security', <Icon name="shield" size={16}/>],
+    ['Notifications', <Icon name="bell" size={16}/>]
+  ]
+
+  const handleSavePersonalInfo = (savedRows) => {
+    const map = {}
+    savedRows.forEach((row) => {
+      const parts = row.split('|')
+      const label = parts[0]
+      const val = parts.slice(1).join('|')
+      if (label === 'Full Name') map.name = val
+      if (label === 'Email Address') map.email = val
+      if (label === 'Mobile Number') map.phone = val
+      if (label === 'Date of Birth') map.dob = val
+      if (label === 'Gender') map.gender = val
+      if (label === 'Current Location') map.location = val
+      if (label === 'College/University') map.college = val
+      if (label === 'Course') map.course = val
+      if (label === 'Year') map.year = val
+      if (label === 'About You' || label === 'Bio') map.bio = val
+    })
+    updateUserProfile(map)
+    setEditPersonalActive(false)
+    setStatus('Personal information saved and updated successfully.')
+  }
+
+  const personalRows = [
+    `Full Name|${userProfile?.name || 'Aman Verma'}`,
+    `Email Address|${userProfile?.email || 'amanverma@gmail.com'}`,
+    `Mobile Number|${userProfile?.phone || '+91 9876543210'}`,
+    `Date of Birth|${userProfile?.dob || '15 March 2005'}`,
+    `Gender|${userProfile?.gender || 'Male'}`,
+    `Current Location|${userProfile?.location || 'Indirapuram, Ghaziabad, Uttar Pradesh'}`,
+    `College/University|${userProfile?.college || 'ABES Institute of Technology'}`,
+    `Course|${userProfile?.course || 'B.Tech (Information Technology)'}`,
+    `Year|${userProfile?.year || '3rd Year'}`,
+    `About You|${userProfile?.bio || 'Looking for a safe and comfortable place to stay while I build my future.'}`
+  ]
+
+  const initial = userProfile?.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'A'
+
   return <StudentChrome active="Profile" onNavigate={onNavigate}>
-    <section className="profile-title"><div><h1>My Profile</h1><p>Manage your account, preferences, documents and verification.</p></div><aside>A Better<br/><em>You in a Safer Neighborhood</em></aside></section>
-    <div className="profile-tabs">{profileTabs.map(([name, icon]) => <button type="button" className={activeTab === name ? 'active' : ''} onClick={() => setActiveTab(name)} key={name}>{icon}<span>{name}</span></button>)}</div>
-    {activeTab === 'Profile' && <section className="profile-layout"><aside className="profile-card"><b>A</b><h2>Aman Verma</h2><p>Student</p><p>ABES Institute of Technology</p><p>Indirapuram, Ghaziabad</p><blockquote>Looking for a safe and comfortable place to stay while I build my future.</blockquote><div><span><b>12</b>Properties Viewed</span><span><b>5</b>Saved</span><span><b>2</b>Visits Booked</span></div><button type="button" onClick={showEditMessage}>Edit Profile</button><button type="button" onClick={() => onNavigate('Settings')}>Account Settings</button></aside><div className="profile-main"><DataCard title="Personal Information" rows={['Full Name|Aman Verma','Email Address|amanverma@gmail.com','Mobile Number|+91 9876543210','Date of Birth|15 March 2005','Gender|Male','Current Location|Indirapuram, Ghaziabad, Uttar Pradesh','College/University|ABES Institute of Technology','Course|B.Tech (Information Technology)','Year|3rd Year']} onEdit={showEditMessage}/><DataCard title="Preferences" rows={['Looking For|PG / Flat (Both)','Preferred Location|Indirapuram, Ghaziabad','Budget Range|₹5,000 - ₹15,000','Preferred For|Boys Only','Move-in Date|October 2025','Amenities Preference|Wi-Fi, AC, Attached Bath, Food','Lifestyle Preference|Study Friendly, Quiet Environment']} onEdit={showEditMessage}/><DataCard title="Documents" rows={[`Identity Document|${documents.identity ? documents.identity.name : 'Not uploaded'}`, `Address Document|${documents.address ? documents.address.name : 'Not uploaded'}`, `Verification Status|${verificationProgress === 100 ? 'Verified' : 'Pending upload'}`]} onEdit={() => setActiveTab('Documents')}/><DataCard title="Security" rows={['Password|Last updated recently','Two-Factor Authentication|Not enabled','Login Alerts|Enabled']} onEdit={() => setActiveTab('Security')}/></div><aside className="profile-side"><VerificationCard documents={documents} progress={verificationProgress} status={status} onUpload={uploadDocument}/><section><h2><Icon name="sparkle" size={16}/> Quick Actions</h2><button className="quick-action-link" type="button" onClick={() => setActiveTab('Documents')}>Manage Documents</button><button className="quick-action-link" type="button" onClick={() => onNavigate('Saved Properties')}>View Saved Properties</button><button className="quick-action-link" type="button" onClick={() => onNavigate('My Bookings')}>View My Bookings</button></section></aside></section>}
+    <section className="profile-title">
+      <div>
+        <h1>My Profile</h1>
+        <p>Manage your account, preferences, documents and verification.</p>
+      </div>
+      <aside>A Better<br/><em>You in a Safer Neighborhood</em></aside>
+    </section>
+    <div className="profile-tabs">
+      {profileTabs.map(([name, icon]) => (
+        <button type="button" className={activeTab === name ? 'active' : ''} onClick={() => setActiveTab(name)} key={name}>
+          {icon}<span>{name}</span>
+        </button>
+      ))}
+    </div>
+    {activeTab === 'Profile' && (
+      <section className="profile-layout">
+        <aside className="profile-card">
+          <b>{initial}</b>
+          <h2>{userProfile?.name || 'Aman Verma'}</h2>
+          <p>{userProfile?.role || 'Student'}</p>
+          <p>{userProfile?.college || 'ABES Institute of Technology'}</p>
+          <p>{userProfile?.location || 'Indirapuram, Ghaziabad'}</p>
+          <blockquote>{userProfile?.bio || 'Looking for a safe and comfortable place to stay while I build my future.'}</blockquote>
+          <div>
+            <span><b>12</b>Properties Viewed</span>
+            <span><b>5</b>Saved</span>
+            <span><b>2</b>Visits Booked</span>
+          </div>
+          <button type="button" onClick={() => { setEditPersonalActive(true); setStatus('Editing Personal Information. Modify the fields below and click Save.'); }}>
+            Edit Profile
+          </button>
+          <button type="button" onClick={() => onNavigate('Settings')}>Account Settings</button>
+        </aside>
+
+        <div className="profile-main">
+          <DataCard 
+            title="Personal Information" 
+            rows={personalRows} 
+            isEditing={editPersonalActive}
+            onToggleEdit={setEditPersonalActive}
+            onSave={handleSavePersonalInfo}
+          />
+          <DataCard 
+            title="Preferences" 
+            rows={['Looking For|PG / Flat (Both)','Preferred Location|Indirapuram, Ghaziabad','Budget Range|₹5,000 - ₹15,000','Preferred For|Boys Only','Move-in Date|October 2025','Amenities Preference|Wi-Fi, AC, Attached Bath, Food','Lifestyle Preference|Study Friendly, Quiet Environment']} 
+            onEdit={() => setStatus('Preferences editing active. Click Save to apply.')}
+            onSave={() => setStatus('Preferences updated successfully.')}
+          />
+          <DataCard 
+            title="Documents" 
+            rows={[`Identity Document|${documents.identity ? documents.identity.name : 'Not uploaded'}`, `Address Document|${documents.address ? documents.address.name : 'Not uploaded'}`, `Verification Status|${verificationProgress === 100 ? 'Verified' : 'Pending upload'}`]} 
+            onEdit={() => setActiveTab('Documents')}
+          />
+          <DataCard 
+            title="Security" 
+            rows={['Password|Last updated recently','Two-Factor Authentication|Not enabled','Login Alerts|Enabled']} 
+            onEdit={() => setActiveTab('Security')}
+          />
+        </div>
+
+        <aside className="profile-side">
+          <VerificationCard documents={documents} progress={verificationProgress} status={status} onUpload={uploadDocument}/>
+          <section>
+            <h2><Icon name="sparkle" size={16}/> Quick Actions</h2>
+            <button className="quick-action-link" type="button" onClick={() => setActiveTab('Documents')}>Manage Documents</button>
+            <button className="quick-action-link" type="button" onClick={() => onNavigate('Saved Properties')}>View Saved Properties</button>
+            <button className="quick-action-link" type="button" onClick={() => onNavigate('My Bookings')}>View My Bookings</button>
+          </section>
+        </aside>
+      </section>
+    )}
     {activeTab === 'Documents' && <section className="profile-document-panel"><VerificationCard documents={documents} progress={verificationProgress} status={status} onUpload={uploadDocument}/><button type="button" onClick={() => document.getElementById('identity-document')?.click()}>Add New Document</button></section>}
     {activeTab === 'Preferences' && <PreferencesPanel onStatus={setStatus}/>} 
     {activeTab === 'Security' && <section className="profile-document-panel"><DataCard title="Security" rows={['Password|Last updated recently','Two-Factor Authentication|Not enabled','Login Alerts|Enabled']} onEdit={() => setStatus('Security settings can be updated from Settings.')}/><button type="button" onClick={() => onNavigate('Settings')}>Open Security Settings</button></section>}
@@ -1484,13 +1681,59 @@ function VerificationCard({ documents, progress, status, onUpload }) {
   return <section className="verification-card"><h2><Icon name="shield" size={16}/> Profile Verification</h2><p>{progress === 100 ? 'Both document photos uploaded. Verification is complete.' : `${progress}% verified`}</p><div className="verification-track"><span style={{ width: `${progress}%` }}/></div><b>{progress}%</b><small>{status}</small><label className="document-upload">Upload Identity Document<input id="identity-document" type="file" accept="image/*" onChange={(event) => onUpload('identity', event)} /></label><label className="document-upload">Upload Address Document<input id="address-document" type="file" accept="image/*" onChange={(event) => onUpload('address', event)} /></label>{Object.entries(documents).map(([type, file]) => file && <p className="uploaded-document" key={type}>{type === 'identity' ? 'Identity' : 'Address'}: {file.name}</p>)}</section>
 }
 
-function DataCard({ title, rows, onEdit }) {
-  const [editing, setEditing] = useState(false)
+function DataCard({ title, rows, onEdit, onSave, isEditing: controlledIsEditing, onToggleEdit }) {
+  const [internalEditing, setInternalEditing] = useState(false)
+  const isEditing = controlledIsEditing !== undefined ? controlledIsEditing : internalEditing
+  const setEditing = (val) => {
+    if (onToggleEdit) onToggleEdit(val)
+    else setInternalEditing(val)
+  }
+
   const [draftRows, setDraftRows] = useState(rows)
+
+  useEffect(() => {
+    setDraftRows(rows)
+  }, [rows])
+
   const updateRow = (index, value) => setDraftRows((current) => current.map((row, rowIndex) => rowIndex === index ? `${row.split('|')[0]}|${value}` : row))
   const startEditing = () => { setEditing(true); onEdit?.() }
-  const saveChanges = () => setEditing(false)
-  return <section className="data-card"><h2>{title}<span>{editing ? <><button type="button" onClick={saveChanges}>Save</button><button type="button" onClick={() => { setDraftRows(rows); setEditing(false) }}>Cancel</button></> : <button type="button" onClick={startEditing}>Edit</button>}</span></h2>{draftRows.map((row, index) => { const [label, value] = row.split('|'); return <p key={label}><span>{label}</span>{editing ? <input value={value} onChange={(event) => updateRow(index, event.target.value)} aria-label={label} /> : <b>{value}</b>}</p> })}</section>
+  const saveChanges = () => { 
+    setEditing(false)
+    if (onSave) onSave(draftRows)
+  }
+  const cancelChanges = () => {
+    setDraftRows(rows)
+    setEditing(false)
+  }
+
+  return <section className="data-card">
+    <h2>
+      {title}
+      <span>
+        {isEditing ? (
+          <>
+            <button type="button" onClick={saveChanges}>Save</button>
+            <button type="button" onClick={cancelChanges}>Cancel</button>
+          </>
+        ) : (
+          <button type="button" onClick={startEditing}>Edit</button>
+        )}
+      </span>
+    </h2>
+    {draftRows.map((row, index) => { 
+      const parts = row.split('|')
+      const label = parts[0]
+      const value = parts.slice(1).join('|')
+      return <p key={label}>
+        <span>{label}</span>
+        {isEditing ? (
+          <input value={value} onChange={(event) => updateRow(index, event.target.value)} aria-label={label} />
+        ) : (
+          <b>{value}</b>
+        )}
+      </p> 
+    })}
+  </section>
 }
 
 function LegacySettingsPage({ onNavigate, onLogout }) {
@@ -1498,28 +1741,54 @@ function LegacySettingsPage({ onNavigate, onLogout }) {
   return <StudentChrome active="Settings" onNavigate={onNavigate}><section className="settings-hero"><div><h1>Settings</h1><p>Manage your account, preferences and privacy all in one place.</p><em>Your Comfort<br/>Our Priority ♡</em></div><aside>“　A better student life<br/>starts with the right space.</aside></section><div className="setting-tabs"><button className="active">♙　Account Settings</button><button>⚙　Preferences</button><button>♧　Notifications</button><button>♢　Privacy & Security</button><button>?　Help & Support</button></div><section className={`settings-layout ${dark ? 'dark-preview' : ''}`}><div><section className="settings-card account-form"><h2>♙　Profile Information</h2><p>Update your personal details.</p><div className="setting-inputs"><span className="settings-avatar">A</span><label>Full Name<input defaultValue="Aman Verma"/></label><label>Email Address<input defaultValue="amanverma@gmail.com"/></label><label>Phone Number<input defaultValue="+91 98765 43210"/></label><label>Date of Birth<input defaultValue="15 Mar 2005"/></label><label className="wide">About You<textarea defaultValue="B.Tech IT Student | Looking for a safe and comfortable PG near my college."/></label></div></section><section className="settings-card preferences-form"><h2>⚙　Preferences</h2><p>Customize your experience.</p><div className="preference-fields"><label>Preferred Locations<input defaultValue="Indirapuram  ×　 Vaishali  ×　 Raj Nagar ×"/></label><label>Preferred Budget Range<select defaultValue="5000"> <option value="5000">₹5,000 - ₹10,000</option></select></label><label>Room Type Preference<select><option>Single Room</option></select></label><label>Gender Preference<select><option>No Preference</option></select></label></div></section><section className="settings-card privacy-card"><h2>🛡️　Privacy & Security</h2><p>Keep your account safe.</p><div><span>🔒　<b>Two-Factor Authentication<small>Add an extra layer of security to your account.</small></b><input type="checkbox"/></span><span>▣　<b>Login Activity<small>View your recent login activity.</small></b>　›</span></div></section></div><aside className="settings-side"><section className="theme"><h2>◐　Theme Mode</h2><p>Choose the look and feel of your app.</p><div><button>☼<b>Light</b></button><button className={!dark ? 'selected' : ''} onClick={() => setDark(false)}>▣<b>Default</b></button><button className={dark ? 'selected' : ''} onClick={() => setDark(true)}>☾<b>Dark</b></button></div></section><section><h2>⚙　Quick Settings</h2><p>♙　Edit Profile　›</p><p>🔒　Change Password　›</p><p>▤　Manage Payment Methods　›</p><p>♧　Notification Preferences　›</p><p>◎　Language　›</p><p>?　Help & Support　›</p></section><button className="logout-btn" onClick={onLogout}>⇥　 Logout　›<small>Sign out from your account on this device.</small></button></aside></section></StudentChrome>
 }
 
-
 function LegacySettingsPageV2({ onNavigate, onLogout }) {
   const [activeTab, setActiveTab] = useState('Account')
-    const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
   const tabs = [['Account', 'Account Settings'], ['Preferences', 'Preferences'], ['Notifications', 'Notifications'], ['Privacy', 'Privacy & Security'], ['Help', 'Help & Support']]
   const save = () => setStatus('Settings saved successfully.')
   const quickAction = (message) => setStatus(message)
   const accountOverview = <><section className="settings-card account-overview-card"><h2>Preferences</h2><p>Indirapuram, Vaishali, Raj Nagar · ₹5,000 - ₹10,000 · Single Room</p><button type="button" className="settings-save" onClick={() => setActiveTab('Preferences')}>Edit Preferences</button></section><section className="settings-card account-overview-card"><h2>Notifications</h2><label className="settings-toggle"><span>Booking Updates<small>Receive updates about visits and bookings.</small></span><input type="checkbox" defaultChecked /></label><label className="settings-toggle"><span>Property Alerts<small>Receive alerts for matching homes.</small></span><input type="checkbox" defaultChecked /></label><button type="button" className="settings-save" onClick={() => setActiveTab('Notifications')}>Manage Notifications</button></section><section className="settings-card account-overview-card"><h2>Privacy &amp; Security</h2><p>Two-Factor Authentication: Off</p><p>Login Alerts: Enabled</p><button type="button" className="settings-save" onClick={() => setActiveTab('Privacy')}>Manage Privacy &amp; Security</button></section><section className="settings-card account-overview-card"><h2>Help &amp; Support</h2><p>Find answers or contact the AI SafeRent support team.</p><button type="button" className="settings-save" onClick={() => setActiveTab('Help')}>Open Help &amp; Support</button></section></>
   return <StudentChrome active="Settings" onNavigate={onNavigate}><section className="settings-hero"><div><h1>Settings</h1><p>Manage your account, preferences and privacy all in one place.</p><em>Your Comfort<br/>Our Priority</em></div><aside>A better student life<br/>starts with the right space.</aside></section><div className="setting-tabs">{tabs.map(([key, label]) => <button type="button" className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)} key={key}>{label}</button>)}</div><section className={`settings-layout ${dark ? 'dark-preview' : ''}`}><div>{activeTab === 'Account' && <section className="settings-card"><h2>Profile Information</h2><p>Update your personal details.</p><div className="setting-inputs settings-form-grid"><span className="settings-avatar">A</span><label>Full Name<input defaultValue="Aman Verma" /></label><label>Email Address<input defaultValue="amanverma@gmail.com" /></label><label>Phone Number<input defaultValue="+91 98765 43210" /></label><label>Date of Birth<input defaultValue="15 Mar 2005" /></label><label className="wide">About You<textarea defaultValue="B.Tech IT Student | Looking for a safe and comfortable PG near my college." /></label></div><button type="button" className="settings-save" onClick={save}>Save Account Details</button></section>}{activeTab === 'Preferences' && <section className="settings-card"><h2>Preferences</h2><p>Customize your home search.</p><div className="preference-fields"><label>Preferred Locations<input defaultValue="Indirapuram, Vaishali, Raj Nagar" /></label><label>Budget Range<select defaultValue="5000"><option value="5000">₹5,000 - ₹10,000</option><option value="15000">₹15,000 - ₹25,000</option></select></label><label>Room Type<select><option>Single Room</option><option>Shared Room</option><option>1 BHK</option></select></label><label>Gender Preference<select><option>No Preference</option><option>Girls Only</option><option>Boys Only</option></select></label></div><button type="button" className="settings-save" onClick={save}>Save Preferences</button></section>}{activeTab === 'Notifications' && <section className="settings-card"><h2>Notifications</h2><p>Choose the updates you want to receive.</p>{['Booking Updates','Property Alerts','Messages','Price Drops'].map((item) => <label className="settings-toggle" key={item}><span>{item}<small>Receive {item.toLowerCase()} from AI SafeRent.</small></span><input type="checkbox" defaultChecked /></label>)}<button type="button" className="settings-save" onClick={save}>Save Notifications</button></section>}{activeTab === 'Privacy' && <section className="settings-card"><h2>Privacy & Security</h2><p>Keep your account safe.</p><label className="settings-toggle"><span>Two-Factor Authentication<small>Add an extra layer of security.</small></span><input type="checkbox" onChange={() => quickAction('Two-factor authentication preference updated.')} /></label><button type="button" className="settings-save" onClick={() => quickAction('Login activity opened.')}>View Login Activity</button></section>}{activeTab === 'Help' && <section className="settings-card"><h2>Help & Support</h2><p>Find answers or contact our support team.</p><button type="button" className="settings-save" onClick={() => quickAction('Support request started.')}>Contact Support</button></section>}</div><aside className="settings-side"><section className="theme"><h2>Theme Mode</h2><p>Choose the look and feel of your app.</p><div><button type="button" onClick={() => setDark(false)} className={!dark ? 'selected' : ''}>Light</button><button type="button" onClick={() => setDark(false)} className={!dark ? 'selected' : ''}>Default</button><button type="button" onClick={() => setDark(true)} className={dark ? 'selected' : ''}>Dark</button></div></section><section className="quick-settings-card"><h2>Quick Settings</h2><button type="button" onClick={() => onNavigate('Profile')}>Edit Profile</button><button type="button" onClick={() => quickAction('Change password flow opened.')}>Change Password</button><button type="button" onClick={() => quickAction('Payment methods opened.')}>Manage Payment Methods</button><button type="button" onClick={() => setActiveTab('Notifications')}>Notification Preferences</button><button type="button" onClick={() => quickAction('Language selector opened.')}>Language</button><button type="button" onClick={() => setActiveTab('Help')}>Help & Support</button></section><button className="logout-btn" onClick={onLogout}>Logout<small>Sign out from your account on this device.</small></button></aside></section>{status && <p className="settings-status" role="status">{status}</p>}</StudentChrome>
 }
+
 function SettingsPage({ onNavigate, onLogout }) {
+  const { userProfile, updateUserProfile } = useStudentUser()
   const [tab, setTab] = useState('Account')
   const [status, setStatus] = useState('')
+  const [nameInput, setNameInput] = useState(userProfile?.name || 'Aman Verma')
+  const [emailInput, setEmailInput] = useState(userProfile?.email || 'amanverma@gmail.com')
+  const [phoneInput, setPhoneInput] = useState(userProfile?.phone || '+91 98765 43210')
+  const [bioInput, setBioInput] = useState(userProfile?.bio || 'B.Tech IT Student | Looking for a safe and comfortable PG near my college.')
+
+  useEffect(() => {
+    if (userProfile) {
+      setNameInput(userProfile.name || 'Aman Verma')
+      setEmailInput(userProfile.email || 'amanverma@gmail.com')
+      setPhoneInput(userProfile.phone || '+91 98765 43210')
+      setBioInput(userProfile.bio || '')
+    }
+  }, [userProfile])
+
+  const saveAccount = () => {
+    updateUserProfile({
+      name: nameInput,
+      email: emailInput,
+      phone: phoneInput,
+      bio: bioInput
+    })
+    setStatus('Account details saved successfully.')
+  }
+
   const tabs = [['Account', 'Account Settings'], ['Preferences', 'Preferences'], ['Notifications', 'Notifications'], ['Privacy', 'Privacy & Security'], ['Help', 'Help & Support']]
   const action = (message) => setStatus(message)
   const accountSections = <><section className="settings-card account-overview-card"><h2>Preferences</h2><p>Indirapuram, Vaishali, Raj Nagar · ₹5,000 - ₹10,000 · Single Room</p><button type="button" className="settings-save" onClick={() => setTab('Preferences')}>Edit Preferences</button></section><section className="settings-card account-overview-card"><h2>Notifications</h2><p>Booking updates and property alerts are enabled.</p><button type="button" className="settings-save" onClick={() => setTab('Notifications')}>Manage Notifications</button></section><section className="settings-card account-overview-card"><h2>Privacy &amp; Security</h2><p>Two-Factor Authentication: Off · Login Alerts: Enabled</p><button type="button" className="settings-save" onClick={() => setTab('Privacy')}>Manage Privacy &amp; Security</button></section><section className="settings-card account-overview-card"><h2>Help &amp; Support</h2><p>Find answers or contact the AI SafeRent support team.</p><button type="button" className="settings-save" onClick={() => setTab('Help')}>Open Help &amp; Support</button></section></>
-  return <StudentChrome active="Settings" onNavigate={onNavigate}><section className="settings-hero"><div><h1>Settings</h1><p>Manage your account, preferences and privacy all in one place.</p></div></section><div className="setting-tabs">{tabs.map(([key, label]) => <button type="button" className={tab === key ? 'active' : ''} onClick={() => setTab(key)} key={key}>{label}</button>)}</div><main className="settings-account-view"><section className="settings-card"><h2>{tab === 'Account' ? 'Account Settings' : tabs.find(([key]) => key === tab)?.[1]}</h2>{tab === 'Account' && <><p>Update your personal details.</p><div className="setting-inputs settings-form-grid"><span className="settings-avatar">A</span><label>Full Name<input defaultValue="Aman Verma" /></label><label>Email Address<input defaultValue="amanverma@gmail.com" /></label><label>Phone Number<input defaultValue="+91 98765 43210" /></label><label className="wide">About You<textarea defaultValue="B.Tech IT Student | Looking for a safe and comfortable PG near my college." /></label></div><button type="button" className="settings-save" onClick={() => action('Account details saved.')}>Save Account Details</button></>}{tab === 'Preferences' && <><p>Customize your home search preferences.</p><div className="preference-fields"><label>Preferred Locations<input defaultValue="Indirapuram, Vaishali, Raj Nagar" /></label><label>Budget<select><option>₹5,000 - ₹10,000</option><option>₹15,000 - ₹25,000</option></select></label></div><button type="button" className="settings-save" onClick={() => action('Preferences saved.')}>Save Preferences</button></>}{tab === 'Notifications' && <><p>Choose the updates you want to receive.</p>{['Booking Updates', 'Property Alerts', 'Messages'].map((item) => <label className="settings-toggle" key={item}><span>{item}<small>Receive {item.toLowerCase()}.</small></span><input type="checkbox" defaultChecked /></label>)}<button type="button" className="settings-save" onClick={() => action('Notification preferences saved.')}>Save Notifications</button></>}{tab === 'Privacy' && <><p>Keep your account safe.</p><label className="settings-toggle"><span>Two-Factor Authentication<small>Add an extra layer of security.</small></span><input type="checkbox" /></label><button type="button" className="settings-save" onClick={() => action('Privacy settings saved.')}>Save Privacy Settings</button></>}{tab === 'Help' && <><p>Find answers or contact our support team.</p><button type="button" className="settings-save" onClick={() => action('Support request started.')}>Contact Support</button></>}</section>{tab === 'Account' && <section className="settings-account-overview">{accountSections}</section>}<aside className="quick-settings-card"><h2>Quick Settings</h2><button type="button" onClick={() => onNavigate('Profile')}>Edit Profile</button><button type="button" onClick={() => action('Change password flow opened.')}>Change Password</button><button type="button" onClick={() => setTab('Notifications')}>Notification Preferences</button><button type="button" onClick={() => setTab('Help')}>Help &amp; Support</button><button type="button" className="logout-btn" onClick={onLogout}>Logout</button></aside></main>{status && <p className="settings-status" role="status">{status}</p>}</StudentChrome>
+  const initial = nameInput ? nameInput.trim().charAt(0).toUpperCase() : 'A'
+
+  return <StudentChrome active="Settings" onNavigate={onNavigate}><section className="settings-hero"><div><h1>Settings</h1><p>Manage your account, preferences and privacy all in one place.</p></div></section><div className="setting-tabs">{tabs.map(([key, label]) => <button type="button" className={tab === key ? 'active' : ''} onClick={() => setTab(key)} key={key}>{label}</button>)}</div><main className="settings-account-view"><section className="settings-card"><h2>{tab === 'Account' ? 'Account Settings' : tabs.find(([key]) => key === tab)?.[1]}</h2>{tab === 'Account' && <><p>Update your personal details.</p><div className="setting-inputs settings-form-grid"><span className="settings-avatar">{initial}</span><label>Full Name<input value={nameInput} onChange={(e) => setNameInput(e.target.value)} /></label><label>Email Address<input value={emailInput} onChange={(e) => setEmailInput(e.target.value)} /></label><label>Phone Number<input value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} /></label><label className="wide">About You<textarea value={bioInput} onChange={(e) => setBioInput(e.target.value)} /></label></div><button type="button" className="settings-save" onClick={saveAccount}>Save Account Details</button></>}{tab === 'Preferences' && <><p>Customize your home search preferences.</p><div className="preference-fields"><label>Preferred Locations<input defaultValue="Indirapuram, Vaishali, Raj Nagar" /></label><label>Budget<select><option>₹5,000 - ₹10,000</option><option>₹15,000 - ₹25,000</option></select></label></div><button type="button" className="settings-save" onClick={() => action('Preferences saved.')}>Save Preferences</button></>}{tab === 'Notifications' && <><p>Choose the updates you want to receive.</p>{['Booking Updates', 'Property Alerts', 'Messages'].map((item) => <label className="settings-toggle" key={item}><span>{item}<small>Receive {item.toLowerCase()}.</small></span><input type="checkbox" defaultChecked /></label>)}<button type="button" className="settings-save" onClick={() => action('Notification preferences saved.')}>Save Notifications</button></>}{tab === 'Privacy' && <><p>Keep your account safe.</p><label className="settings-toggle"><span>Two-Factor Authentication<small>Add an extra layer of security.</small></span><input type="checkbox" /></label><button type="button" className="settings-save" onClick={() => action('Privacy settings saved.')}>Save Privacy Settings</button></>}{tab === 'Help' && <><p>Find answers or contact our support team.</p><button type="button" className="settings-save" onClick={() => action('Support request started.')}>Contact Support</button></>}</section>{tab === 'Account' && <section className="settings-account-overview">{accountSections}</section>}<aside className="quick-settings-card"><h2>Quick Settings</h2><button type="button" onClick={() => onNavigate('Profile')}>Edit Profile</button><button type="button" onClick={() => action('Change password flow opened.')}>Change Password</button><button type="button" onClick={() => setTab('Notifications')}>Notification Preferences</button><button type="button" onClick={() => setTab('Help')}>Help & Support</button><button type="button" className="logout-btn" onClick={onLogout}>Logout</button></aside></main>{status && <p className="settings-status" role="status">{status}</p>}</StudentChrome>
 }
 
 function InfoStrip() { return <section className="info-strip"><span>🛡️ <b>Verified Listings<small>Every property is manually verified</small></b></span><span>⌖ <b>Safe Neighborhoods<small>Check safety scores & reviews</small></b></span><span>▣ <b>Transparent Information<small>No hidden charges</small></b></span><span>▣ <b>Book Site Visits<small>Schedule visits easily</small></b></span></section> }
 
-const ownerNav = [[<Icon name="grid" size={18}/>, 'Dashboard'], [<Icon name="building" size={18}/>, 'My Properties'], [<Icon name="sparkle" size={18}/>, 'Add Property'], [<Icon name="calendar" size={18}/>, 'Booking'], [<Icon name="people" size={18}/>, 'Tenants'], [<Icon name="mail" size={18}/>, 'Messages'], [<Icon name="settings" size={18}/>, 'Settings']]
+const ownerNav = [[<Icon name="grid" size={18}/>, 'Dashboard'], [<Icon name="building" size={18}/>, 'My Properties'], [<Icon name="sparkle" size={18}/>, 'Add Property'], [<Icon name="calendar" size={18}/>, 'Booking'], [<Icon name="people" size={18}/>, 'Tenants'], [<Icon name="calendar" size={18}/>, 'Visit Requests'], [<Icon name="settings" size={18}/>, 'Settings']]
 const ownerProperties = [['Sunrise PG for Girls', 'Indirapuram, Ghaziabad', 'Girls Only', '₹ 7,000 / month', '3/10'], ['Comfort Stay PG', 'Vaishali, Ghaziabad', 'Boys Only', '₹ 6,500 / month', '5/12'], ['Urban Nest PG', 'Raj Nagar, Ghaziabad', 'Boys & Girls', '₹ 8,000 / month', '2/8']]
 const requests = [['A', 'Aman Singh', 'Requested visit', 'Sunrise PG for Girls', '10:30 AM', 'Pending'], ['N', 'Neha Sharma', 'Booked a room', 'Comfort Stay PG', 'Yesterday', 'Confirmed'], ['R', 'Rahul Verma', 'Requested visit', 'Urban Nest PG', '16 Sep', 'Pending'], ['S', 'Sneha Patel', 'Mess inquiry', 'Sunrise PG for Girls', '15 Sep', 'Responded']]
 
@@ -2936,9 +3205,1311 @@ function OwnerBookingsPage({ onNavigate }) {
   )
 }
 
-function OwnerTenantsPage({ onNavigate }) { return <section><OwnerHero title="My Tenants" subtitle="Manage your current and past tenants with ease."/><section className="owner-page-stats"><article><b><Icon name="people" size={21}/></b><span><strong>42</strong><small>Total Tenants</small></span></article><article><b><Icon name="check" size={21}/></b><span><strong>28</strong><small>Active Tenants</small></span></article><article><b><Icon name="arrow" size={21}/></b><span><strong>8</strong><small>Moving Out Soon</small></span></article><article><b><Icon name="home" size={21}/></b><span><strong>6</strong><small>Past Tenants</small></span></article></section><section className="tenant-layout"><div className="owner-table-card"><header><strong>All Tenants (42)</strong><button>All Properties</button></header><div className="tenant-row selected"><b>A</b><span><strong>Ananya Singh</strong><small>+91 98765 43210 · Sunshine PG</small></span><em>Active</em></div><div className="tenant-row"><b>R</b><span><strong>Rahul Verma</strong><small>+91 98765 43210 · Maple PG</small></span><em>Active</em></div><div className="tenant-row"><b>S</b><span><strong>Sneha Tiwari</strong><small>+91 98765 43210 · Comfort Stay</small></span><em className="moving">Moving Out</em></div></div><aside className="tenant-profile"><h2>Tenant Profile</h2><b>A</b><h3>Ananya Singh</h3><em>Active</em><p>Phone: +91 98765 43210</p><p>Email: ananya@gmail.com</p><hr/><p>Property: Sunshine PG</p><p>Room No: 101</p><p>Monthly Rent: ₹7,500</p><button onClick={() => onNavigate('Messages')}>Message</button><button>View Agreement</button></aside></section></section> }
+const initialTenantsData = [
+  {
+    id: 1,
+    name: 'Ananya Singh',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 98765 43210',
+    email: 'ananya@gmail.com',
+    property: 'Sunshine PG',
+    propertyLocation: 'Indirapuram, Gzb',
+    roomNo: 'Room 101',
+    propertyImg: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '01 Aug 2025',
+    leaseEndDate: '31 Jul 2026',
+    status: 'Active',
+    monthlyRent: '₹7,500',
+    securityDeposit: '₹7,500',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  },
+  {
+    id: 2,
+    name: 'Rahul Verma',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 91234 56789',
+    email: 'rahulv@gmail.com',
+    property: 'Maple PG',
+    propertyLocation: 'Vaishali, Gzb',
+    roomNo: 'Room 203',
+    propertyImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '15 Jul 2025',
+    leaseEndDate: '14 Jul 2026',
+    status: 'Active',
+    monthlyRent: '₹8,000',
+    securityDeposit: '₹8,000',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  },
+  {
+    id: 3,
+    name: 'Sneha Tiwari',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 99887 66554',
+    email: 'sneha.t@gmail.com',
+    property: 'Comfort Stay',
+    propertyLocation: 'Raj Nagar, Gzb',
+    roomNo: 'Room 105',
+    propertyImg: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '10 Jun 2025',
+    leaseEndDate: '09 Jun 2026',
+    status: 'Moving Out Soon',
+    monthlyRent: '₹6,500',
+    securityDeposit: '₹6,500',
+    preferredOccupancy: 'Double Sharing',
+    aadhaarVerified: true
+  },
+  {
+    id: 4,
+    name: 'Aditya Kumar',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 97654 32109',
+    email: 'aditya.k@gmail.com',
+    property: 'Urban Nest',
+    propertyLocation: 'Kaushambi, Gzb',
+    roomNo: 'Room 302',
+    propertyImg: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '01 Sep 2025',
+    leaseEndDate: '31 Aug 2026',
+    status: 'Active',
+    monthlyRent: '₹9,500',
+    securityDeposit: '₹9,500',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  },
+  {
+    id: 5,
+    name: 'Priya Mehta',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 88991 23456',
+    email: 'priya.m@gmail.com',
+    property: 'Bliss PG',
+    propertyLocation: 'Indirapuram, Gzb',
+    roomNo: 'Room 201',
+    propertyImg: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '12 May 2025',
+    leaseEndDate: '11 May 2026',
+    status: 'Inactive',
+    monthlyRent: '₹7,000',
+    securityDeposit: '₹7,000',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  },
+  {
+    id: 6,
+    name: 'Karan Arora',
+    avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 85296 74123',
+    email: 'karan.a@gmail.com',
+    property: 'Green View PG',
+    propertyLocation: 'Vasundhara, Gzb',
+    roomNo: 'Room 104',
+    propertyImg: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '05 Aug 2025',
+    leaseEndDate: '04 Aug 2026',
+    status: 'Active',
+    monthlyRent: '₹6,800',
+    securityDeposit: '₹6,800',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  },
+  {
+    id: 7,
+    name: 'Riya Sharma',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 94567 12345',
+    email: 'riya.s@gmail.com',
+    property: 'Sunshine PG',
+    propertyLocation: 'Indirapuram, Gzb',
+    roomNo: 'Room 102',
+    propertyImg: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '20 Jul 2025',
+    leaseEndDate: '19 Jul 2026',
+    status: 'Active',
+    monthlyRent: '₹7,500',
+    securityDeposit: '₹7,500',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  },
+  {
+    id: 8,
+    name: 'Vikram Malhotra',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+    phone: '+91 98111 22334',
+    email: 'vikram.m@gmail.com',
+    property: 'Maple PG',
+    propertyLocation: 'Vaishali, Gzb',
+    roomNo: 'Room 204',
+    propertyImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=200&q=80',
+    moveInDate: '01 Jun 2025',
+    leaseEndDate: '31 May 2026',
+    status: 'Moving Out Soon',
+    monthlyRent: '₹8,000',
+    securityDeposit: '₹8,000',
+    preferredOccupancy: 'Single',
+    aadhaarVerified: true
+  }
+];
 
-function OwnerMessagesPage() { const [text,setText] = useState(''); const [messages,setMessages] = useState(['Hi, is the room still available?','Hello Ananya, yes the room is still available.']); const send = () => { if (text.trim()) { setMessages([...messages, text]); setText('') } }; return <section><OwnerHero title="Messages" subtitle="Connect with tenants, answer queries and build long-term relationships."/><div className="owner-success"><b>3</b><h2>Messages inbox</h2><p>{messages.join(' · ')}</p><input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message"/><button onClick={send}>Send Message</button></div></section> }
+function OwnerTenantsPage({ onNavigate }) {
+  const [tenants, setTenants] = useState(initialTenantsData);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'active', 'moving', 'inactive'
+  const [selectedProperty, setSelectedProperty] = useState('All Properties');
+  const [propertyDropdownOpen, setPropertyDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  
+  const [selectedTenant, setSelectedTenant] = useState(initialTenantsData[0]);
+  const [profileOpen, setProfileOpen] = useState(true);
+  const [profileTab, setProfileTab] = useState('Details'); // 'Details', 'Documents', 'History'
+  
+  const [selectedRowIds, setSelectedRowIds] = useState(new Set());
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  
+  const [agreementTenant, setAgreementTenant] = useState(null);
+  const [messageTenant, setMessageTenant] = useState(null);
+  const [messageText, setMessageText] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Property options
+  const propertyOptions = ['All Properties', 'Sunshine PG', 'Maple PG', 'Comfort Stay', 'Urban Nest', 'Bliss PG', 'Green View PG'];
+
+  // Filtered tenants list
+  const filteredTenants = tenants.filter(t => {
+    // Tab filter
+    if (activeTab === 'active' && t.status !== 'Active') return false;
+    if (activeTab === 'moving' && t.status !== 'Moving Out Soon') return false;
+    if (activeTab === 'inactive' && t.status !== 'Inactive') return false;
+    
+    // Property filter
+    if (selectedProperty !== 'All Properties' && t.property !== selectedProperty) return false;
+    
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchName = t.name.toLowerCase().includes(q);
+      const matchPhone = t.phone.toLowerCase().includes(q);
+      const matchEmail = t.email.toLowerCase().includes(q);
+      const matchProp = t.property.toLowerCase().includes(q);
+      const matchRoom = t.roomNo.toLowerCase().includes(q);
+      if (!matchName && !matchPhone && !matchEmail && !matchProp && !matchRoom) return false;
+    }
+    
+    return true;
+  });
+
+  // Checkbox handlers
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedRowIds(new Set(filteredTenants.map(t => t.id)));
+    } else {
+      setSelectedRowIds(new Set());
+    }
+  };
+
+  const handleToggleRow = (id, e) => {
+    e.stopPropagation();
+    setSelectedRowIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectTenant = (tenant) => {
+    setSelectedTenant(tenant);
+    setProfileOpen(true);
+  };
+
+  const handleSendMessage = () => {
+    if (!messageText.trim()) return;
+    showToast(`Message sent to ${messageTenant.name}: "${messageText}"`);
+    setMessageText('');
+    setMessageTenant(null);
+  };
+
+  return (
+    <div className="tenants-page-wrapper">
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: '#0f172a',
+          color: '#ffffff',
+          padding: '12px 20px',
+          borderRadius: '10px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          zIndex: 9999,
+          fontSize: '13.5px',
+          fontWeight: '500',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{ color: '#10b981' }}>✓</span> {toastMsg}
+        </div>
+      )}
+
+      
+      {/* Hero Section */}
+      <section className="tenants-hero-banner">
+        <div className="tenants-hero-left">
+          <h1>My Tenants</h1>
+          <p>Manage your current and past tenants with ease.</p>
+          <span className="tenants-hero-script">
+            Good Tenants<br/>
+            Build Great Communities ♡
+          </span>
+        </div>
+
+        <div className="tenants-hero-right-card">
+          <div className="tenants-hero-feature-item">
+            <span className="tenants-hero-feature-icon"><Icon name="people" size={17}/></span>
+            <span>Trusted Tenants</span>
+          </div>
+          <div className="tenants-hero-feature-item">
+            <span className="tenants-hero-feature-icon shield"><Icon name="shield" size={17}/></span>
+            <span>Verified Identities</span>
+          </div>
+          <div className="tenants-hero-feature-item">
+            <span className="tenants-hero-feature-icon doc"><Icon name="building" size={17}/></span>
+            <span>Hassle-free Management</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Row */}
+      <section className="tenants-stats-row">
+        <article onClick={() => setActiveTab('all')} style={{ cursor: 'pointer' }}>
+          <b className="stat-icon-purple"><Icon name="people" size={22}/></b>
+          <span>
+            <strong>42</strong>
+            <small>Total Tenants</small>
+          </span>
+        </article>
+
+        <article onClick={() => setActiveTab('active')} style={{ cursor: 'pointer' }}>
+          <b className="stat-icon-green"><Icon name="people" size={22}/></b>
+          <span>
+            <strong>28</strong>
+            <small>Active Tenants</small>
+          </span>
+        </article>
+
+        <article onClick={() => setActiveTab('moving')} style={{ cursor: 'pointer' }}>
+          <b className="stat-icon-blue"><Icon name="calendar" size={22}/></b>
+          <span>
+            <strong>8</strong>
+            <small>Moving Out Soon</small>
+          </span>
+        </article>
+
+        <article onClick={() => setActiveTab('inactive')} style={{ cursor: 'pointer' }}>
+          <b className="stat-icon-red"><Icon name="people" size={22}/></b>
+          <span>
+            <strong>6</strong>
+            <small>Inactive / Past Tenants</small>
+          </span>
+        </article>
+      </section>
+
+      {/* Top Bar with Tabs and Controls */}
+      <div className="tenants-top-bar">
+        <div className="tenants-tabs-list">
+          <button
+            type="button"
+            className={`tenants-tab-item ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
+          >
+            All Tenants (42)
+          </button>
+          <button
+            type="button"
+            className={`tenants-tab-item ${activeTab === 'active' ? 'active' : ''}`}
+            onClick={() => setActiveTab('active')}
+          >
+            Active (28)
+          </button>
+          <button
+            type="button"
+            className={`tenants-tab-item ${activeTab === 'moving' ? 'active' : ''}`}
+            onClick={() => setActiveTab('moving')}
+          >
+            Moving Out (8)
+          </button>
+          <button
+            type="button"
+            className={`tenants-tab-item ${activeTab === 'inactive' ? 'active' : ''}`}
+            onClick={() => setActiveTab('inactive')}
+          >
+            Inactive (6)
+          </button>
+        </div>
+
+        <div className="tenants-controls-group">
+          {/* Property Filter Dropdown */}
+          <div className="tenants-select-wrapper">
+            <button
+              type="button"
+              className="tenants-property-select-btn"
+              onClick={() => setPropertyDropdownOpen(!propertyDropdownOpen)}
+            >
+              <Icon name="home" size={16}/>
+              <span>{selectedProperty}</span>
+              <span style={{ fontSize: '11px', color: '#64748b' }}>▾</span>
+            </button>
+
+            {propertyDropdownOpen && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '6px',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                zIndex: 50,
+                minWidth: '180px',
+                padding: '6px'
+              }}>
+                {propertyOptions.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '8px 12px',
+                      textAlign: 'left',
+                      background: selectedProperty === p ? '#eef2ff' : 'transparent',
+                      color: selectedProperty === p ? '#4f46e5' : '#1e293b',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: selectedProperty === p ? '700' : '500',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setSelectedProperty(p);
+                      setPropertyDropdownOpen(false);
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Filter / Search toggle button */}
+          <button
+            type="button"
+            className={`tenants-filter-btn ${filterDrawerOpen ? 'active' : ''}`}
+            onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span>Filter</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Drawer / Search Input */}
+      {filterDrawerOpen && (
+        <div className="tenants-search-drawer">
+          <Icon name="search" size={16}/>
+          <input
+            type="text"
+            className="tenants-search-input"
+            placeholder="Search tenant by name, phone, email, room or property..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '13px' }}
+              onClick={() => setSearchQuery('')}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Main Two-Column Layout (Table on left, Profile Card on right) */}
+      <div className={`tenants-layout ${!profileOpen ? 'profile-closed' : ''}`}>
+        {/* Left Side: Table Card */}
+        <div className="tenants-table-card">
+          <div className="tenants-table-container">
+            <table className="tenants-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '45px', paddingLeft: '16px' }}>
+                    <input
+                      type="checkbox"
+                      checked={filteredTenants.length > 0 && selectedRowIds.size === filteredTenants.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                  <th>Tenant</th>
+                  <th>Property</th>
+                  <th>Move-in Date</th>
+                  <th>Lease End</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTenants.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                      No tenants found matching your filter criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTenants.map((tenant, idx) => {
+                    const isSelected = selectedTenant?.id === tenant.id;
+                    const isChecked = selectedRowIds.has(tenant.id);
+                    const isDropdownOpen = openDropdownId === tenant.id;
+
+                    return (
+                      <tr
+                        key={tenant.id}
+                        className={isSelected ? 'selected' : ''}
+                        onClick={() => handleSelectTenant(tenant)}
+                      >
+                        <td style={{ paddingLeft: '16px' }}>
+                          <div className="tenant-checkbox-cell">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => handleToggleRow(tenant.id, e)}
+                            />
+                            <span className="tenant-row-idx">#{tenant.id}</span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="tenant-user-cell">
+                            <div className="tenant-avatar-letter">
+                              {tenant.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="tenant-user-meta">
+                              <span className="tenant-user-name">{tenant.name}</span>
+                              <span className="tenant-user-phone">{tenant.phone}</span>
+                              <span className="tenant-user-email">{tenant.email}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="tenant-property-cell">
+                            <img
+                              src={tenant.propertyImg}
+                              alt={tenant.property}
+                              className="tenant-prop-thumb"
+                              onError={(e) => {
+                                e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=200&q=80';
+                              }}
+                            />
+                            <div className="tenant-prop-meta">
+                              <span className="tenant-prop-name">{tenant.property}</span>
+                              <span className="tenant-prop-location">{tenant.propertyLocation}</span>
+                              <span className="tenant-prop-room">{tenant.roomNo}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="tenant-date-cell">{tenant.moveInDate}</td>
+                        <td className="tenant-date-cell">{tenant.leaseEndDate}</td>
+
+                        <td>
+                          <span className={`tenant-status-chip ${tenant.status === 'Active' ? 'active' : tenant.status === 'Moving Out Soon' ? 'moving' : 'inactive'}`}>
+                            {tenant.status}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className="tenant-actions-cell" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="tenant-view-pill-btn"
+                              onClick={() => handleSelectTenant(tenant)}
+                            >
+                              View
+                            </button>
+
+                            <button
+                              type="button"
+                              className="tenant-dots-btn"
+                              onClick={() => setOpenDropdownId(isDropdownOpen ? null : tenant.id)}
+                            >
+                              ⋮
+                            </button>
+
+                            {isDropdownOpen && (
+                              <div className="tenant-row-dropdown">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    setMessageTenant(tenant);
+                                  }}
+                                >
+                                  💬 Message Tenant
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    setAgreementTenant(tenant);
+                                  }}
+                                >
+                                  📄 View Agreement
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    showToast(`Lease for ${tenant.name} extended by 1 year.`);
+                                  }}
+                                >
+                                  🔄 Extend Lease
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, status: t.status === 'Active' ? 'Inactive' : 'Active' } : t));
+                                    showToast(`Status for ${tenant.name} updated.`);
+                                  }}
+                                >
+                                  ⚙ Toggle Status
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right Side: Tenant Profile Panel */}
+        {profileOpen && selectedTenant && (
+          <aside className="tenant-profile-card">
+            <div className="tenant-profile-top-header">
+              <h2>Tenant Profile</h2>
+              <button
+                type="button"
+                className="tenant-profile-close-btn"
+                onClick={() => setProfileOpen(false)}
+                title="Close profile panel"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Profile Hero Header */}
+            <div className="tenant-profile-hero">
+              <div className="tenant-profile-avatar-letter">
+                {selectedTenant.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="tenant-profile-hero-info">
+                <h3>{selectedTenant.name}</h3>
+                <span className={`tenant-status-chip ${selectedTenant.status === 'Active' ? 'active' : selectedTenant.status === 'Moving Out Soon' ? 'moving' : 'inactive'}`}>
+                  {selectedTenant.status}
+                </span>
+                <span className="tenant-profile-contact-line">
+                  <Icon name="phone" size={13} /> {selectedTenant.phone}
+                </span>
+                <span className="tenant-profile-contact-line">
+                  <Icon name="mail" size={13} /> {selectedTenant.email}
+                </span>
+                <div className="tenant-profile-verified-badge">
+                  <span className="check-icon">✓</span>
+                  <span>Aadhaar Verified</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-tabs: Details, Documents, History */}
+            <div className="tenant-profile-tabs-nav">
+              <button
+                type="button"
+                className={`tenant-profile-tab-btn ${profileTab === 'Details' ? 'active' : ''}`}
+                onClick={() => setProfileTab('Details')}
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className={`tenant-profile-tab-btn ${profileTab === 'Documents' ? 'active' : ''}`}
+                onClick={() => setProfileTab('Documents')}
+              >
+                Documents
+              </button>
+              <button
+                type="button"
+                className={`tenant-profile-tab-btn ${profileTab === 'History' ? 'active' : ''}`}
+                onClick={() => setProfileTab('History')}
+              >
+                History
+              </button>
+            </div>
+
+            {/* Tab: Details */}
+            {profileTab === 'Details' && (
+              <div className="tenant-profile-details-list">
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <Icon name="home" size={15}/> Property:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.property}</span>
+                </div>
+
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <Icon name="room" size={15}/> Room No:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.roomNo.replace('Room ', '')}</span>
+                </div>
+
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <Icon name="calendar" size={15}/> Move-in Date:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.moveInDate}</span>
+                </div>
+
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <Icon name="calendar" size={15}/> Lease End Date:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.leaseEndDate}</span>
+                </div>
+
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>₹</span> Monthly Rent:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.monthlyRent}</span>
+                </div>
+
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <Icon name="shield" size={15}/> Security Deposit:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.securityDeposit}</span>
+                </div>
+
+                <div className="tenant-profile-detail-row">
+                  <span className="tenant-profile-detail-label">
+                    <Icon name="people" size={15}/> Preferred Occupancy:
+                  </span>
+                  <span className="tenant-profile-detail-value">{selectedTenant.preferredOccupancy}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Documents */}
+            {profileTab === 'Documents' && (
+              <div className="tenant-docs-list">
+                <div className="tenant-doc-item">
+                  <div className="tenant-doc-left">
+                    <span>📄 Aadhaar Card</span>
+                  </div>
+                  <span className="tenant-doc-badge">Verified</span>
+                </div>
+                <div className="tenant-doc-item">
+                  <div className="tenant-doc-left">
+                    <span>📑 Lease Agreement</span>
+                  </div>
+                  <span className="tenant-doc-badge">Signed PDF</span>
+                </div>
+                <div className="tenant-doc-item">
+                  <div className="tenant-doc-left">
+                    <span>🛡️ Police Verification</span>
+                  </div>
+                  <span className="tenant-doc-badge">Approved</span>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: History */}
+            {profileTab === 'History' && (
+              <div className="tenant-history-list">
+                <div className="tenant-history-item">
+                  <span className="tenant-history-month">August 2025 Rent</span>
+                  <span className="tenant-history-amount">{selectedTenant.monthlyRent} Paid</span>
+                </div>
+                <div className="tenant-history-item">
+                  <span className="tenant-history-month">July 2025 Rent</span>
+                  <span className="tenant-history-amount">{selectedTenant.monthlyRent} Paid</span>
+                </div>
+                <div className="tenant-history-item">
+                  <span className="tenant-history-month">Security Deposit</span>
+                  <span className="tenant-history-amount">{selectedTenant.securityDeposit} Paid</span>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Actions: Message & View Agreement */}
+            <div className="tenant-profile-bottom-actions">
+              <button
+                type="button"
+                className="tenant-btn-message"
+                onClick={() => setMessageTenant(selectedTenant)}
+              >
+                💬 Message
+              </button>
+              <button
+                type="button"
+                className="tenant-btn-agreement"
+                onClick={() => setAgreementTenant(selectedTenant)}
+              >
+                📄 View Agreement
+              </button>
+            </div>
+          </aside>
+        )}
+      </div>
+
+      {/* Agreement Modal */}
+      {agreementTenant && (
+        <div className="tenant-modal-backdrop" onClick={() => setAgreementTenant(null)}>
+          <div className="tenant-agreement-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="tenant-agreement-header">
+              <h2>Rental Agreement Preview</h2>
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}
+                onClick={() => setAgreementTenant(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="tenant-agreement-body">
+              <div className="tenant-agreement-seal">
+                ✓ SafeRent Verified & Digitally Signed
+              </div>
+
+              <p>
+                <strong>This Residential Rental Agreement</strong> is entered between the Property Owner and <strong>{agreementTenant.name}</strong> for the occupancy of <strong>{agreementTenant.roomNo}</strong> at <strong>{agreementTenant.property}</strong> ({agreementTenant.propertyLocation}).
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#fff', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div><strong>Lease Start:</strong> {agreementTenant.moveInDate}</div>
+                <div><strong>Lease End:</strong> {agreementTenant.leaseEndDate}</div>
+                <div><strong>Monthly Rent:</strong> {agreementTenant.monthlyRent}</div>
+                <div><strong>Security Deposit:</strong> {agreementTenant.securityDeposit}</div>
+                <div><strong>Occupancy:</strong> {agreementTenant.preferredOccupancy}</div>
+                <div><strong>Verification:</strong> Aadhaar UIDAI Verified</div>
+              </div>
+
+              <p style={{ fontSize: '12px', color: '#64748b' }}>
+                The Tenant agrees to maintain discipline, comply with residential PG regulations, and pay monthly dues on or before the 5th of each calendar month.
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', borderTop: '1px dashed #cbd5e1', paddingTop: '12px' }}>
+                <div>
+                  <small style={{ display: 'block', color: '#64748b' }}>Tenant Signature</small>
+                  <strong style={{ color: '#4f46e5', fontStyle: 'italic' }}>{agreementTenant.name} (Signed)</strong>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <small style={{ display: 'block', color: '#64748b' }}>Property Owner</small>
+                  <strong style={{ color: '#059669', fontStyle: 'italic' }}>SafeRent Verified Host (Signed)</strong>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                style={{
+                  background: '#f1f5f9',
+                  color: '#334155',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 18px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setAgreementTenant(null)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                style={{
+                  background: '#4f46e5',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 18px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+                onClick={() => {
+                  showToast('Agreement PDF downloaded successfully.');
+                  setAgreementTenant(null);
+                }}
+              >
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {messageTenant && (
+        <div className="tenant-modal-backdrop" onClick={() => setMessageTenant(null)}>
+          <div className="tenant-agreement-dialog" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="tenant-agreement-header">
+              <h2>Message {messageTenant.name}</h2>
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}
+                onClick={() => setMessageTenant(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc', padding: '10px 14px', borderRadius: '8px' }}>
+                <img src={messageTenant.avatar} alt={messageTenant.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+                <div>
+                  <strong style={{ fontSize: '13.5px', color: '#0f172a' }}>{messageTenant.name}</strong>
+                  <small style={{ display: 'block', color: '#64748b' }}>{messageTenant.property} · {messageTenant.roomNo}</small>
+                </div>
+              </div>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                Your Message
+                <textarea
+                  rows="4"
+                  placeholder="Type a message or reminder regarding rent, maintenance, or stay..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '13px',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                  autoFocus
+                />
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+              <button
+                type="button"
+                style={{
+                  background: '#f1f5f9',
+                  color: '#334155',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setMessageTenant(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={{
+                  background: '#4f46e5',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 18px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+                onClick={handleSendMessage}
+              >
+                Send Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OwnerVisitRequestsPage() {
+  const visitRequestsData = [
+    {
+      id: 1,
+      studentName: 'Priya Singh',
+      studentCourse: 'B.Tech (IT)',
+      studentCollege: 'ABES Institute of Technology',
+      studentRating: '4.8',
+      studentReviews: 12,
+      studentPhone: '+91 98765 43210',
+      studentAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+      propertyName: 'Sunrise PG for Girls',
+      propertyLocation: 'Indirapuram, Ghaziabad',
+      propertyPrice: '₹8,000 / month',
+      propertyType: 'PG',
+      propertyGender: 'For Girls',
+      propertyImg: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=400&q=80',
+      requestedDate: 'Sat, 28 Sep 2024',
+      preferredTime: '11:00 AM – 12:00 PM',
+      message: 'Hi, I am interested in visiting the PG. Can I come this Saturday at 11 AM?',
+      status: 'Pending'
+    },
+    {
+      id: 2,
+      studentName: 'Aman Verma',
+      studentCourse: 'B.Tech (CSE)',
+      studentCollege: 'ABES Institute of Technology',
+      studentRating: '4.6',
+      studentReviews: 8,
+      studentPhone: '+91 87654 32109',
+      studentAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+      propertyName: 'Comfort Stay PG',
+      propertyLocation: 'Vasundhara, Ghaziabad',
+      propertyPrice: '₹7,500 / month',
+      propertyType: 'PG',
+      propertyGender: 'For Boys',
+      propertyImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
+      requestedDate: 'Sun, 29 Sep 2024',
+      preferredTime: '03:00 PM – 04:00 PM',
+      message: 'I would like to visit the property and see the room. Please confirm the ti...',
+      status: 'Pending'
+    },
+    {
+      id: 3,
+      studentName: 'Sneha Gupta',
+      studentCourse: 'B.Tech (IT)',
+      studentCollege: 'ABES Institute of Technology',
+      studentRating: '4.9',
+      studentReviews: 15,
+      studentPhone: '+91 76543 21098',
+      studentAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      propertyName: 'Green View PG',
+      propertyLocation: 'Indirapuram, Ghaziabad',
+      propertyPrice: '₹8,500 / month',
+      propertyType: 'PG',
+      propertyGender: 'For Girls',
+      propertyImg: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=400&q=80',
+      requestedDate: 'Mon, 30 Sep 2024',
+      preferredTime: '10:00 AM – 11:00 AM',
+      message: 'I am planning to shift next month. Can I visit the PG on Monday?',
+      status: 'Accepted'
+    },
+    {
+      id: 4,
+      studentName: 'Rahul Yadav',
+      studentCourse: 'B.Tech (ECE)',
+      studentCollege: 'ABES Institute of Technology',
+      studentRating: '4.4',
+      studentReviews: 7,
+      studentPhone: '+91 65432 10987',
+      studentAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+      propertyName: 'Metro Nest PG',
+      propertyLocation: 'Vaibhav Khand, Ghaziabad',
+      propertyPrice: '₹7,800 / month',
+      propertyType: 'PG',
+      propertyGender: 'For Boys',
+      propertyImg: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80',
+      requestedDate: 'Tue, 1 Oct 2024',
+      preferredTime: '04:00 PM – 05:00 PM',
+      message: 'I am interested in this PG. Please let me know if it is available...',
+      status: 'Rejected'
+    },
+    {
+      id: 5,
+      studentName: 'Neha Khan',
+      studentCourse: 'B.Tech (IT)',
+      studentCollege: 'ABES Institute of Technology',
+      studentRating: '4.7',
+      studentReviews: 9,
+      studentPhone: '+91 99887 66554',
+      studentAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+      propertyName: 'Urban Living PG',
+      propertyLocation: 'Shakti Khand, Ghaziabad',
+      propertyPrice: '₹9,000 / month',
+      propertyType: 'PG',
+      propertyGender: 'For Girls',
+      propertyImg: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&q=80',
+      requestedDate: 'Wed, 2 Oct 2024',
+      preferredTime: '12:00 PM – 01:00 PM',
+      message: 'I would like to visit and check the facilities. Please confirm.',
+      status: 'Pending'
+    }
+  ];
+
+  const [requests, setRequests] = useState(visitRequestsData);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [rescheduleId, setRescheduleId] = useState(null);
+  const [newDate, setNewDate] = useState('');
+  const [newTime, setNewTime] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToastMsg({ msg, type });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const updateStatus = (id, status) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    showToast(status === 'Accepted' ? 'Visit request accepted!' : 'Visit request rejected.');
+  };
+
+  const handleReschedule = (id) => {
+    if (!newDate || !newTime) return;
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, requestedDate: newDate, preferredTime: newTime, status: 'Pending' } : r));
+    setRescheduleId(null);
+    setNewDate('');
+    setNewTime('');
+    showToast('Visit rescheduled successfully!');
+  };
+
+  const filtered = activeFilter === 'all'
+    ? requests
+    : requests.filter(r => r.status.toLowerCase().replace(' ', '') === activeFilter);
+
+  const counts = {
+    all: requests.length,
+    pending: requests.filter(r => r.status === 'Pending').length,
+    accepted: requests.filter(r => r.status === 'Accepted').length,
+    rejected: requests.filter(r => r.status === 'Rejected').length,
+  };
+
+  const getStatusClass = (status) => {
+    if (status === 'Accepted') return 'vr-badge-accepted';
+    if (status === 'Rejected') return 'vr-badge-rejected';
+    return 'vr-badge-pending';
+  };
+
+  return (
+    <section className="vr-page">
+      {/* Toast */}
+      {toastMsg && (
+        <div className={`vr-toast ${toastMsg.type === 'success' ? 'vr-toast-success' : 'vr-toast-error'}`}>
+          {toastMsg.type === 'success' ? '✓' : '✕'} {toastMsg.msg}
+        </div>
+      )}
+
+      {/* Hero */}
+      <section className="owner-page-hero">
+        <div>
+          <h1>Visit Requests</h1>
+          <p>Students interested in visiting your properties</p>
+          <em>Every visit is a step towards a great tenancy ♡</em>
+        </div>
+      </section>
+
+      {/* Filter Tabs */}
+      <div className="vr-filter-bar">
+        <div className="vr-filter-tabs">
+          {[
+            { key: 'all', label: 'All', count: counts.all },
+            { key: 'pending', label: 'Pending', count: counts.pending },
+            { key: 'accepted', label: 'Accepted', count: counts.accepted },
+            { key: 'rejected', label: 'Rejected', count: counts.rejected },
+          ].map(({ key, label, count }) => (
+            <button
+              key={key}
+              type="button"
+              className={`vr-filter-tab ${activeFilter === key ? 'active' : ''}`}
+              onClick={() => setActiveFilter(key)}
+            >
+              {label} ({count})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Request Cards */}
+      <div className="vr-cards-list">
+        {filtered.length === 0 ? (
+          <div className="vr-empty">No visit requests found.</div>
+        ) : (
+          filtered.map(req => (
+            <article key={req.id} className="vr-card">
+              {/* Status Badge (top right) */}
+              <span className={`vr-status-badge ${getStatusClass(req.status)}`}>
+                {req.status}
+              </span>
+
+              {/* Left: Student Info */}
+              <div className="vr-student-col">
+                <div className="vr-student-avatar-letter">
+                  {req.studentName.charAt(0).toUpperCase()}
+                </div>
+                <div className="vr-student-meta">
+                  <strong className="vr-student-name">{req.studentName}</strong>
+                  <span className="vr-student-detail">{req.studentCourse}</span>
+                  <span className="vr-student-detail">{req.studentCollege}</span>
+                  <div className="vr-student-rating">
+                    <span className="vr-star">★</span>
+                    <span>{req.studentRating}</span>
+                    <span className="vr-reviews">({req.studentReviews} reviews)</span>
+                  </div>
+                  <span className="vr-student-phone">
+                    <Icon name="phone" size={12}/> {req.studentPhone}
+                  </span>
+                </div>
+              </div>
+
+              {/* Middle: Property Info */}
+              <div className="vr-property-col">
+                <img
+                  src={req.propertyImg}
+                  alt={req.propertyName}
+                  className="vr-property-thumb"
+                  onError={e => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=400&q=80'; }}
+                />
+                <div className="vr-property-meta">
+                  <strong className="vr-property-name">{req.propertyName}</strong>
+                  <span className="vr-property-location">
+                    <Icon name="pin" size={12}/> {req.propertyLocation}
+                  </span>
+                  <span className="vr-property-price">{req.propertyPrice}</span>
+                  <div className="vr-property-tags">
+                    <span className="vr-tag vr-tag-blue">{req.propertyType}</span>
+                    <span className={`vr-tag ${req.propertyGender.includes('Girls') ? 'vr-tag-pink' : 'vr-tag-indigo'}`}>
+                      {req.propertyGender}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Date, Time, Message */}
+              <div className="vr-details-col">
+                <div className="vr-detail-row">
+                  <span className="vr-detail-label">
+                    <Icon name="calendar" size={14}/> Requested Date
+                  </span>
+                  <span className="vr-detail-value">{req.requestedDate}</span>
+                </div>
+                <div className="vr-detail-row">
+                  <span className="vr-detail-label">
+                    <Icon name="clock" size={14}/> Preferred Time
+                  </span>
+                  <span className="vr-detail-value">{req.preferredTime}</span>
+                </div>
+                <div className="vr-message-bubble">
+                  <Icon name="mail" size={13}/>
+                  <p>{req.message}</p>
+                </div>
+              </div>
+
+              {/* Actions Col */}
+              <div className="vr-actions-col">
+                {req.status === 'Pending' && (
+                  <>
+                    <button
+                      type="button"
+                      className="vr-btn vr-btn-accept"
+                      onClick={() => updateStatus(req.id, 'Accepted')}
+                    >
+                      ✓ Accept
+                    </button>
+                    <button
+                      type="button"
+                      className="vr-btn vr-btn-reschedule"
+                      onClick={() => setRescheduleId(req.id)}
+                    >
+                      ⊞ Reschedule
+                    </button>
+                    <button
+                      type="button"
+                      className="vr-btn vr-btn-reject"
+                      onClick={() => updateStatus(req.id, 'Rejected')}
+                    >
+                      ✕ Reject
+                    </button>
+                  </>
+                )}
+                {(req.status === 'Accepted' || req.status === 'Rejected') && (
+                  <>
+                    <button type="button" className="vr-btn vr-btn-view-details">
+                      View Details
+                    </button>
+                    {req.status === 'Accepted' && (
+                      <button
+                        type="button"
+                        className="vr-btn vr-btn-cancel"
+                        onClick={() => updateStatus(req.id, 'Rejected')}
+                      >
+                        Cancel Visit
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      {/* Reschedule Modal */}
+      {rescheduleId && (
+        <div className="vr-modal-backdrop" onClick={() => setRescheduleId(null)}>
+          <div className="vr-modal" onClick={e => e.stopPropagation()}>
+            <h2>Reschedule Visit</h2>
+            <p>Set a new date and time for the visit.</p>
+            <label>
+              New Date
+              <input
+                type="text"
+                placeholder="e.g. Sat, 5 Oct 2024"
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+              />
+            </label>
+            <label>
+              Preferred Time
+              <input
+                type="text"
+                placeholder="e.g. 10:00 AM – 11:00 AM"
+                value={newTime}
+                onChange={e => setNewTime(e.target.value)}
+              />
+            </label>
+            <div className="vr-modal-actions">
+              <button type="button" className="vr-btn vr-btn-cancel" onClick={() => setRescheduleId(null)}>Cancel</button>
+              <button type="button" className="vr-btn vr-btn-accept" onClick={() => handleReschedule(rescheduleId)}>Confirm Reschedule</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+
 
 function OwnerSettingsPage({ onLogout }) { const [dark,setDark]=useState(false); return <><OwnerHero title="Settings" subtitle="Manage your account, preferences and business details all in one place."/><section className={`owner-settings ${dark?'dark-preview':''}`}><main><section><h2>♙　Profile Information</h2><p>Update your personal information.</p><div className="owner-fields"><label>Full Name<input defaultValue="Rohit Sharma"/></label><label>Email Address<input defaultValue="rohitsharma@gmail.com"/></label><label>Phone Number<input defaultValue="+91 98765 43210"/></label><label>Role<input defaultValue="PG Owner"/></label></div></section><section><h2>▥　Business Details</h2><p>Manage your PG business information.</p><div className="owner-fields"><label>Business Name<input defaultValue="Rohit PG Homes"/></label><label>Address<input defaultValue="Indirapuram, Ghaziabad, Uttar Pradesh"/></label><label>City<input defaultValue="Ghaziabad"/></label><label>Pincode<input defaultValue="201014"/></label></div></section><section><h2>☷　Preferences</h2><div className="owner-fields"><label>Preferred Communication<select><option>Email</option><option>Phone</option></select></label><label>Property Alerts<select><option>All Updates</option></select></label></div></section></main><aside><section><h2>◐ Theme Mode</h2><p>Choose the look and feel of your dashboard.</p><div className="theme-picks"><button>☼<b>Light</b></button><button className={!dark?'selected':''} onClick={()=>setDark(false)}>▣<b>Default</b></button><button className={dark?'selected':''} onClick={()=>setDark(true)}>☾<b>Dark</b></button></div></section><section><h2>⚙ Quick Settings</h2><p>♙　Edit Profile　›</p><p>🔒　Change Password　›</p><p>▣　Manage Bank Details　›</p><p>♧　Notification Preferences　›</p><p>◎　Language　›</p></section><button className="owner-logout" onClick={onLogout}>⇥　Logout <small>Sign out from your account.</small></button></aside></section></> }
 
@@ -3194,7 +4765,7 @@ function OwnerDashboard({ onLogout }) {
       {active === 'Add Property' && <AddPropertyPage onNavigate={setActive} onAddProperty={handleAddProperty}/>} 
       {active === 'Booking' && <OwnerBookingsPage onNavigate={setActive}/>} 
       {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} 
-      {active === 'Messages' && <OwnerMessagesPage/>} 
+      {active === 'Visit Requests' && <OwnerVisitRequestsPage/>} 
       {active === 'Collabs' && <OwnerCollabsPage/>} 
       {active === 'Settings' && <OwnerSettingsPage onLogout={onLogout}/>} 
     </main>
