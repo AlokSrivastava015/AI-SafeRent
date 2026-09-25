@@ -1,6 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Caveat:wght@500;600&display=swap');
 
 :root { font-family: 'DM Sans', sans-serif; color: #09174f; background: #14111a; }
+.booking-recommendations { min-width:0; padding:15px; border:1px solid #e2e8f5; border-radius:10px; background:#fff; }
+.booking-recommendations > header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.booking-recommendations h2 { margin:0; color:#10225e; font-size:15px; }
+.booking-recommendations > header button { padding:6px 9px; border:1px solid #dce4f4; border-radius:6px; color:#503dff; background:#fff; font-size:10px; cursor:pointer; }
+.booking-pg-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.booking-pg-card { min-width:0; overflow:hidden; border:1px solid #e2e8f5; border-radius:8px; background:#fbfcff; }
+.booking-pg-card .tiny-photo { height:76px; border-radius:0; }
+.booking-pg-card > div:last-child { padding:8px; }
+.booking-pg-card h3 { overflow:hidden; margin:0 0 3px; color:#13245f; font-size:11px; white-space:nowrap; text-overflow:ellipsis; }
+.booking-pg-card p,.booking-pg-card small { overflow:hidden; margin:0 0 4px; color:#637094; font-size:9px; white-space:nowrap; text-overflow:ellipsis; }
+.booking-pg-card small { display:block; color:#e29918; }
+.booking-pg-card strong { display:block; color:#10225e; font-size:12px; }
+.booking-pg-card strong em { color:#68779a; font-size:9px; font-style:normal; font-weight:500; }
+.booking-pg-card button { width:100%; margin-top:7px; padding:6px; border:0; border-radius:5px; color:#fff; background:#543fff; font-size:9px; cursor:pointer; }
+.bookings-layout { display: block; }
+.booking-list { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 18px; }
+.booking-card { display: block; min-width: 0; padding: 12px; border-color: #dfe6f4; border-radius: 14px; box-shadow: 0 8px 22px rgba(30, 55, 108, .07); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+article.booking-card { display: block; min-width: 0; padding: 12px; border-color: #dfe6f4; border-radius: 14px; box-shadow: 0 8px 22px rgba(30, 55, 108, .07); }
+.booking-card:hover, article.booking-card:hover { border-color: #c9d4f0; transform: translateY(-3px); box-shadow: 0 14px 30px rgba(30, 55, 108, .12); }
+.booking-card .booking-img { height: 165px; margin: -12px -12px 14px; border-radius: 13px 13px 0 0; }
+.booking-card .booking-status { top: 22px; left: 22px; padding: 6px 10px; box-shadow: 0 4px 10px rgba(24, 43, 92, .12); }
+.booking-card .booking-info { padding: 0 2px; }
+.booking-card .booking-info h2 { overflow: hidden; margin-bottom: 6px; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
+.booking-card .booking-info p { margin-bottom: 9px; }
+.booking-card .booking-info small { color: #657496; line-height: 1.5; }
+.booking-card .booking-price { margin-top: 15px; padding: 13px 2px 0; border-top: 1px solid #edf0f7; }
+.booking-card .booking-price > b { color: #142760; font-size: 20px; }
+.booking-card .booking-price p { margin: 6px 0 10px; }
+.booking-card .booking-price button { margin-top: 5px; border-radius: 7px; background: #f4f2ff; }
+.booking-card .booking-price button:hover { color: #fff; background: #543fff; }
+.booking-card.expanded { grid-template-rows: none; }
+.booking-card .booking-details { margin: 15px 0 0; padding: 13px; border-color: #dfe6f4; background: #f8f9ff; }
+.booking-card .booking-details h3 { color: #283b73; }
+.booking-card .booking-facts { grid-template-columns: 1fr 1fr; }
+@media (max-width: 1100px) {
+  .booking-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .booking-list { grid-template-columns: 1fr; }
+  .booking-card { grid-template-columns: none; }
+  .booking-card .booking-img { height: 150px; }
+  .booking-card .booking-status { top: 24px; left: 24px; }
+  .booking-card .booking-price { grid-column: auto; }
+}
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 body { margin: 0; min-width: 320px; overflow-x: hidden; overflow-y: auto; }
@@ -362,17 +406,23 @@ footer a { color: inherit; text-decoration: none; }
 .data-card h2 > span { display: inline-flex; gap: 8px; }
 .data-card h2 button { border: 0; color: #5140f8; background: transparent; font-size: 10px; cursor: pointer; }
 .data-card h2 button:hover { text-decoration: underline; }
+.data-card h2 > span > button:only-child { padding: 7px 12px; border: 1px solid #5140f8; border-radius: 6px; color: #5140f8; background: #f4f2ff; font-size: 10px; cursor: pointer; text-decoration: none; }
+.data-card h2 > span > button:only-child:hover { color: #fff; background: #5140f8; text-decoration: none; }
 .data-card p input { width: min(100%, 260px); padding: 6px 8px; border: 1px solid #d8e2f2; border-radius: 5px; outline-color: #5140f8; color: #24366e; font-size: 10px; }
 .profile-side h2, .verification-card h2 { display: flex; align-items: center; gap: 7px; }
-.verification-card { padding: 16px; border: 1px solid #e2e9f6; border-radius: 10px; background: #fff; }
-.verification-card > p { margin: 0 0 8px; color: #42547f; font-size: 11px; }
-.verification-track { height: 9px; overflow: hidden; border-radius: 8px; background: #e8ecf7; }
-.verification-track span { display: block; height: 100%; border-radius: inherit; background: #13a876; transition: width .25s ease; }
-.verification-card > b { display: block; margin: 6px 0 8px; color: #13835f; font-size: 13px; }
-.verification-card > small { display: block; margin-bottom: 12px; color: #667496; font-size: 10px; line-height: 1.4; }
-.document-upload { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding: 9px 10px; border: 1px dashed #cfd8ee; border-radius: 7px; color: #3d4f7d; background: #fafbff; font-size: 10px; cursor: pointer; }
-.document-upload input { width: 16px; max-width: 100px; font-size: 9px; }
-.uploaded-document { margin: 8px 0 0; padding: 7px 9px; border-radius: 6px; color: #087950; background: #e7f8ef; font-size: 9px; }
+.verification-card { position: relative; overflow: hidden; padding: 18px; border: 1px solid #dfe6f4; border-radius: 12px; background: linear-gradient(145deg, #fff 0%, #f8fbff 100%); box-shadow: 0 8px 22px rgba(37, 57, 111, .07); }
+.verification-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: linear-gradient(180deg, #5140f8, #13a876); }
+.verification-card h2 { margin: 0 0 6px; color: #13245f; font-size: 15px; }
+.verification-card > p { margin: 0 0 10px; color: #42547f; font-size: 11px; line-height: 1.45; }
+.verification-track { height: 10px; overflow: hidden; border-radius: 10px; background: #e7ecf7; box-shadow: inset 0 1px 2px rgba(21, 39, 91, .08); }
+.verification-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5140f8, #13a876); transition: width .25s ease; }
+.verification-card > b { display: block; margin: 7px 0 5px; color: #13835f; font-size: 13px; }
+.verification-card > small { display: block; margin-bottom: 13px; color: #667496; font-size: 10px; line-height: 1.45; }
+.document-upload { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; margin-top: 8px; padding: 9px 10px; border: 1px dashed #c6d2e9; border-radius: 8px; color: #304574; background: rgba(255,255,255,.72); font-size: 10px; font-weight: 600; cursor: pointer; transition: border-color .2s, background .2s; }
+.document-upload:hover { border-color: #5140f8; background: #f3f1ff; }
+.document-upload input { width: 120px; max-width: 46%; color: #596a8e; font-size: 9px; }
+.uploaded-document { margin: 8px 0 0; padding: 8px 9px; border: 1px solid #c7ecd9; border-radius: 7px; color: #087950; background: #eafaf1; font-size: 9px; }
+@media (max-width: 680px) { .verification-card { padding: 16px; }.document-upload { min-height: 44px; }.document-upload input { width: 145px; max-width: 52%; } }
 .profile-document-panel { display: grid; gap: 12px; max-width: 780px; padding: 16px; border: 1px solid #e2e9f6; border-radius: 10px; background: #fff; }
 .profile-document-panel > button { width: max-content; padding: 10px 14px; border: 0; border-radius: 7px; color: #fff; background: #5140f8; cursor: pointer; }
 .profile-status { margin: 12px 0 0; padding: 10px 13px; border-radius: 7px; color: #334676; background: #eef2ff; font-size: 11px; }
@@ -395,6 +445,14 @@ footer a { color: inherit; text-decoration: none; }
 @media (max-width: 800px) { .settings-account-view { grid-template-columns: 1fr; }.settings-account-view > .settings-card, .settings-account-view > .settings-account-overview, .settings-account-view > .quick-settings-card { grid-column: 1; grid-row: auto; }.settings-account-overview { grid-template-columns: 1fr; } }
 .profile-side .quick-action-link { width: auto; display: block; margin: 10px 0 0; padding: 0; border: 0; color: #5140f8; background: transparent; text-align: left; font-size: 11px; cursor: pointer; }
 .profile-side .quick-action-link:hover { text-decoration: underline; }
+
+.profile-layout { grid-template-columns: 320px minmax(0, 1fr); grid-template-areas: "card main" "verification main"; }
+.profile-card { grid-area: card; }
+.profile-main { grid-area: main; min-width: 0; }
+.profile-side { display: contents; }
+.profile-side .verification-card { grid-area: verification; }
+.profile-side > section:not(.verification-card) { display: none; }
+@media (max-width: 680px) { .profile-layout { grid-template-columns: 1fr; grid-template-areas: "card" "verification" "main"; } }
 
 /* Responsive student header across desktop, tablet, and phone widths */
 .student-header { min-width: 0; }
@@ -799,6 +857,46 @@ footer a { color: inherit; text-decoration: none; }
 .ai-layout { grid-template-columns: 1fr; }
 .ai-side { display: grid; grid-template-columns: minmax(0, 1fr); }
 
+/* Full-page preference editor used by AI Recommendations */
+.preferences-modal-backdrop { padding: 0; background: #f4f7ff; backdrop-filter: none; }
+.preferences-modal.preferences-page { width: 100%; height: 100%; max-height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border: 0; border-radius: 0; background: #f8faff; box-shadow: none; }
+.preferences-page .preferences-modal-header { min-height: 76px; padding: 14px 22px; background: #fff; }
+.preferences-page .preferences-modal-header h2 { font-size: 21px; }
+.preferences-page .preferences-modal-header p { font-size: 12px; }
+.preferences-page .modal-icon { width: 44px; height: 44px; border: 1px solid #dce3ff; border-radius: 12px; }
+.preferences-page .preferences-modal-body { max-height: none; padding: 14px 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 10px; overflow-y: auto; }
+.preferences-page .modal-grid, .preferences-page .modal-grid-wide { display: contents; }
+.preferences-page .location-field { grid-column: span 1; margin: 0; }
+.preferences-page .modal-field, .preferences-page .amenity-field { min-width: 0; padding: 12px; border: 1px solid #dfe6f8; border-radius: 10px; background: #fff; }
+.preferences-page .modal-field > span, .preferences-page .modal-field > legend { font-size: 13px; }
+.preferences-page .modal-field > span small, .preferences-page .modal-field > legend + small { font-size: 10px; }
+.preferences-page .modal-field input:not([type='checkbox']):not([type='radio']), .preferences-page .modal-field select, .preferences-page .modal-field textarea { min-height: 38px; font-size: 12px; }
+.preferences-page .amenity-options, .preferences-page .choice-options { gap: 7px; }
+.preferences-page .amenity-options label, .preferences-page .choice-options label { min-height: 31px; font-size: 10px; }
+.preferences-page .modal-stack { gap: 10px; }
+.preferences-page .notes-field { grid-column: 1 / -1; }
+.preferences-page .notes-field textarea { min-height: 68px; }
+.preferences-page .preferences-modal-footer { padding: 12px 20px; background: #fff; }
+.preferences-page .cancel-preferences, .preferences-page .save-preferences, .preferences-page .reset-preferences { min-height: 40px; padding: 0 18px; font-size: 13px; }
+.preferences-page .cancel-preferences { border: 1px solid #dce3f4; background: #fff; }
+@media (max-width: 850px) {
+  .preferences-page .preferences-modal-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .preferences-page .location-field { grid-column: span 2; }
+  .preferences-page .modal-stack { grid-column: span 2; grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .preferences-page .preferences-modal-header { padding: 11px 13px; }
+  .preferences-page .preferences-modal-header h2 { font-size: 17px; }
+  .preferences-page .preferences-modal-header p { font-size: 10px; }
+  .preferences-page .preferences-modal-body { grid-template-columns: 1fr; padding: 10px; }
+  .preferences-page .location-field, .preferences-page .notes-field, .preferences-page .modal-stack { grid-column: auto; }
+  .preferences-page .modal-stack { grid-template-columns: 1fr; }
+  .preferences-page .preferences-modal-footer { align-items: center; flex-direction: row; padding: 10px; }
+  .preferences-page .reset-preferences { display: none; }
+  .preferences-page .preferences-modal-footer > div { display: flex; width: 100%; }
+  .preferences-page .cancel-preferences, .preferences-page .save-preferences { flex: 1; }
+}
+
 @media (max-width: 700px) {
   .preferences-modal-backdrop { padding: 10px; }
   .preferences-modal { max-height: calc(100vh - 20px); border-radius: 14px; }
@@ -808,6 +906,13 @@ footer a { color: inherit; text-decoration: none; }
   .preferences-modal-footer { align-items: stretch; flex-direction: column; }
   .preferences-modal-footer > div { display: grid; grid-template-columns: 1fr 1.3fr; }
   .reset-preferences, .cancel-preferences, .save-preferences { width: 100%; }
+}
+
+/* Keep the recommendations editor full-screen at every breakpoint. */
+@media (max-width: 700px) {
+  .preferences-modal-backdrop { padding: 0; }
+  .preferences-modal.preferences-page { width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
+  .preferences-page .preferences-modal-body { max-height: none; }
 }
 
 /* Property details modal */
@@ -1697,3 +1802,6 @@ footer a { color: inherit; text-decoration: none; }
   }
 }
 
+
+/* Keep the recommendations editor full-screen at every breakpoint. */
+@media (max-width: 700px) { .preferences-modal-backdrop { padding: 0; } .preferences-modal.preferences-page { width: 100%; height: 100%; max-height: 100%; border-radius: 0; } .preferences-page .preferences-modal-body { max-height: none; } }
