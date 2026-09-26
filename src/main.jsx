@@ -17,6 +17,73 @@ export const initialUserProfile = {
   bio: 'Looking for a safe and comfortable place to stay while I build my future.'
 }
 
+
+export const initialOwnerProfile = {
+  name: 'Rohit Sharma',
+  role: 'Property Owner',
+  phone: '+91 98765 43210',
+  altPhone: '+91 87654 32109',
+  email: 'rohitsharma@gmail.com',
+  dob: '12 March 1995',
+  gender: 'Male',
+  address: 'Indirapuram, Ghaziabad, Uttar Pradesh',
+  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+  businessType: 'Individual Owner',
+  businessName: 'Sharma Properties',
+  experience: '5+ Years',
+  totalProperties: 8,
+  primaryLocation: 'Indirapuram, Ghaziabad',
+  areasCovered: 'Indirapuram, Vaishali, Vasundhara, Kaushambi',
+  about: 'I provide clean, safe and fully furnished PG accommodations for students and working professionals. My focus is on creating a comfortable and secure living environment.',
+  contactTime: '9:00 AM – 8:00 PM',
+  communicationMode: 'Call / WhatsApp / Email',
+  notifications: {
+    visitRequests: true,
+    newBookings: true,
+    messages: true,
+    reviews: false
+  },
+  stats: {
+    properties: 8,
+    bookings: 24,
+    rating: 4.7
+  }
+}
+
+const OwnerProfileContext = createContext({
+  ownerProfile: initialOwnerProfile,
+  updateOwnerProfile: () => {}
+})
+
+export const useOwnerProfile = () => useContext(OwnerProfileContext)
+
+export function OwnerProfileProvider({ children }) {
+  const [ownerProfile, setOwnerProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ai_saferent_owner_profile')
+      return saved ? JSON.parse(saved) : initialOwnerProfile
+    } catch (e) {
+      return initialOwnerProfile
+    }
+  })
+
+  const updateOwnerProfile = (newValues) => {
+    setOwnerProfile((prev) => {
+      const updated = { ...prev, ...newValues }
+      try {
+        localStorage.setItem('ai_saferent_owner_profile', JSON.stringify(updated))
+      } catch (e) {}
+      return updated
+    })
+  }
+
+  return (
+    <OwnerProfileContext.Provider value={{ ownerProfile, updateOwnerProfile }}>
+      {children}
+    </OwnerProfileContext.Provider>
+  )
+}
+
 const StudentUserContext = createContext({
   userProfile: initialUserProfile,
   updateUserProfile: () => {}
@@ -87,7 +154,8 @@ const Icon = ({ name, size = 24 }) => {
     chevronLeft: <path d="m15 18-6-6 6-6"/>,
     chevronRight: <path d="m9 18 6-6-6-6"/>,
     clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></>,
-    phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 2.77h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 10c1.02 2.08 2.77 3.88 4.91 4.9l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2.03Z"></path></>
+    phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 2.77h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 10c1.02 2.08 2.77 3.88 4.91 4.9l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2.03Z"></path></>,
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
@@ -140,7 +208,7 @@ function StudentDashboard({ onLogout, onNavigate }) {
   const displayRole = userProfile?.role ? `${userProfile.role}/Tenant` : 'Student/Tenant'
 
   return <div className="dashboard">
-    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><button className="notification" aria-label="Notifications"><Icon name="bell" size={18}/><i /></button><span className="avatar">{initial}</span><span className="account-copy">Hi, {firstName}<small>{displayRole}</small></span><span>⌄</span></div></header>
+    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><button className="notification" aria-label="Notifications"><Icon name="bell" size={18}/><i /></button><span className="avatar">{initial}</span><span className="account-copy">Hi, {firstName}<small>{displayRole}</small></span></div></header>
     <StudentSidebar active="Home" onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} />
     <main className="dash-main">
       <section className="dash-hero"><div className="dash-hero-copy"><span className="eyebrow">Verified Spaces. Happy Places.</span><h1>Safest places.<br/>Better spaces.<em>Yours to call home.</em></h1><p>PGs, Flats & Rooms for Students<br/>and Working Professionals.</p><div className="trust-row"><span><Icon name="shield" size={14}/> Safe</span><span><Icon name="check" size={14}/> Verified</span><span><Icon name="home" size={14}/> Affordable</span><span><Icon name="settings" size={14}/> Trusted</span></div></div></section>
@@ -168,7 +236,7 @@ function StudentChrome({ active, onNavigate, children }) {
   const displayName = userProfile?.name || 'Aman Verma'
   const displayRole = userProfile?.role || 'Student'
 
-  return <div className="student-pages"><header className="student-header"><button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Open navigation"><Icon name="menu" size={21}/></button><a className="brand dash-brand" onClick={() => onNavigate('Home')} href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><label className="student-search"><Icon name="search" size={17}/><input placeholder="Search by location, property name or landmark..."/></label><div className="student-user" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><span><Icon name="bell" size={20}/></span><b>{initial}</b><i>{displayName}<small>{displayRole}</small></i><em>⌄</em></div></header><StudentSidebar active={active} onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} /><main className="student-content">{children}</main></div>
+  return <div className="student-pages"><header className="student-header"><button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Open navigation"><Icon name="menu" size={21}/></button><a className="brand dash-brand" onClick={() => onNavigate('Home')} href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><label className="student-search"><Icon name="search" size={17}/><input placeholder="Search by location, property name or landmark..."/></label><div className="student-user" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><span><Icon name="bell" size={20}/></span><b>{initial}</b><i>{displayName}<small>{displayRole}</small></i></div></header><StudentSidebar active={active} onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} /><main className="student-content">{children}</main></div>
 }
 
 function ListingCard({ name, type, index, onVisit, onDetails }) {
@@ -1517,8 +1585,9 @@ function ProfilePage({ onNavigate }) {
   const { userProfile, updateUserProfile } = useStudentUser()
   const [activeTab, setActiveTab] = useState('Profile')
   const [documents, setDocuments] = useState({ identity: null, address: null })
-  const [status, setStatus] = useState('Upload your identity and address documents to verify your profile.')
+  const [status, setStatus] = useState('')
   const [editPersonalActive, setEditPersonalActive] = useState(false)
+  const [editPreferencesActive, setEditPreferencesActive] = useState(false)
   const verificationProgress = Object.values(documents).filter(Boolean).length * 50
 
   const uploadDocument = (type, event) => {
@@ -1545,15 +1614,16 @@ function ProfilePage({ onNavigate }) {
     const map = {}
     savedRows.forEach((row) => {
       const parts = row.split('|')
-      const label = parts[0]
-      const val = parts.slice(1).join('|')
-      if (label === 'Full Name') map.name = val
-      if (label === 'Email Address') map.email = val
-      if (label === 'Mobile Number') map.phone = val
-      if (label === 'Date of Birth') map.dob = val
+      const label = parts[0]?.trim()
+      const val = parts.slice(1).join('|').trim()
+      if (label === 'Full Name' || label === 'Name') map.name = val
+      if (label === 'Role' || label === 'User Role') map.role = val
+      if (label === 'Email Address' || label === 'Email') map.email = val
+      if (label === 'Mobile Number' || label === 'Phone' || label === 'Phone Number') map.phone = val
+      if (label === 'Date of Birth' || label === 'DOB') map.dob = val
       if (label === 'Gender') map.gender = val
-      if (label === 'Current Location') map.location = val
-      if (label === 'College/University') map.college = val
+      if (label === 'Current Location' || label === 'Location') map.location = val
+      if (label === 'College/University' || label === 'College' || label === 'University') map.college = val
       if (label === 'Course') map.course = val
       if (label === 'Year') map.year = val
       if (label === 'About You' || label === 'Bio') map.bio = val
@@ -1563,8 +1633,28 @@ function ProfilePage({ onNavigate }) {
     setStatus('Personal information saved and updated successfully.')
   }
 
+  const handleSavePreferences = (savedRows) => {
+    const map = {}
+    savedRows.forEach((row) => {
+      const parts = row.split('|')
+      const label = parts[0]?.trim()
+      const val = parts.slice(1).join('|').trim()
+      if (label === 'Looking For') map.lookingFor = val
+      if (label === 'Preferred Location') map.preferredLocation = val
+      if (label === 'Budget Range') map.budget = val
+      if (label === 'Preferred For') map.preferredFor = val
+      if (label === 'Move-in Date') map.moveInDate = val
+      if (label === 'Amenities Preference') map.amenities = val
+      if (label === 'Lifestyle Preference') map.lifestyle = val
+    })
+    updateUserProfile(map)
+    setEditPreferencesActive(false)
+    setStatus('Preferences saved and updated successfully.')
+  }
+
   const personalRows = [
     `Full Name|${userProfile?.name || 'Aman Verma'}`,
+    `Role|${userProfile?.role || 'Student'}`,
     `Email Address|${userProfile?.email || 'amanverma@gmail.com'}`,
     `Mobile Number|${userProfile?.phone || '+91 9876543210'}`,
     `Date of Birth|${userProfile?.dob || '15 March 2005'}`,
@@ -1574,6 +1664,16 @@ function ProfilePage({ onNavigate }) {
     `Course|${userProfile?.course || 'B.Tech (Information Technology)'}`,
     `Year|${userProfile?.year || '3rd Year'}`,
     `About You|${userProfile?.bio || 'Looking for a safe and comfortable place to stay while I build my future.'}`
+  ]
+
+  const preferenceRows = [
+    `Looking For|${userProfile?.lookingFor || 'PG / Flat (Both)'}`,
+    `Preferred Location|${userProfile?.preferredLocation || 'Indirapuram, Ghaziabad'}`,
+    `Budget Range|${userProfile?.budget || '₹5,000 - ₹15,000'}`,
+    `Preferred For|${userProfile?.preferredFor || 'Boys Only'}`,
+    `Move-in Date|${userProfile?.moveInDate || 'October 2025'}`,
+    `Amenities Preference|${userProfile?.amenities || 'Wi-Fi, AC, Attached Bath, Food'}`,
+    `Lifestyle Preference|${userProfile?.lifestyle || 'Study Friendly, Quiet Environment'}`
   ]
 
   const initial = userProfile?.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'A'
@@ -1607,7 +1707,7 @@ function ProfilePage({ onNavigate }) {
             <span><b>5</b>Saved</span>
             <span><b>2</b>Visits Booked</span>
           </div>
-          <button type="button" onClick={() => { setEditPersonalActive(true); setStatus('Editing Personal Information. Modify the fields below and click Save.'); }}>
+          <button type="button" onClick={() => { setEditPersonalActive(true); setStatus('Editing Personal Information. Modify the fields and click Save.'); }}>
             Edit Profile
           </button>
           <button type="button" onClick={() => onNavigate('Settings')}>Account Settings</button>
@@ -1623,9 +1723,10 @@ function ProfilePage({ onNavigate }) {
           />
           <DataCard 
             title="Preferences" 
-            rows={['Looking For|PG / Flat (Both)','Preferred Location|Indirapuram, Ghaziabad','Budget Range|₹5,000 - ₹15,000','Preferred For|Boys Only','Move-in Date|October 2025','Amenities Preference|Wi-Fi, AC, Attached Bath, Food','Lifestyle Preference|Study Friendly, Quiet Environment']} 
-            onEdit={() => setStatus('Preferences editing active. Click Save to apply.')}
-            onSave={() => setStatus('Preferences updated successfully.')}
+            rows={preferenceRows} 
+            isEditing={editPreferencesActive}
+            onToggleEdit={setEditPreferencesActive}
+            onSave={handleSavePreferences}
           />
           <DataCard 
             title="Documents" 
@@ -1660,20 +1761,43 @@ function ProfilePage({ onNavigate }) {
 }
 
 function PreferencesPanel({ onStatus }) {
+  const { userProfile, updateUserProfile } = useStudentUser()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState({
-    lookingFor: 'PG / Flat (Both)',
-    location: 'Indirapuram, Ghaziabad',
-    budget: '₹5,000 - ₹15,000',
+    lookingFor: userProfile?.lookingFor || 'PG / Flat (Both)',
+    location: userProfile?.preferredLocation || 'Indirapuram, Ghaziabad',
+    budget: userProfile?.budget || '₹5,000 - ₹15,000',
     amenities: ['Wi-Fi', 'AC', 'Attached Bath', 'Food'],
     electricity: '24/7 electricity with power backup',
     water: 'Regular water supply and RO drinking water',
     surroundings: 'Near metro, college, market and pharmacy'
   })
+
+  useEffect(() => {
+    if (userProfile) {
+      setDraft((prev) => ({
+        ...prev,
+        lookingFor: userProfile.lookingFor || prev.lookingFor,
+        location: userProfile.preferredLocation || prev.location,
+        budget: userProfile.budget || prev.budget
+      }))
+    }
+  }, [userProfile])
+
   const amenityOptions = ['Wi-Fi', 'AC', 'Attached Bath', 'Food', 'Laundry', 'Parking', 'Study Area', 'Housekeeping']
   const toggleAmenity = (amenity) => setDraft((current) => ({ ...current, amenities: current.amenities.includes(amenity) ? current.amenities.filter((item) => item !== amenity) : [...current.amenities, amenity] }))
   const update = (field, value) => setDraft((current) => ({ ...current, [field]: value }))
-  const save = () => { setEditing(false); onStatus('Preferences saved successfully.') }
+  const save = () => { 
+    setEditing(false)
+    if (updateUserProfile) {
+      updateUserProfile({
+        lookingFor: draft.lookingFor,
+        preferredLocation: draft.location,
+        budget: draft.budget
+      })
+    }
+    onStatus('Preferences saved successfully.') 
+  }
   return <section className="profile-preferences-page"><header><div><h2><Icon name="settings" size={17}/> Preferences</h2><p>Choose the facilities and lifestyle details that matter for your next home.</p></div>{editing ? <span className="preference-actions"><button type="button" onClick={save}>Save</button><button type="button" onClick={() => setEditing(false)}>Cancel</button></span> : <button type="button" onClick={() => setEditing(true)}>Edit</button>}</header><div className="preference-edit-grid"><label>Looking For<select disabled={!editing} value={draft.lookingFor} onChange={(event) => update('lookingFor', event.target.value)}><option>PG / Flat (Both)</option><option>PG</option><option>Flat</option><option>Room</option></select></label><label>Preferred Location<input disabled={!editing} value={draft.location} onChange={(event) => update('location', event.target.value)} /></label><label>Budget Range<select disabled={!editing} value={draft.budget} onChange={(event) => update('budget', event.target.value)}><option>₹5,000 - ₹15,000</option><option>₹15,000 - ₹25,000</option><option>₹25,000 - ₹50,000</option></select></label></div><section className="preference-choice-section"><h3>Amenities</h3><p>Select the amenities you want in a PG, room or flat.</p><div className="preference-choice-grid">{amenityOptions.map((amenity) => <label className={draft.amenities.includes(amenity) ? 'selected' : ''} key={amenity}><input type="checkbox" disabled={!editing} checked={draft.amenities.includes(amenity)} onChange={() => toggleAmenity(amenity)} />{amenity}</label>)}</div></section><section className="preference-choice-section"><h3>Lifestyle Preferences</h3><p>Tell us about the practical conditions around your preferred home.</p><div className="preference-edit-grid"><label>Electricity Availability<select disabled={!editing} value={draft.electricity} onChange={(event) => update('electricity', event.target.value)}><option>24/7 electricity with power backup</option><option>Regular electricity, limited backup</option><option>Solar and backup power preferred</option></select></label><label>Water Availability<select disabled={!editing} value={draft.water} onChange={(event) => update('water', event.target.value)}><option>Regular water supply and RO drinking water</option><option>Regular water supply</option><option>24/7 water supply required</option></select></label><label>Surroundings<select disabled={!editing} value={draft.surroundings} onChange={(event) => update('surroundings', event.target.value)}><option>Near metro, college, market and pharmacy</option><option>Quiet residential surroundings</option><option>Close to public transport and markets</option></select></label></div></section></section>
 }
 
@@ -1691,16 +1815,28 @@ function DataCard({ title, rows, onEdit, onSave, isEditing: controlledIsEditing,
 
   const [draftRows, setDraftRows] = useState(rows)
 
+  // Only update draftRows from external rows when not currently editing
   useEffect(() => {
-    setDraftRows(rows)
-  }, [rows])
+    if (!isEditing) {
+      setDraftRows(rows)
+    }
+  }, [rows, isEditing])
 
   const updateRow = (index, value) => setDraftRows((current) => current.map((row, rowIndex) => rowIndex === index ? `${row.split('|')[0]}|${value}` : row))
-  const startEditing = () => { setEditing(true); onEdit?.() }
+  
+  const startEditing = () => { 
+    setDraftRows(rows)
+    setEditing(true)
+    onEdit?.() 
+  }
+
   const saveChanges = () => { 
     setEditing(false)
-    if (onSave) onSave(draftRows)
+    if (onSave) {
+      onSave(draftRows)
+    }
   }
+
   const cancelChanges = () => {
     setDraftRows(rows)
     setEditing(false)
@@ -1735,7 +1871,6 @@ function DataCard({ title, rows, onEdit, onSave, isEditing: controlledIsEditing,
     })}
   </section>
 }
-
 function LegacySettingsPage({ onNavigate, onLogout }) {
   const [dark, setDark] = useState(false)
   return <StudentChrome active="Settings" onNavigate={onNavigate}><section className="settings-hero"><div><h1>Settings</h1><p>Manage your account, preferences and privacy all in one place.</p><em>Your Comfort<br/>Our Priority ♡</em></div><aside>“　A better student life<br/>starts with the right space.</aside></section><div className="setting-tabs"><button className="active">♙　Account Settings</button><button>⚙　Preferences</button><button>♧　Notifications</button><button>♢　Privacy & Security</button><button>?　Help & Support</button></div><section className={`settings-layout ${dark ? 'dark-preview' : ''}`}><div><section className="settings-card account-form"><h2>♙　Profile Information</h2><p>Update your personal details.</p><div className="setting-inputs"><span className="settings-avatar">A</span><label>Full Name<input defaultValue="Aman Verma"/></label><label>Email Address<input defaultValue="amanverma@gmail.com"/></label><label>Phone Number<input defaultValue="+91 98765 43210"/></label><label>Date of Birth<input defaultValue="15 Mar 2005"/></label><label className="wide">About You<textarea defaultValue="B.Tech IT Student | Looking for a safe and comfortable PG near my college."/></label></div></section><section className="settings-card preferences-form"><h2>⚙　Preferences</h2><p>Customize your experience.</p><div className="preference-fields"><label>Preferred Locations<input defaultValue="Indirapuram  ×　 Vaishali  ×　 Raj Nagar ×"/></label><label>Preferred Budget Range<select defaultValue="5000"> <option value="5000">₹5,000 - ₹10,000</option></select></label><label>Room Type Preference<select><option>Single Room</option></select></label><label>Gender Preference<select><option>No Preference</option></select></label></div></section><section className="settings-card privacy-card"><h2>🛡️　Privacy & Security</h2><p>Keep your account safe.</p><div><span>🔒　<b>Two-Factor Authentication<small>Add an extra layer of security to your account.</small></b><input type="checkbox"/></span><span>▣　<b>Login Activity<small>View your recent login activity.</small></b>　›</span></div></section></div><aside className="settings-side"><section className="theme"><h2>◐　Theme Mode</h2><p>Choose the look and feel of your app.</p><div><button>☼<b>Light</b></button><button className={!dark ? 'selected' : ''} onClick={() => setDark(false)}>▣<b>Default</b></button><button className={dark ? 'selected' : ''} onClick={() => setDark(true)}>☾<b>Dark</b></button></div></section><section><h2>⚙　Quick Settings</h2><p>♙　Edit Profile　›</p><p>🔒　Change Password　›</p><p>▤　Manage Payment Methods　›</p><p>♧　Notification Preferences　›</p><p>◎　Language　›</p><p>?　Help & Support　›</p></section><button className="logout-btn" onClick={onLogout}>⇥　 Logout　›<small>Sign out from your account on this device.</small></button></aside></section></StudentChrome>
@@ -1788,7 +1923,14 @@ function SettingsPage({ onNavigate, onLogout }) {
 
 function InfoStrip() { return <section className="info-strip"><span>🛡️ <b>Verified Listings<small>Every property is manually verified</small></b></span><span>⌖ <b>Safe Neighborhoods<small>Check safety scores & reviews</small></b></span><span>▣ <b>Transparent Information<small>No hidden charges</small></b></span><span>▣ <b>Book Site Visits<small>Schedule visits easily</small></b></span></section> }
 
-const ownerNav = [[<Icon name="grid" size={18}/>, 'Dashboard'], [<Icon name="building" size={18}/>, 'My Properties'], [<Icon name="sparkle" size={18}/>, 'Add Property'], [<Icon name="calendar" size={18}/>, 'Booking'], [<Icon name="people" size={18}/>, 'Tenants'], [<Icon name="calendar" size={18}/>, 'Visit Requests'], [<Icon name="settings" size={18}/>, 'Settings']]
+const ownerNav = [
+  [<Icon name="grid" size={18}/>, 'Dashboard'],
+  [<Icon name="building" size={18}/>, 'My Properties'],
+  [<Icon name="calendar" size={18}/>, 'Visit Requests', 5],
+  [<Icon name="calendar" size={18}/>, 'My Bookings'],
+  [<Icon name="user" size={18}/>, 'Profile'],
+  [<Icon name="settings" size={18}/>, 'Settings']
+]
 const ownerProperties = [['Sunrise PG for Girls', 'Indirapuram, Ghaziabad', 'Girls Only', '₹ 7,000 / month', '3/10'], ['Comfort Stay PG', 'Vaishali, Ghaziabad', 'Boys Only', '₹ 6,500 / month', '5/12'], ['Urban Nest PG', 'Raj Nagar, Ghaziabad', 'Boys & Girls', '₹ 8,000 / month', '2/8']]
 const requests = [['A', 'Aman Singh', 'Requested visit', 'Sunrise PG for Girls', '10:30 AM', 'Pending'], ['N', 'Neha Sharma', 'Booked a room', 'Comfort Stay PG', 'Yesterday', 'Confirmed'], ['R', 'Rahul Verma', 'Requested visit', 'Urban Nest PG', '16 Sep', 'Pending'], ['S', 'Sneha Patel', 'Mess inquiry', 'Sunrise PG for Girls', '15 Sep', 'Responded']]
 
@@ -4533,7 +4675,553 @@ function OwnerCollabsPage() {
   </section>
 }
 
+
+function OwnerProfilePage({ onNavigate }) {
+  const { ownerProfile, updateOwnerProfile } = useOwnerProfile()
+  const [editPersonal, setEditPersonal] = useState(false)
+  const [editBusiness, setEditBusiness] = useState(false)
+  const [editPrefs, setEditPrefs] = useState(false)
+  const [viewDoc, setViewDoc] = useState(null)
+  const [statusToast, setStatusToast] = useState('')
+
+  const [personalForm, setPersonalForm] = useState({
+    name: ownerProfile?.name || 'Rohit Sharma',
+    phone: ownerProfile?.phone || '+91 98765 43210',
+    email: ownerProfile?.email || 'rohitsharma@gmail.com',
+    dob: ownerProfile?.dob || '12 March 1995',
+    gender: ownerProfile?.gender || 'Male',
+    address: ownerProfile?.address || 'Indirapuram, Ghaziabad, Uttar Pradesh',
+    altPhone: ownerProfile?.altPhone || '+91 87654 32109'
+  })
+
+  const [businessForm, setBusinessForm] = useState({
+    businessType: ownerProfile?.businessType || 'Individual Owner',
+    businessName: ownerProfile?.businessName || 'Sharma Properties',
+    experience: ownerProfile?.experience || '5+ Years',
+    totalProperties: ownerProfile?.totalProperties || 8,
+    primaryLocation: ownerProfile?.primaryLocation || 'Indirapuram, Ghaziabad',
+    areasCovered: ownerProfile?.areasCovered || 'Indirapuram, Vaishali, Vasundhara, Kaushambi',
+    about: ownerProfile?.about || 'I provide clean, safe and fully furnished PG accommodations for students and working professionals. My focus is on creating a comfortable and secure living environment.'
+  })
+
+  const [prefsForm, setPrefsForm] = useState({
+    contactTime: ownerProfile?.contactTime || '9:00 AM – 8:00 PM',
+    communicationMode: ownerProfile?.communicationMode || 'Call / WhatsApp / Email',
+    notifications: ownerProfile?.notifications || {
+      visitRequests: true,
+      newBookings: true,
+      messages: true,
+      reviews: false
+    }
+  })
+
+  const [avatarSrc, setAvatarSrc] = useState(ownerProfile?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80')
+
+  useEffect(() => {
+    if (ownerProfile) {
+      setPersonalForm({
+        name: ownerProfile.name || 'Rohit Sharma',
+        phone: ownerProfile.phone || '+91 98765 43210',
+        email: ownerProfile.email || 'rohitsharma@gmail.com',
+        dob: ownerProfile.dob || '12 March 1995',
+        gender: ownerProfile.gender || 'Male',
+        address: ownerProfile.address || 'Indirapuram, Ghaziabad, Uttar Pradesh',
+        altPhone: ownerProfile.altPhone || '+91 87654 32109'
+      })
+      setBusinessForm({
+        businessType: ownerProfile.businessType || 'Individual Owner',
+        businessName: ownerProfile.businessName || 'Sharma Properties',
+        experience: ownerProfile.experience || '5+ Years',
+        totalProperties: ownerProfile.totalProperties || 8,
+        primaryLocation: ownerProfile.primaryLocation || 'Indirapuram, Ghaziabad',
+        areasCovered: ownerProfile.areasCovered || 'Indirapuram, Vaishali, Vasundhara, Kaushambi',
+        about: ownerProfile.about || 'I provide clean, safe and fully furnished PG accommodations for students and working professionals.'
+      })
+      if (ownerProfile.avatar) setAvatarSrc(ownerProfile.avatar)
+    }
+  }, [ownerProfile])
+
+  const notify = (msg) => {
+    setStatusToast(msg)
+    setTimeout(() => setStatusToast(''), 3500)
+  }
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result
+        if (result) {
+          setAvatarSrc(result)
+          updateOwnerProfile({ avatar: result })
+          notify('Profile photo updated successfully!')
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const savePersonal = () => {
+    updateOwnerProfile(personalForm)
+    setEditPersonal(false)
+    notify('Personal information saved successfully!')
+  }
+
+  const saveBusiness = () => {
+    updateOwnerProfile(businessForm)
+    setEditBusiness(false)
+    notify('Business information saved successfully!')
+  }
+
+  const savePreferences = () => {
+    updateOwnerProfile(prefsForm)
+    setEditPrefs(false)
+    notify('Preferences saved successfully!')
+  }
+
+  const toggleAllEdit = () => {
+    const nextState = !(editPersonal || editBusiness || editPrefs)
+    setEditPersonal(nextState)
+    setEditBusiness(nextState)
+    setEditPrefs(nextState)
+  }
+
+  return (
+    <div className="owner-profile-page">
+      {statusToast && <div className="owner-status-banner">✓ {statusToast}</div>}
+
+      {/* Hero Title */}
+      <div className="owner-profile-hero">
+        <div className="owner-profile-hero-left">
+          <div className="owner-profile-hero-icon">
+            <Icon name="user" size={24}/>
+          </div>
+          <div>
+            <h1>Profile</h1>
+            <p>Manage your personal and business information</p>
+          </div>
+        </div>
+        <button type="button" className="owner-edit-main-btn" onClick={toggleAllEdit}>
+          <Icon name="sparkle" size={16}/> {editPersonal && editBusiness ? 'Done Editing' : 'Edit Profile'}
+        </button>
+      </div>
+
+      {/* Top Banner Card */}
+      <div className="owner-profile-banner">
+        <div className="owner-banner-left">
+          <div className="owner-avatar-wrapper">
+            <img src={avatarSrc} alt={personalForm.name} className="owner-avatar-photo" />
+            <label className="owner-avatar-camera-overlay" title="Change Photo">
+              <Icon name="camera" size={15} />
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+            </label>
+          </div>
+          <div className="owner-banner-info">
+            <div className="owner-name-title">
+              <h2>{personalForm.name}</h2>
+              <span className="owner-verified-icon" title="Verified Owner">✓</span>
+            </div>
+            <span className="owner-role-tag">Property Owner</span>
+            <div className="owner-meta-items">
+              <span><Icon name="phone" size={13}/> {personalForm.phone}</span>
+              <span><Icon name="mail" size={13}/> {personalForm.email}</span>
+              <span><Icon name="pin" size={13}/> {personalForm.address}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="owner-banner-stats">
+          <div className="owner-stat-card">
+            <div className="owner-stat-icon-circle blue">
+              <Icon name="building" size={20} />
+            </div>
+            <div className="owner-stat-text">
+              <b>{businessForm.totalProperties}</b>
+              <span>Total Properties</span>
+            </div>
+          </div>
+
+          <div className="owner-stat-card">
+            <div className="owner-stat-icon-circle purple">
+              <Icon name="people" size={20} />
+            </div>
+            <div className="owner-stat-text">
+              <b>24</b>
+              <span>Total Bookings</span>
+            </div>
+          </div>
+
+          <div className="owner-stat-card">
+            <div className="owner-stat-icon-circle gold">
+              <Icon name="star" size={20} />
+            </div>
+            <div className="owner-stat-text">
+              <b>4.7</b>
+              <span>Average Rating</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 1: Personal & Business Information */}
+      <div className="owner-cards-row">
+        {/* Personal Information */}
+        <div className="owner-section-card">
+          <div className="owner-card-header">
+            <div className="owner-card-header-left">
+              <span className="header-icon"><Icon name="user" size={18}/></span>
+              <h3>Personal Information</h3>
+            </div>
+            {editPersonal ? (
+              <button type="button" className="owner-card-edit-btn save" onClick={savePersonal}>Save</button>
+            ) : (
+              <button type="button" className="owner-card-edit-btn" onClick={() => setEditPersonal(true)}>
+                <Icon name="sparkle" size={12}/> Edit
+              </button>
+            )}
+          </div>
+
+          <div className="owner-fields-table">
+            <div className="owner-field-row">
+              <span className="owner-field-label">Full Name</span>
+              {editPersonal ? (
+                <input className="owner-field-input" value={personalForm.name} onChange={(e) => setPersonalForm({ ...personalForm, name: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{personalForm.name}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Phone Number</span>
+              {editPersonal ? (
+                <input className="owner-field-input" value={personalForm.phone} onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{personalForm.phone}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Email Address</span>
+              {editPersonal ? (
+                <input className="owner-field-input" value={personalForm.email} onChange={(e) => setPersonalForm({ ...personalForm, email: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{personalForm.email}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Date of Birth</span>
+              {editPersonal ? (
+                <input className="owner-field-input" value={personalForm.dob} onChange={(e) => setPersonalForm({ ...personalForm, dob: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{personalForm.dob}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Gender</span>
+              {editPersonal ? (
+                <select className="owner-field-input" value={personalForm.gender} onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+              ) : (
+                <span className="owner-field-val">{personalForm.gender}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Address</span>
+              {editPersonal ? (
+                <input className="owner-field-input" value={personalForm.address} onChange={(e) => setPersonalForm({ ...personalForm, address: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{personalForm.address}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Alternate Phone</span>
+              {editPersonal ? (
+                <input className="owner-field-input" value={personalForm.altPhone} onChange={(e) => setPersonalForm({ ...personalForm, altPhone: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{personalForm.altPhone}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Business Information */}
+        <div className="owner-section-card">
+          <div className="owner-card-header">
+            <div className="owner-card-header-left">
+              <span className="header-icon"><Icon name="building" size={18}/></span>
+              <h3>Business Information</h3>
+            </div>
+            {editBusiness ? (
+              <button type="button" className="owner-card-edit-btn save" onClick={saveBusiness}>Save</button>
+            ) : (
+              <button type="button" className="owner-card-edit-btn" onClick={() => setEditBusiness(true)}>
+                <Icon name="sparkle" size={12}/> Edit
+              </button>
+            )}
+          </div>
+
+          <div className="owner-fields-table">
+            <div className="owner-field-row">
+              <span className="owner-field-label">Business Type</span>
+              {editBusiness ? (
+                <select className="owner-field-input" value={businessForm.businessType} onChange={(e) => setBusinessForm({ ...businessForm, businessType: e.target.value })}>
+                  <option>Individual Owner</option>
+                  <option>Property Management Firm</option>
+                  <option>Co-Living Operator</option>
+                </select>
+              ) : (
+                <span className="owner-field-val">{businessForm.businessType}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Business Name</span>
+              {editBusiness ? (
+                <input className="owner-field-input" value={businessForm.businessName} onChange={(e) => setBusinessForm({ ...businessForm, businessName: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{businessForm.businessName}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Years of Experience</span>
+              {editBusiness ? (
+                <input className="owner-field-input" value={businessForm.experience} onChange={(e) => setBusinessForm({ ...businessForm, experience: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{businessForm.experience}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Total Properties</span>
+              {editBusiness ? (
+                <input type="number" className="owner-field-input" value={businessForm.totalProperties} onChange={(e) => setBusinessForm({ ...businessForm, totalProperties: Number(e.target.value) })} />
+              ) : (
+                <span className="owner-field-val">{businessForm.totalProperties}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Primary Location</span>
+              {editBusiness ? (
+                <input className="owner-field-input" value={businessForm.primaryLocation} onChange={(e) => setBusinessForm({ ...businessForm, primaryLocation: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{businessForm.primaryLocation}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Areas Covered</span>
+              {editBusiness ? (
+                <input className="owner-field-input" value={businessForm.areasCovered} onChange={(e) => setBusinessForm({ ...businessForm, areasCovered: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{businessForm.areasCovered}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">About Me</span>
+              {editBusiness ? (
+                <textarea className="owner-field-textarea" value={businessForm.about} onChange={(e) => setBusinessForm({ ...businessForm, about: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{businessForm.about}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: Identity & Verification and Preferences & Settings */}
+      <div className="owner-cards-row">
+        {/* Identity & Verification */}
+        <div className="owner-section-card">
+          <div className="owner-card-header">
+            <div className="owner-card-header-left">
+              <span className="header-icon"><Icon name="shield" size={18}/></span>
+              <h3>Identity &amp; Verification</h3>
+            </div>
+            <span className="owner-card-badge-verified">✓ Verified</span>
+          </div>
+
+          <div className="owner-docs-grid">
+            {/* Aadhaar Card */}
+            <div className="owner-doc-item">
+              <div className="owner-doc-top">
+                <span className="owner-doc-top-icon"><Icon name="lock" size={16}/></span>
+                <div className="owner-doc-title-box">
+                  <strong>Aadhaar Card</strong>
+                  <small>Uploaded ✓</small>
+                </div>
+              </div>
+              <div className="owner-doc-card-visual aadhaar">
+                <div className="owner-doc-chip">
+                  <span>GOVT OF INDIA</span>
+                  <span>🇮🇳</span>
+                </div>
+                <div className="owner-doc-number">XXXX XXXX 1234</div>
+              </div>
+              <button type="button" className="owner-doc-view-btn" onClick={() => setViewDoc({ title: 'Aadhaar Card', type: 'aadhaar', number: 'XXXX XXXX 1234', verified: '15 Jan 2025' })}>
+                <Icon name="eyeOpen" size={14}/> View
+              </button>
+            </div>
+
+            {/* PAN Card */}
+            <div className="owner-doc-item">
+              <div className="owner-doc-top">
+                <span className="owner-doc-top-icon"><Icon name="wallet" size={16}/></span>
+                <div className="owner-doc-title-box">
+                  <strong>PAN Card</strong>
+                  <small>Uploaded ✓</small>
+                </div>
+              </div>
+              <div className="owner-doc-card-visual pan">
+                <div className="owner-doc-chip">
+                  <span>INCOME TAX DEPT</span>
+                  <span>GOVT OF INDIA</span>
+                </div>
+                <div className="owner-doc-number">XXXXX1234X</div>
+              </div>
+              <button type="button" className="owner-doc-view-btn" onClick={() => setViewDoc({ title: 'PAN Card', type: 'pan', number: 'XXXXX1234X', verified: '15 Jan 2025' })}>
+                <Icon name="eyeOpen" size={14}/> View
+              </button>
+            </div>
+
+            {/* Address Proof */}
+            <div className="owner-doc-item">
+              <div className="owner-doc-top">
+                <span className="owner-doc-top-icon"><Icon name="home" size={16}/></span>
+                <div className="owner-doc-title-box">
+                  <strong>Address Proof</strong>
+                  <small>Uploaded ✓</small>
+                </div>
+              </div>
+              <div className="owner-doc-card-visual address">
+                <div className="owner-doc-chip">
+                  <span>ELECTRICITY BILL</span>
+                  <span>VERIFIED</span>
+                </div>
+                <div className="owner-doc-number">CA #9481204</div>
+              </div>
+              <button type="button" className="owner-doc-view-btn" onClick={() => setViewDoc({ title: 'Address Proof (Electricity Bill)', type: 'address', number: 'CA #9481204 - Indirapuram', verified: '15 Jan 2025' })}>
+                <Icon name="eyeOpen" size={14}/> View
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Preferences & Settings */}
+        <div className="owner-section-card">
+          <div className="owner-card-header">
+            <div className="owner-card-header-left">
+              <span className="header-icon"><Icon name="settings" size={18}/></span>
+              <h3>Preferences &amp; Settings</h3>
+            </div>
+            {editPrefs ? (
+              <button type="button" className="owner-card-edit-btn save" onClick={savePreferences}>Save</button>
+            ) : (
+              <button type="button" className="owner-card-edit-btn" onClick={() => setEditPrefs(true)}>
+                <Icon name="sparkle" size={12}/> Edit
+              </button>
+            )}
+          </div>
+
+          <div className="owner-fields-table">
+            <div className="owner-field-row">
+              <span className="owner-field-label">Preferred Contact Time</span>
+              {editPrefs ? (
+                <input className="owner-field-input" value={prefsForm.contactTime} onChange={(e) => setPrefsForm({ ...prefsForm, contactTime: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{prefsForm.contactTime}</span>
+              )}
+            </div>
+
+            <div className="owner-field-row">
+              <span className="owner-field-label">Communication Mode</span>
+              {editPrefs ? (
+                <input className="owner-field-input" value={prefsForm.communicationMode} onChange={(e) => setPrefsForm({ ...prefsForm, communicationMode: e.target.value })} />
+              ) : (
+                <span className="owner-field-val">{prefsForm.communicationMode}</span>
+              )}
+            </div>
+
+            <div style={{ marginTop: '6px' }}>
+              <span className="owner-field-label" style={{ display: 'block', marginBottom: '10px' }}>Notification Preferences</span>
+              <div className="owner-notif-grid">
+                <label className="owner-notif-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={prefsForm.notifications.visitRequests}
+                    onChange={(e) => setPrefsForm({ ...prefsForm, notifications: { ...prefsForm.notifications, visitRequests: e.target.checked } })}
+                  />
+                  <span>Visit Requests</span>
+                </label>
+
+                <label className="owner-notif-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={prefsForm.notifications.newBookings}
+                    onChange={(e) => setPrefsForm({ ...prefsForm, notifications: { ...prefsForm.notifications, newBookings: e.target.checked } })}
+                  />
+                  <span>New Bookings</span>
+                </label>
+
+                <label className="owner-notif-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={prefsForm.notifications.messages}
+                    onChange={(e) => setPrefsForm({ ...prefsForm, notifications: { ...prefsForm.notifications, messages: e.target.checked } })}
+                  />
+                  <span>Messages</span>
+                </label>
+
+                <label className="owner-notif-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={prefsForm.notifications.reviews}
+                    onChange={(e) => setPrefsForm({ ...prefsForm, notifications: { ...prefsForm.notifications, reviews: e.target.checked } })}
+                  />
+                  <span>Reviews</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Document View Modal */}
+      {viewDoc && (
+        <div className="owner-doc-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setViewDoc(null) }}>
+          <div className="owner-doc-modal-content">
+            <div className="owner-doc-modal-header">
+              <h3>{viewDoc.title}</h3>
+              <button type="button" className="owner-doc-modal-close" onClick={() => setViewDoc(null)}>✕</button>
+            </div>
+            <div className="owner-doc-modal-preview-box">
+              <div style={{ fontSize: '38px', marginBottom: '12px' }}>📄</div>
+              <h4 style={{ margin: '0 0 6px', color: '#0f1c4d', fontSize: '16px' }}>{viewDoc.title}</h4>
+              <p style={{ margin: '0 0 14px', color: '#64749b', fontSize: '13px' }}>Document ID: <strong>{viewDoc.number}</strong></p>
+              <span className="owner-card-badge-verified">✓ Verified on {viewDoc.verified}</span>
+            </div>
+            <div className="owner-doc-modal-footer">
+              <button type="button" className="owner-card-edit-btn save" onClick={() => setViewDoc(null)}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function OwnerDashboard({ onLogout }) {
+  const { ownerProfile } = useOwnerProfile()
   const [menu, setMenu] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [query, setQuery] = useState('')
@@ -4569,20 +5257,14 @@ function OwnerDashboard({ onLogout }) {
   return <div className="owner-dashboard">
     <aside className={`owner-sidebar ${menu ? 'show' : ''}`}>
       <div className="owner-sidebar-header">
-        <a className="brand owner-brand" href="#">
+        <a className="brand owner-brand" href="#" onClick={(e) => { e.preventDefault(); setActive('Dashboard'); }}>
           <span className="brand-mark"><Icon name="home" size={28}/></span>
-          <span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span>
+          <span><strong>AI Safe<span>Rent</span></strong><small>Owner Dashboard</small></span>
         </a>
       </div>
 
-      <button className="owner-profile" title="Rohit Sharma (PG Owner)">
-        <b>R</b>
-        <span>Rohit Sharma<small>PG Owner</small></span>
-        <i>⌄</i>
-      </button>
-
       <nav>
-        {ownerNav.map(([icon, label]) => (
+        {ownerNav.map(([icon, label, badge]) => (
           <button 
             key={label} 
             className={`owner-nav-btn ${active === label ? 'active' : ''}`} 
@@ -4591,15 +5273,23 @@ function OwnerDashboard({ onLogout }) {
           >
             <b>{icon}</b>
             <span className="nav-label">{label}</span>
+            {badge && <span className={`owner-nav-badge ${label === 'Messages' ? 'red' : ''}`}>{badge}</span>}
           </button>
         ))}
       </nav>
+
+      <div className="owner-sidebar-footer">
+        <button type="button" className="owner-sidebar-help-btn" onClick={() => { setActive('Messages'); setMenu(false); }}>
+          <Icon name="help" size={18}/>
+          <span>Help &amp; Support</span>
+        </button>
+      </div>
     </aside>
     <main className="owner-main">
       <header className="owner-header">
         <button className="owner-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Icon name="menu" size={20}/></button>
         <label className="global-search"><Icon name="search" size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search properties, tenants or messages..."/></label>
-        <div className="owner-tools"><span className="owner-bell"><Icon name="bell" size={18}/><i /></span><span className="owner-avatar">R</span><button onClick={onLogout}><b>Rohit Sharma</b><small>PG Owner · Sign out</small></button><i>⌄</i></div>
+        <div className="owner-tools"><span className="owner-bell"><Icon name="bell" size={18}/><i /></span><span className="owner-avatar">R</span><button onClick={() => setActive('Profile')}><b>{ownerProfile?.name || 'Rohit Sharma'}</b><small>{ownerProfile?.role || 'PG Owner'}</small></button></div>
       </header>
 
       {toastMessage && <div className="owner-status-banner">✓ {toastMessage}</div>}
@@ -4764,20 +5454,37 @@ function OwnerDashboard({ onLogout }) {
       {active === 'My Properties' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
       {active === 'Add Property' && <AddPropertyPage onNavigate={setActive} onAddProperty={handleAddProperty}/>} 
       {active === 'Booking' && <OwnerBookingsPage onNavigate={setActive}/>} 
+      {active === 'My Bookings' && <OwnerBookingsPage onNavigate={setActive}/>} 
       {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} 
       {active === 'Visit Requests' && <OwnerVisitRequestsPage/>} 
+      {active === 'Messages' && <OwnerCollabsPage/>} 
       {active === 'Collabs' && <OwnerCollabsPage/>} 
+      {active === 'Reviews' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
+      {active === 'Analytics' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
+      {active === 'Profile' && <OwnerProfilePage onNavigate={setActive}/>}
       {active === 'Settings' && <OwnerSettingsPage onLogout={onLogout}/>} 
     </main>
   </div>
 }
 
 function App() {
+  const { updateUserProfile } = useStudentUser()
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('tenant')
+  const [authMode, setAuthMode] = useState('login')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
+  const [authForm, setAuthForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    agree: false
+  })
+  const [errors, setErrors] = useState({})
+  const [authSuccess, setAuthSuccess] = useState('')
   const [page, setPage] = useState('login')
+
   useEffect(() => { const timer = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(timer) }, [])
   const benefits = [['shield', 'Verified', 'Properties'], ['people', 'Safer', 'Neighborhoods'], ['pin', 'AI', 'Recommendations'], ['leaf', 'Better', 'Living']]
   const defaultSearchFilters = {
@@ -4800,6 +5507,7 @@ function App() {
     const routes = { Home: 'dashboard', PGs: 'pgs', Flats: 'flats', Rooms: 'rooms', Explore: 'explore', 'AI Recommendations': 'recommendations', 'Book a Visit': 'visit', 'Saved Properties': 'saved', 'My Bookings': 'bookings', Profile: 'profile', Settings: 'settings' }
     setPage(routes[destination] || 'dashboard')
   }
+
   if (page === 'dashboard') return <StudentDashboard onLogout={() => setPage('login')} onNavigate={studentNavigate} />
   if (page === 'pgs') return <ListingsPage type="PGs" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
   if (page === 'flats') return <ListingsPage type="Flats" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
@@ -4812,7 +5520,126 @@ function App() {
   if (page === 'profile') return <ProfilePage onNavigate={studentNavigate} />
   if (page === 'settings') return <SettingsPage onNavigate={studentNavigate} onLogout={() => setPage('login')} />
   if (page === 'owner-dashboard') return <OwnerDashboard onLogout={() => setPage('login')} />
-  const submitLogin = (event) => { event.preventDefault(); setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard') }
+
+  const validateSignup = () => {
+    const errs = {}
+    // Name validation
+    const trimmedName = authForm.name.trim()
+    if (!trimmedName) {
+      errs.name = 'Please enter your full name.'
+    } else if (trimmedName.length < 2) {
+      errs.name = 'Name must be at least 2 characters.'
+    } else if (!/^[a-zA-Zs.'-]+$/.test(trimmedName)) {
+      errs.name = 'Please enter a valid name (letters only).'
+    }
+
+    // Email validation
+    const trimmedEmail = authForm.email.trim()
+    if (!trimmedEmail) {
+      errs.email = 'Please enter your email address.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errs.email = 'Please enter a valid email address.'
+    }
+
+    // Phone validation
+    const trimmedPhone = authForm.phone.trim()
+    const cleanDigits = trimmedPhone.replace(/\D/g, '')
+    if (!trimmedPhone) {
+      errs.phone = 'Please enter your mobile number.'
+    } else if (cleanDigits.length < 10 || cleanDigits.length > 12) {
+      errs.phone = 'Please enter a valid 10-digit mobile number.'
+    }
+
+    // Password validation
+    if (!authForm.password) {
+      errs.password = 'Please create a password.'
+    } else if (authForm.password.length < 6) {
+      errs.password = 'Password must be at least 6 characters.'
+    }
+
+    // Terms agreement
+    if (!authForm.agree) {
+      errs.agree = 'You must agree to the Terms & Privacy Policy to sign up.'
+    }
+
+    return errs
+  }
+
+  const validateLogin = () => {
+    const errs = {}
+    const trimmedEmail = authForm.email.trim()
+    if (!trimmedEmail) {
+      errs.email = 'Please enter your email address.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errs.email = 'Please enter a valid email address.'
+    }
+
+    if (!authForm.password) {
+      errs.password = 'Please enter your password.'
+    } else if (authForm.password.length < 4) {
+      errs.password = 'Password must be at least 4 characters.'
+    }
+    return errs
+  }
+
+  const handleFieldChange = (field, value) => {
+    setAuthForm((prev) => ({ ...prev, [field]: value }))
+    if (errors[field] || errors.general) {
+      setErrors((prev) => ({ ...prev, [field]: '', general: '' }))
+    }
+    if (authSuccess) {
+      setAuthSuccess('')
+    }
+  }
+
+  const submitAuth = (event) => {
+    event.preventDefault()
+    setAuthSuccess('')
+
+    if (authMode === 'signup') {
+      const formErrors = validateSignup()
+      if (Object.keys(formErrors).length > 0) {
+        setErrors(formErrors)
+        return
+      }
+
+      // Successful Sign Up: update profile context, then open LOGIN page
+      if (updateUserProfile) {
+        updateUserProfile({
+          name: authForm.name.trim(),
+          email: authForm.email.trim(),
+          phone: authForm.phone.trim()
+        })
+      }
+
+      setErrors({})
+      // Clear password and agree flag, preserve email for easy login
+      setAuthForm((prev) => ({
+        ...prev,
+        password: '',
+        agree: false
+      }))
+      setAuthSuccess('Account created successfully! Please enter your password to log in.')
+      setAuthMode('login')
+    } else {
+      // Login validation
+      const formErrors = validateLogin()
+      if (Object.keys(formErrors).length > 0) {
+        setErrors(formErrors)
+        return
+      }
+
+      setErrors({})
+      setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
+    }
+  }
+
+  const switchMode = (newMode) => {
+    setAuthMode(newMode)
+    setErrors({})
+    setAuthSuccess('')
+  }
+
   return <>
     {loading && <Preloader />}
     <main className="page-shell">
@@ -4829,19 +5656,120 @@ function App() {
       </section>
 
       <section className="login-side">
-        <form className="login-card" onSubmit={submitLogin}>
-          <header><h2>Welcome to <span>AI SafeRent</span></h2><p>Login to continue</p></header>
+        <form className="login-card" onSubmit={submitAuth} noValidate>
+          <header>
+            <h2>{authMode === 'login' ? <>Welcome to <span>AI SafeRent</span></> : <>Join <span>AI SafeRent</span></>}</h2>
+            <p>{authMode === 'login' ? 'Login to continue' : 'Create your free account'}</p>
+          </header>
+
+          {authSuccess && (
+            <div className="auth-alert success" role="status">
+              <Icon name="check" size={20} />
+              <span>{authSuccess}</span>
+            </div>
+          )}
+
+          {errors.general && (
+            <div className="auth-alert error" role="alert">
+              <Icon name="help" size={20} />
+              <span>{errors.general}</span>
+            </div>
+          )}
+
           <div className="role-toggle">
             <button type="button" className={role === 'tenant' ? 'selected' : ''} onClick={() => setRole('tenant')}><Icon name="cap"/>Student / Tenant</button>
             <button type="button" className={role === 'owner' ? 'selected' : ''} onClick={() => setRole('owner')}><Icon name="building"/>PG Owner</button>
           </div>
-          <label className="field"><Icon name="mail"/><input type="email" placeholder="Enter your email address" aria-label="Email address"/></label>
-          <label className="field"><Icon name="lock"/><input type={showPassword ? 'text' : 'password'} placeholder="Enter your password" aria-label="Password"/><button type="button" className="eye" onClick={() => setShowPassword(!showPassword)}><Icon name="eye"/></button></label>
-          <div className="form-options"><label className="remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}/><span>✓</span>Remember me</label><a href="#">Forgot password?</a></div>
-          <button className="login-button" type="submit">Login <Icon name="arrow"/></button>
+
+          {authMode === 'signup' && (
+            <div>
+              <label className={`field ${errors.name ? 'has-error' : ''}`}>
+                <Icon name="user"/>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={authForm.name}
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  aria-label="Full name"
+                />
+              </label>
+              {errors.name && <span className="field-error-msg">{errors.name}</span>}
+            </div>
+          )}
+
+          <div>
+            <label className={`field ${errors.email ? 'has-error' : ''}`}>
+              <Icon name="mail"/>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={authForm.email}
+                onChange={(e) => handleFieldChange('email', e.target.value)}
+                aria-label="Email address"
+              />
+            </label>
+            {errors.email && <span className="field-error-msg">{errors.email}</span>}
+          </div>
+
+          {authMode === 'signup' && (
+            <div>
+              <label className={`field ${errors.phone ? 'has-error' : ''}`}>
+                <Icon name="phone"/>
+                <input
+                  type="tel"
+                  placeholder="Enter your mobile number"
+                  value={authForm.phone}
+                  onChange={(e) => handleFieldChange('phone', e.target.value)}
+                  aria-label="Phone number"
+                />
+              </label>
+              {errors.phone && <span className="field-error-msg">{errors.phone}</span>}
+            </div>
+          )}
+
+          <div>
+            <label className={`field ${errors.password ? 'has-error' : ''}`}>
+              <Icon name="lock"/>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder={authMode === 'login' ? 'Enter your password' : 'Create a secure password (min. 6 chars)'}
+                value={authForm.password}
+                onChange={(e) => handleFieldChange('password', e.target.value)}
+                aria-label="Password"
+              />
+              <button type="button" className="eye" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
+                <Icon name={showPassword ? 'eyeOpen' : 'eye'}/>
+              </button>
+            </label>
+            {errors.password && <span className="field-error-msg">{errors.password}</span>}
+          </div>
+
+          {authMode === 'login' ? (
+            <div className="form-options">
+              <label className="remember">
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}/>
+                <span>✓</span>Remember me
+              </label>
+              <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('A password reset link has been sent to your email.'); }}>Forgot password?</a>
+            </div>
+          ) : (
+            <div>
+              <div className="form-options">
+                <label className="remember">
+                  <input type="checkbox" checked={authForm.agree} onChange={(e) => handleFieldChange('agree', e.target.checked)}/>
+                  <span>✓</span>I agree to the Terms & Privacy
+                </label>
+              </div>
+              {errors.agree && <span className="field-error-msg" style={{ marginTop: '-12px', marginBottom: '10px' }}>{errors.agree}</span>}
+            </div>
+          )}
+
+          <button className="login-button" type="submit">
+            {authMode === 'login' ? 'Login' : 'Create Account'} <Icon name="arrow"/>
+          </button>
           <div className="or"><span />OR<span /></div>
           <div className="socials">
-            <button type="button" className="social-btn google-btn">
+            <button type="button" className="social-btn google-btn" onClick={() => setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')}>
               <span className="social-icon google-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" role="img" aria-label="Google icon">
                   <path fill="#EA4335" d="M24 9.5c3.2 0 6.1 1.1 8.3 3.2l6.2-6.2A23.9 23.9 0 0 0 24 0C14.8 0 6.8 5.6 2.7 13.7l7.8 6.1c1.8-5.6 6.8-9.3 13.5-9.3Z"/>
@@ -4850,18 +5778,23 @@ function App() {
                   <path fill="#34A853" d="M10.9 32.9C8.8 29.7 7.7 25.9 7.7 24c0-1.9.9-5.1 2.1-7.1L2.3 11.3A23.7 23.7 0 0 0 0 24c0 3.8.9 7.6 2.5 10.9l8.4-6Z"/>
                 </svg>
               </span>
-              <span>Continue with Google</span>
+              <span>{authMode === 'login' ? 'Continue with Google' : 'Sign up with Google'}</span>
             </button>
-            <button type="button" className="social-btn apple-btn">
+            <button type="button" className="social-btn apple-btn" onClick={() => setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')}>
               <span className="social-icon apple-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" role="img" aria-label="Apple icon">
                   <path fill="currentColor" d="M15.4 12.3c0-2.3 1.9-3.4 2-3.5-1.1-1.7-2.8-1.9-3.4-1.9-1.4-.1-2.8.8-3.5.8-.8 0-2-.8-3.2-.8-1.7 0-3.2 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.8 1.2 1.9 2.5 3.2 2.4 1.3-.1 1.8-.8 3.4-.8 1.6 0 2.1.8 3.4.8 1.4 0 2.3-1.2 3.1-2.4.9-1.4 1.3-2.8 1.3-2.8-.1 0-2.8-1.1-4.2-3.4Zm-2.4-6.7c.6-.8 1.1-1.9 1-3-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2-.5 2.6-1.3Z"/>
                 </svg>
               </span>
-              <span>Continue with Apple</span>
+              <span>{authMode === 'login' ? 'Continue with Apple' : 'Sign up with Apple'}</span>
             </button>
           </div>
-          <p className="signup-text">Don’t have an account? <a href="#">Sign Up</a></p>
+
+          {authMode === 'login' ? (
+            <p className="signup-text">Don’t have an account? <a href="#signup" onClick={(e) => { e.preventDefault(); switchMode('signup'); }}>Sign Up</a></p>
+          ) : (
+            <p className="signup-text">Already have an account? <a href="#login" onClick={(e) => { e.preventDefault(); switchMode('login'); }}>Log In</a></p>
+          )}
         </form>
       </section>
       <footer><span>© 2026 AI SafeRent. All rights reserved.</span><nav><a href="#">About</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Help</a></nav></footer>
@@ -4869,4 +5802,10 @@ function App() {
   </>
 }
 
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(
+  <OwnerProfileProvider>
+    <StudentUserProvider>
+      <App />
+    </StudentUserProvider>
+  </OwnerProfileProvider>
+)
