@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, createContext, useContext } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 import AIMapExplorer from './AIMapExplorer'
+import { login as loginWithApi, requestPasswordReset, signUp as signUpWithApi } from './api/auth'
 
 export const initialUserProfile = {
   name: 'Aman Verma',
@@ -5592,7 +5593,7 @@ function App() {
     }
   }
 
-  const submitAuth = (event) => {
+  const submitAuth = async (event) => {
     event.preventDefault()
     setAuthSuccess('')
 
@@ -5603,24 +5604,14 @@ function App() {
         return
       }
 
-      // Successful Sign Up: update profile context, then open LOGIN page
-      if (updateUserProfile) {
-        updateUserProfile({
-          name: authForm.name.trim(),
-          email: authForm.email.trim(),
-          phone: authForm.phone.trim()
-        })
-      }
-
-      setErrors({})
-      // Clear password and agree flag, preserve email for easy login
-      setAuthForm((prev) => ({
-        ...prev,
-        password: '',
-        agree: false
-      }))
-      setAuthSuccess('Account created successfully! Please enter your password to log in.')
-      setAuthMode('login')
+      try {
+        const result = await signUpWithApi({ full_name: authForm.name.trim(), email: authForm.email.trim(), password: authForm.password, role: role === 'tenant' ? 'student' : 'owner' })
+        if (updateUserProfile) updateUserProfile({ name: authForm.name.trim(), email: authForm.email.trim(), phone: authForm.phone.trim() })
+        setErrors({})
+        setAuthForm((prev) => ({ ...prev, password: '', agree: false }))
+        if (result.session) setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
+        else { setAuthSuccess('Account created. Check your email to confirm it, then log in.'); setAuthMode('login') }
+      } catch (error) { setErrors({ general: error.message || 'Unable to create your account. Please try again.' }) }
     } else {
       // Login validation
       const formErrors = validateLogin()
@@ -5629,8 +5620,11 @@ function App() {
         return
       }
 
-      setErrors({})
-      setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
+      try {
+        await loginWithApi({ email: authForm.email.trim(), password: authForm.password })
+        setErrors({})
+        setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
+      } catch (error) { setErrors({ general: error.message || 'Invalid email or password.' }) }
     }
   }
 
@@ -5750,7 +5744,7 @@ function App() {
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}/>
                 <span>✓</span>Remember me
               </label>
-              <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('A password reset link has been sent to your email.'); }}>Forgot password?</a>
+              <a href="#forgot" onClick={async (e) => { e.preventDefault(); if (!authForm.email.trim()) { setErrors({ email: 'Enter your email first to reset your password.' }); return } try { const result = await requestPasswordReset(authForm.email.trim()); setAuthSuccess(result.message) } catch (error) { setErrors({ general: error.message || 'Unable to send reset email.' }) } }}>Forgot password?</a>
             </div>
           ) : (
             <div>

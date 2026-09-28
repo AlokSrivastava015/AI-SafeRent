@@ -1,0 +1,1 @@
+"""AI SafeRent backend package."""
