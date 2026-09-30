@@ -9,6 +9,7 @@ class LoginRequest(BaseModel):
 
 class SignUpRequest(LoginRequest):
     full_name: str = Field(min_length=2, max_length=160)
+    phone: str | None = Field(default=None, max_length=32)
     role: Role
 
 

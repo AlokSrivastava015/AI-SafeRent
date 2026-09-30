@@ -51,6 +51,7 @@ async def signup(payload: SignUpRequest, db: AsyncSession = Depends(get_db)):
             id=user_id,
             email=str(response.user.email or payload.email),
             full_name=payload.full_name,
+            phone=payload.phone,
             role=payload.role,
         )
         db.add(profile)
