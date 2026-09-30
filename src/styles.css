@@ -707,6 +707,43 @@ footer a { color: inherit; text-decoration: none; }
 .login-card h2, .login-card p, .role-toggle button, .socials button, .form-options { overflow-wrap: anywhere; }
 .role-toggle button, .socials button, .login-button { white-space: normal; }
 
+/* Keep the sign-up form the same visual width as login while compacting its
+   additional fields, so it remains balanced instead of becoming oversized. */
+.login-card.signup-card {
+  width: min(100%, 500px);
+  padding: 30px 28px 22px;
+}
+.signup-card header p { margin-bottom: 20px; }
+.signup-card .role-toggle { margin-bottom: 16px; }
+.signup-card .field { height: 52px; margin-top: 10px; border-radius: 14px; }
+.signup-card .form-options { margin: 14px 2px 16px; }
+.signup-card .or { margin: 16px 0 13px; }
+.signup-card .signup-text { margin-top: 18px; }
+
+/* The additional sign-up fields share two columns on desktop, which keeps the
+   card within the same visual height as the login card. */
+@media (min-width: 761px) {
+  .login-card.signup-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .signup-card > header,
+  .signup-card > .auth-alert,
+  .signup-card > .role-toggle,
+  .signup-card > .signup-agreement,
+  .signup-card > .login-button,
+  .signup-card > .or,
+  .signup-card > .socials,
+  .signup-card > .signup-text { grid-column: 1 / -1; }
+  .signup-card .field { margin-top: 8px; }
+}
+
+@media (max-width: 760px) {
+  .login-card.signup-card { width: min(100%, 430px); padding: 28px 18px 20px; }
+  .signup-card .field { height: 50px; }
+}
+
 @media (min-width: 1440px) {
   .login-side { left: 55%; padding: 92px 56px 74px 34px; }
   .login-card { width: min(100%, 520px); padding: 36px 34px 28px; }
@@ -2040,6 +2077,105 @@ footer a { color: inherit; text-decoration: none; }
 .requests article { transition:background .2s ease; }.requests article:hover { background:#fafaff; }
 .tips>div>span { min-height:75px; padding:12px; border:1px solid #edf0f8; border-radius:11px; background:#fbfcff; }.tips>div>span>svg { flex:0 0 auto; padding:7px; border-radius:9px; color:#5542ef; background:#efedff; }.tips>div>span:nth-child(2)>svg { color:#0f9d79; background:#e5faf3; }.tips>div>span:nth-child(3)>svg { color:#db7c24; background:#fff2df; }.tips>div>span:nth-child(4)>svg { color:#d35e86; background:#ffedf4; }.need-help>b { display:grid; place-items:center; width:45px; height:45px; border-radius:13px; color:#fff; background:#5140ee; }.need-help button { display:inline-flex; align-items:center; gap:5px; }.owner-promo { position:relative; min-height:184px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; overflow:hidden; padding:20px; border:1px solid #40589e; border-radius:15px; color:#fff; background:linear-gradient(145deg,#1d2d63 0%,#3d5599 68%,#6378c3 100%); box-shadow:0 14px 28px #24356f2b; }.owner-promo::after { position:absolute; right:-34px; bottom:-48px; width:140px; height:140px; border:1px solid #ffffff35; border-radius:50%; content:""; box-shadow:0 0 0 18px #ffffff12,0 0 0 36px #ffffff0a; }.promo-icon { position:relative; z-index:1; display:grid; place-items:center; width:34px; height:34px; margin-bottom:12px; border:1px solid #ffffff35; border-radius:10px; color:#fff; background:#ffffff1c; }.promo-kicker { position:relative; z-index:1; color:#c7d1ff; font-size:8px; font-weight:800; letter-spacing:1px; }.owner-promo h3 { position:relative; z-index:1; margin:6px 0 7px; color:#fff; font-size:19px; line-height:1.08; letter-spacing:-.2px; }.owner-promo h3 strong { color:#d5ceff; font-weight:800; }.owner-promo p { position:relative; z-index:1; max-width:190px; margin:0 0 13px; color:#e2e7ff; font-size:10px; line-height:1.4; }.owner-promo button { position:relative; z-index:1; display:inline-flex; align-items:center; gap:5px; padding:8px 10px; border:0; border-radius:7px; color:#263a79; background:#fff; font-size:9px; font-weight:800; cursor:pointer; transition:transform .2s ease, background .2s ease; }.owner-promo button:hover { transform:translateY(-1px); background:#f0efff; }
 @media (max-width:760px) { .owner-main { padding-top:60px; }.owner-welcome { padding:20px; }.owner-welcome h1 { font-size:25px; }.owner-welcome::after { right:-50px; }.owner-stats>article { min-height:96px; }.reach-card { min-height:120px!important; }.owner-property-info small { flex-wrap:wrap; }.tips>div>span { min-height:66px; } }
+
+/* Owner navigation: mirror the Student Dashboard's compact rail and hover expansion. */
+.owner-sidebar {
+  box-sizing: border-box;
+  width: 72px;
+  min-width: 72px;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 10px 22px;
+  overflow-x: hidden;
+}
+.owner-sidebar:hover {
+  width: 228px;
+  min-width: 228px;
+  box-shadow: 8px 0 32px rgba(30, 48, 102, .12);
+}
+.owner-sidebar-header { margin-bottom: 16px; padding: 0 2px; }
+.owner-sidebar-header .owner-brand > span:not(.brand-mark) { display: none; }
+.owner-sidebar:hover .owner-sidebar-header .owner-brand > span:not(.brand-mark) { display: flex; flex-direction: column; }
+.owner-sidebar nav { width: 100%; margin-top: 0; }
+.owner-sidebar nav button { justify-content: center; padding: 10px; }
+.owner-sidebar nav button .nav-label { display: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.owner-sidebar:hover nav button { justify-content: flex-start; padding: 10px 13px; }
+.owner-sidebar:hover nav button .nav-label { display: inline-block; }
+.owner-sidebar nav button:hover {
+  color: #3928e8 !important;
+  border-color: #d9d4ff;
+  border-left-color: #a49bff;
+  background: #f0eeff !important;
+  box-shadow: none;
+  transform: translateX(2px);
+}
+.owner-sidebar nav button:hover b,
+.owner-sidebar nav button:hover svg { color: #3928e8 !important; stroke: #3928e8 !important; }
+.owner-sidebar-footer { margin-top: auto; }
+.owner-sidebar-help-btn { justify-content: center; padding: 10px; }
+.owner-sidebar-help-btn > span { display: none; }
+.owner-sidebar:hover .owner-sidebar-help-btn { justify-content: flex-start; padding: 10px 13px; }
+.owner-sidebar:hover .owner-sidebar-help-btn > span { display: inline; }
+.owner-sidebar-help-btn:hover {
+  color: #4432f3;
+  background: #f4f2ff;
+  transform: translateX(2px);
+}
+.owner-main { margin-left: 72px; }
+.owner-header { left: 72px; }
+
+@media (max-width: 1150px) {
+  .owner-sidebar {
+    width: 228px;
+    min-width: 228px;
+    transform: translateX(-105%);
+    transition: transform .22s ease;
+  }
+  .owner-sidebar.show { transform: translateX(0); box-shadow: 10px 0 30px rgba(30,48,102,.14); }
+  .owner-main { margin-left: 0; }
+  .owner-header { left: 0; }
+}
+
+/* Final closed-rail rules: legacy full-sidebar styles above use !important.
+   On desktop, the owner rail must never expose cropped text. */
+@media (min-width: 1151px) {
+  .owner-dashboard .owner-sidebar {
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px;
+    padding: 14px 10px 22px !important;
+    overflow: hidden !important;
+  }
+  .owner-dashboard .owner-sidebar .owner-sidebar-header .owner-brand > span:not(.brand-mark),
+  .owner-dashboard .owner-sidebar nav button .nav-label,
+  .owner-dashboard .owner-sidebar .owner-sidebar-help-btn > span {
+    display: none !important;
+  }
+  .owner-dashboard .owner-sidebar nav button,
+  .owner-dashboard .owner-sidebar .owner-sidebar-help-btn {
+    justify-content: center !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .owner-dashboard .owner-sidebar:hover {
+    width: 228px !important;
+    min-width: 228px !important;
+    max-width: 228px;
+  }
+  .owner-dashboard .owner-sidebar:hover .owner-sidebar-header .owner-brand > span:not(.brand-mark) {
+    display: flex !important;
+  }
+  .owner-dashboard .owner-sidebar:hover nav button .nav-label,
+  .owner-dashboard .owner-sidebar:hover .owner-sidebar-help-btn > span {
+    display: inline-block !important;
+  }
+  .owner-dashboard .owner-sidebar:hover nav button,
+  .owner-dashboard .owner-sidebar:hover .owner-sidebar-help-btn {
+    justify-content: flex-start !important;
+    padding-left: 13px !important;
+    padding-right: 13px !important;
+  }
+}
 
 /* ========================================================
    OWNER BOOKINGS SECTION (Pixel-perfect matching design)
@@ -4557,6 +4693,38 @@ footer a { color: inherit; text-decoration: none; }
 }
 .vr-btn-cancel:hover { background: #f8fafc; }
 
+/* Expandable student profile area below each visit request. */
+.vr-student-details {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 18px;
+  padding: 17px 20px;
+  border-top: 1px solid #e8edf7;
+  background: linear-gradient(135deg, #fafbff, #f4f2ff);
+}
+.vr-student-details header { display: flex; flex-direction: column; gap: 4px; }
+.vr-student-details header strong { color: #17255f; font-size: 14px; }
+.vr-student-details header span { color: #71809f; font-size: 11px; }
+.vr-student-details > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.vr-student-details > div > span { display: grid; grid-template-columns: 18px auto; gap: 2px 7px; align-items: center; padding: 9px 10px; border: 1px solid #e3e6f6; border-radius: 9px; color: #536385; background: #fff; font-size: 11px; }
+.vr-student-details svg { grid-row: span 2; color: #5645ec; }
+.vr-student-details b { color: #18275e; font-size: 10px; }
+
+/* Student visit-status notifications opened by the bell. */
+.dash-account { position: relative; }
+.notification i { min-width: 16px; width: auto; height: 16px; display: grid; place-items: center; padding: 0 3px; color: #fff; border: 2px solid #fff; font-size: 8px; font-style: normal; font-weight: 800; line-height: 1; }
+.student-notification-menu { position: absolute; z-index: 20; top: 48px; right: 70px; width: min(360px, calc(100vw - 28px)); max-height: 380px; overflow-y: auto; padding: 12px; border: 1px solid #dfe5f7; border-radius: 13px; color: #13245e; background: #fff; box-shadow: 0 18px 38px rgba(22, 38, 91, .18); }
+.student-notification-menu header { display: flex; align-items: center; justify-content: space-between; padding: 2px 3px 10px; border-bottom: 1px solid #edf0f8; }
+.student-notification-menu header strong { font-size: 14px; }
+.student-notification-menu header button { border: 0; color: #5140ef; background: transparent; font-size: 11px; font-weight: 700; cursor: pointer; }
+.student-notification-menu article { display: grid; gap: 4px; padding: 11px 4px; border-bottom: 1px solid #edf0f8; }
+.student-notification-menu article:last-child { border-bottom: 0; }
+.student-notification-menu article b { color: #17275f; font-size: 12px; text-transform: capitalize; }
+.student-notification-menu article span { color: #526287; font-size: 11px; line-height: 1.4; }
+.student-notification-menu article small { color: #8a97b3; font-size: 10px; }
+.student-notification-menu > p { margin: 18px 4px 6px; color: #72809e; font-size: 12px; text-align: center; }
+
 /* Reschedule Modal */
 .vr-modal-backdrop {
   position: fixed;
@@ -4616,11 +4784,15 @@ footer a { color: inherit; text-decoration: none; }
     border-top: 1px solid #f1f5f9;
     justify-content: flex-end;
   }
+  .vr-student-details { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
   .vr-card { grid-template-columns: 1fr; }
   .vr-student-col, .vr-property-col, .vr-details-col { border-right: none; border-bottom: 1px solid #f1f5f9; }
   .vr-status-badge { right: 14px; top: 14px; }
+  .vr-student-details { padding: 14px; }
+  .vr-student-details > div { grid-template-columns: 1fr; }
+  .student-notification-menu { right: 0; }
 }
 
 /* VR Student Letter Avatar */

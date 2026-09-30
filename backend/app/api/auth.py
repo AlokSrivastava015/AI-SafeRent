@@ -1,9 +1,13 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import create_client
 from supabase_auth.errors import AuthApiError
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.security import verify_supabase_token
+from app.db.database import get_db
+from app.db.models import OwnerProfile, Profile, Role, StudentProfile
 from app.schemas.common import Success
 from app.schemas.auth import LoginRequest, PasswordResetRequest, SignUpRequest
 router=APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -31,14 +35,39 @@ def raise_auth_error(error: AuthApiError) -> None:
         raise HTTPException(status_code=code, detail=message) from error
     raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Authentication provider is temporarily unavailable. Please try again.") from error
 
-@router.post("/signup", status_code=status.HTTP_201_CREATED, summary="Create a Supabase account")
-async def signup(payload: SignUpRequest):
+@router.post("/signup", status_code=status.HTTP_201_CREATED, summary="Create a Supabase account and role profile")
+async def signup(payload: SignUpRequest, db: AsyncSession = Depends(get_db)):
     try:
         response = auth_client().auth.sign_up({"email": str(payload.email), "password": payload.password, "options": {"data": {"full_name": payload.full_name, "requested_role": payload.role.value}}})
     except AuthApiError as error:
         raise_auth_error(error)
     if not response.user:
         raise HTTPException(status_code=400, detail="Unable to create account")
+
+    user_id = UUID(str(response.user.id))
+    profile = await db.get(Profile, user_id)
+    if profile is None:
+        profile = Profile(
+            id=user_id,
+            email=str(response.user.email or payload.email),
+            full_name=payload.full_name,
+            role=payload.role,
+        )
+        db.add(profile)
+
+    if payload.role == Role.owner:
+        if await db.get(OwnerProfile, user_id) is None:
+            db.add(OwnerProfile(user_id=user_id))
+    elif payload.role == Role.student:
+        if await db.get(StudentProfile, user_id) is None:
+            db.add(StudentProfile(user_id=user_id))
+
+    try:
+        await db.commit()
+    except Exception as error:
+        await db.rollback()
+        raise HTTPException(status_code=503, detail="Account was created, but the profile could not be saved. Please try logging in again.") from error
+
     return Success(data={"user_id": response.user.id, "email": response.user.email, "confirmation_required": response.session is None, "session": session_data(response.session)})
 
 @router.post("/login", summary="Sign in using Supabase Auth")

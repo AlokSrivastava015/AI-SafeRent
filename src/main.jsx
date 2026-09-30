@@ -139,6 +139,7 @@ const Icon = ({ name, size = 24 }) => {
     bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></>,
     search: <><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></>,
     grid: <><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></>,
+    plus: <><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></>,
     room: <><path d="M4 20V8l8-4 8 4v12"/><path d="M8 20v-5h8v5M9 10h.01M15 10h.01"/></>,
     compass: <><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z"/></>,
     sparkle: <><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z"/></>,
@@ -169,7 +170,7 @@ function Preloader() {
   </div>
 }
 
-const navItems = [[<Icon name="home" size={18}/>, 'Home'], [<Icon name="sparkle" size={18}/>, 'AI Recommendations'], [<Icon name="compass" size={18}/>, 'Explore'], [<Icon name="calendar" size={18}/>, 'Book a Visit'], [<Icon name="calendar" size={18}/>, 'My Bookings'], [<Icon name="heart" size={18}/>, 'Saved Properties'], [<Icon name="people" size={18}/>, 'Profile'], [<Icon name="settings" size={18}/>, 'Settings']]
+const navItems = [[<Icon name="home" size={18}/>, 'Home'], [<Icon name="sparkle" size={18}/>, 'AI Recommendations'], [<Icon name="compass" size={18}/>, 'Explore'], [<Icon name="calendar" size={18}/>, 'Book a Visit'], [<Icon name="calendar" size={18}/>, 'Booking Status'], [<Icon name="heart" size={18}/>, 'Saved Properties'], [<Icon name="people" size={18}/>, 'Profile'], [<Icon name="settings" size={18}/>, 'Settings']]
 const categories = [[<Icon name="people" size={22}/>, 'PG for Girls'], [<Icon name="people" size={22}/>, 'PG for Boys'], [<Icon name="building" size={22}/>, 'Flats'], [<Icon name="room" size={22}/>, '1 RK / Studio'], [<Icon name="room" size={22}/>, 'Rooms'], [<Icon name="people" size={22}/>, 'Findmates']]
 const properties = [
   ['The Blossom House', 'Indirapuram, Ghaziabad', '₹7,500', 'PG for Girls'],
@@ -185,10 +186,11 @@ function StudentSidebar({ active, onNavigate, menu, onClose }) {
   </aside>
 }
 
-function StudentDashboard({ onLogout, onNavigate }) {
+function StudentDashboard({ onLogout, onNavigate, notifications = [], onClearNotifications }) {
   const { userProfile } = useStudentUser()
   const [menu, setMenu] = useState(false)
   const [liked, setLiked] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
   const [search, setSearch] = useState('Indirapuram, Ghaziabad')
   const [selectedType, setSelectedType] = useState('PG')
   const [budget, setBudget] = useState('₹ 0 – ₹ 30,000')
@@ -209,7 +211,7 @@ function StudentDashboard({ onLogout, onNavigate }) {
   const displayRole = userProfile?.role ? `${userProfile.role}/Tenant` : 'Student/Tenant'
 
   return <div className="dashboard">
-    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><button className="notification" aria-label="Notifications"><Icon name="bell" size={18}/><i /></button><span className="avatar">{initial}</span><span className="account-copy">Hi, {firstName}<small>{displayRole}</small></span></div></header>
+    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account"><button className="notification" aria-label="Notifications" onClick={() => setShowNotifications((open) => !open)}><Icon name="bell" size={18}/>{notifications.length > 0 && <i>{notifications.length > 9 ? '9+' : notifications.length}</i>}</button>{showNotifications && <section className="student-notification-menu" aria-label="Visit notifications"><header><strong>Notifications</strong>{notifications.length > 0 && <button type="button" onClick={onClearNotifications}>Mark all read</button>}</header>{notifications.length ? notifications.map((notification) => <article key={notification.id}><b>{notification.title}</b><span>{notification.message}</span><small>{notification.createdAt}</small></article>) : <p>No new notifications.</p>}</section>}<span className="avatar" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }}>{initial}</span><span className="account-copy" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }}>Hi, {firstName}<small>{displayRole}</small></span></div></header>
     <StudentSidebar active="Home" onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} />
     <main className="dash-main">
       <section className="dash-hero"><div className="dash-hero-copy"><span className="eyebrow">Verified Spaces. Happy Places.</span><h1>Safest places.<br/>Better spaces.<em>Yours to call home.</em></h1><p>PGs, Flats & Rooms for Students<br/>and Working Professionals.</p><div className="trust-row"><span><Icon name="shield" size={14}/> Safe</span><span><Icon name="check" size={14}/> Verified</span><span><Icon name="home" size={14}/> Affordable</span><span><Icon name="settings" size={14}/> Trusted</span></div></div></section>
@@ -240,13 +242,17 @@ function StudentChrome({ active, onNavigate, children }) {
   return <div className="student-pages"><header className="student-header"><button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Open navigation"><Icon name="menu" size={21}/></button><a className="brand dash-brand" onClick={() => onNavigate('Home')} href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><label className="student-search"><Icon name="search" size={17}/><input placeholder="Search by location, property name or landmark..."/></label><div className="student-user" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }} title="View Profile"><span><Icon name="bell" size={20}/></span><b>{initial}</b><i>{displayName}<small>{displayRole}</small></i></div></header><StudentSidebar active={active} onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} /><main className="student-content">{children}</main></div>
 }
 
-function ListingCard({ name, type, index, onVisit, onDetails }) {
-  const price = type === 'Flats' ? [18000,12000,25000,14500,28000,20000,16500,22000,19500,11000,24000,30000][index] : type === 'Rooms' ? [9000,7500,8500,11000,12000,6000,13500,5500,7000,10000,9500,8000][index] : [7000,6500,8000,5500,9000,7500,8500,6800,7200,6200,7800,8800][index]
-  const property = { name, index, location: places[index % places.length], price, type }
-  return <article className="listing-card"><div className={`listing-photo photo-${index % 6}`}><span>{index % 3 === 0 ? 'Verified' : index % 3 === 1 ? 'Popular' : 'Near Metro'}</span><button>♡</button></div><div className="listing-body"><h3>{name}</h3><p>⌖ &nbsp;{places[index % places.length]}</p><div className="listing-price">₹{price.toLocaleString()} <small>/ month</small><i>★ 4.{(index + 4) % 10} ({72 + index * 7})</i></div><div className="listing-tags"><span>{type === 'PGs' ? 'With Food' : 'Furnished'}</span><span>Wi-Fi</span><span>{index % 2 ? 'AC' : 'Attached Bath'}</span></div><div className="listing-actions"><button onClick={() => onDetails(property)}>View Details</button><button onClick={() => onVisit(property)}>Book a Visit</button></div></div></article>
+function ListingCard({ name, type, index, onVisit, onDetails, propertyRecord }) {
+  const price = propertyRecord?.price ?? (type === 'Flats' ? [18000,12000,25000,14500,28000,20000,16500,22000,19500,11000,24000,30000][index] : type === 'Rooms' ? [9000,7500,8500,11000,12000,6000,13500,5500,7000,10000,9500,8000][index] : [7000,6500,8000,5500,9000,7500,8500,6800,7200,6200,7800,8800][index])
+  const property = propertyRecord ? { ...propertyRecord, index, type } : { name, index, location: places[index % places.length], price, type }
+  const title = propertyRecord?.name || name
+  const location = propertyRecord?.location || places[index % places.length]
+  const tags = propertyRecord?.amenities ? propertyRecord.amenities.split(' · ').slice(0, 3) : [type === 'PGs' ? 'With Food' : 'Furnished', 'Wi-Fi', index % 2 ? 'AC' : 'Attached Bath']
+  const imageStyle = propertyRecord?.img ? { backgroundImage: `url(${propertyRecord.img})` } : undefined
+  return <article className="listing-card"><div className={`listing-photo photo-${index % 6}`} style={imageStyle}><span>{propertyRecord ? 'New listing' : index % 3 === 0 ? 'Verified' : index % 3 === 1 ? 'Popular' : 'Near Metro'}</span><button>♡</button></div><div className="listing-body"><h3>{title}</h3><p>⌖ &nbsp;{location}</p><div className="listing-price">₹{price.toLocaleString()} <small>/ month</small><i>★ 4.{(index + 4) % 10} ({72 + index * 7})</i></div><div className="listing-tags">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div><div className="listing-actions"><button onClick={() => onDetails(property)}>View Details</button><button onClick={() => onVisit(property)}>Book a Visit</button></div></div></article>
 }
 
-function BrowsePage({ onNavigate, type, savedNames = [], onToggleSaved }) {
+function BrowsePage({ onNavigate, type, savedNames = [], onToggleSaved, publishedProperties = [] }) {
   const [selectedTab, setSelectedTab] = useState('All')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState(null)
@@ -259,6 +265,7 @@ function BrowsePage({ onNavigate, type, savedNames = [], onToggleSaved }) {
   })
 
   const pageHeading = type === 'PGs' ? 'Verified PGs for Rent' : type === 'Flats' ? 'Verified Flats for Rent' : 'Verified Rooms for Rent'
+  const publishedForType = publishedProperties.filter((property) => (property.propertyType === 'FLAT' || property.propertyType === 'Flat' ? 'Flats' : property.propertyType === 'ROOM' || property.propertyType === 'Room' ? 'Rooms' : 'PGs') === type)
 
   useEffect(() => {
     const tabs = document.querySelectorAll('.browse-tabs button')
@@ -355,6 +362,9 @@ function BrowsePage({ onNavigate, type, savedNames = [], onToggleSaved }) {
             </span>
           </div>
           <div className={`listing-grid ${type === 'PGs' ? 'pg-listing-grid' : ''}`}>
+            {publishedForType.map((property, index) => (
+              <ListingCard key={`published-${property.id}`} propertyRecord={property} name={property.name} type={type} index={index} onVisit={(listing) => onNavigate('Book a Visit', undefined, listing)} onDetails={setSelectedProperty} />
+            ))}
             {listingNames[type].map((name, index) => (
               <ListingCard 
                 key={name} 
@@ -1246,7 +1256,42 @@ function PropertyDetailsModal({ property, onClose, onBookVisit }) {
   )
 }
 
+const recommendationCatalog = [
+  { name: 'Sunrise PG for Girls', location: 'Indirapuram, Ghaziabad', price: 7000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Attached Bath', 'Food', 'Metro / Bus', 'College / University'], image: 0, safety: true },
+  { name: 'Comfort Stay PG', location: 'Indirapuram, Ghaziabad', price: 6500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Laundry', 'Metro / Bus', 'Restaurants / Cafes'], image: 1, safety: true },
+  { name: 'Urban Nest 2BHK', location: 'Vaishali, Ghaziabad', price: 18000, type: 'Flat', preferredFor: ['Single', 'Family'], amenities: ['Wi-Fi', 'AC', 'Parking', 'Metro / Bus', 'Restaurants / Cafes'], image: 2, safety: true },
+  { name: 'Study Haven Room', location: 'Raj Nagar, Ghaziabad', price: 9000, type: 'Room', preferredFor: ['Single'], amenities: ['Wi-Fi', 'Study Area', 'Attached Bath', 'College / University'], image: 3, safety: true },
+  { name: 'Maple Girls PG', location: 'Vaishali, Ghaziabad', price: 8000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Food', 'Laundry', '24/7 Security'], image: 4, safety: true }
+]
+
+const preferenceTokens = (value = '') => String(value).toLowerCase().split(/[,/·]/).map((item) => item.trim()).filter(Boolean)
+const budgetLimits = (value = '') => {
+  const amounts = String(value).match(/\d[\d,]*/g)?.map((amount) => Number(amount.replace(/,/g, ''))) || []
+  return { min: amounts[0] || 0, max: amounts[amounts.length - 1] || Number.POSITIVE_INFINITY }
+}
+
+function rankRecommendations(filters) {
+  const location = String(filters.location || '').split(',')[0].trim().toLowerCase()
+  const requestedType = String(filters.propertyType || '').toLowerCase()
+  const requestedAmenities = preferenceTokens(filters.amenities)
+  const { min, max } = budgetLimits(filters.budget)
+
+  return recommendationCatalog.map((property) => {
+    const matches = []
+    let score = 55
+    if (location && property.location.toLowerCase().includes(location)) { score += 18; matches.push('Preferred location') }
+    if (!requestedType || requestedType.includes('both') || property.type.toLowerCase() === requestedType) { score += 12; matches.push(`${property.type} match`) }
+    if (property.price >= min && property.price <= max) { score += 10; matches.push('Within budget') }
+    if (!filters.preferredFor || property.preferredFor.some((item) => item.toLowerCase() === String(filters.preferredFor).toLowerCase())) { score += 4; matches.push('Sharing preference') }
+    const amenityMatches = property.amenities.filter((amenity) => requestedAmenities.some((requested) => amenity.toLowerCase().includes(requested) || requested.includes(amenity.toLowerCase())))
+    if (amenityMatches.length) { score += Math.min(8, amenityMatches.length * 3); matches.push(...amenityMatches.slice(0, 2)) }
+    if (property.safety) score += 3
+    return { ...property, score: Math.min(99, score), matches: matches.slice(0, 3) }
+  }).sort((first, second) => second.score - first.score).slice(0, 3)
+}
+
 function RecommendationsPage({ onNavigate, filters }) {
+  const { userProfile, updateUserProfile } = useStudentUser()
   const defaultFilters = {
     location: 'Indirapuram, Ghaziabad',
     propertyType: 'PG',
@@ -1254,10 +1299,19 @@ function RecommendationsPage({ onNavigate, filters }) {
     preferredFor: 'Single',
     amenities: 'College / University, Metro / Bus, Restaurants / Cafes'
   }
-  const [selectedFilters, setSelectedFilters] = useState({ ...defaultFilters, ...filters })
+  const [selectedFilters, setSelectedFilters] = useState(() => ({
+    ...defaultFilters,
+    ...(userProfile?.recommendationPreferences || {}),
+    location: userProfile?.preferredLocation || userProfile?.recommendationPreferences?.location || filters?.location || defaultFilters.location,
+    propertyType: userProfile?.lookingFor || userProfile?.recommendationPreferences?.propertyType || filters?.propertyType || defaultFilters.propertyType,
+    budget: userProfile?.budget || userProfile?.recommendationPreferences?.budget || filters?.budget || defaultFilters.budget,
+    preferredFor: userProfile?.preferredFor || userProfile?.recommendationPreferences?.preferredFor || filters?.preferredFor || defaultFilters.preferredFor,
+    amenities: userProfile?.amenities || userProfile?.recommendationPreferences?.amenities || filters?.amenities || defaultFilters.amenities
+  }))
   const [showPreferences, setShowPreferences] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const propertyTypeLabel = selectedFilters.propertyType === 'Flat' ? 'Flat' : selectedFilters.propertyType === 'Room' ? 'Room' : selectedFilters.propertyType
+  const recommendedProperties = rankRecommendations(selectedFilters)
 
   useEffect(() => {
     const openPreferences = (event) => {
@@ -1290,7 +1344,21 @@ function RecommendationsPage({ onNavigate, filters }) {
     document.body.appendChild(host)
     const modalRoot = createRoot(host)
     const closeModal = () => setShowPreferences(false)
-    modalRoot.render(<PreferencesModal values={selectedFilters} onClose={closeModal} onSave={(nextFilters) => { setSelectedFilters((current) => ({ ...current, ...nextFilters })); closeModal() }} />)
+    modalRoot.render(<PreferencesModal values={selectedFilters} onClose={closeModal} onSave={(nextFilters) => {
+      setSelectedFilters((current) => {
+        const savedPreferences = { ...current, ...nextFilters }
+        updateUserProfile({
+          recommendationPreferences: savedPreferences,
+          preferredLocation: savedPreferences.location,
+          lookingFor: savedPreferences.propertyType,
+          budget: savedPreferences.budget,
+          preferredFor: savedPreferences.preferredFor,
+          amenities: savedPreferences.amenities
+        })
+        return savedPreferences
+      })
+      closeModal()
+    }} />)
     return () => {
       modalRoot.unmount()
       host.remove()
@@ -1346,19 +1414,19 @@ function RecommendationsPage({ onNavigate, filters }) {
           <h2 className="top-recs">Top AI Recommendations <small>Properties selected just for you based on AI analysis.</small></h2>
 
           <section className="recommend-list">
-            {[...listingNames.PGs.slice(0, 2), '2 BHK Apartment'].map((name, i) => (
-              <article key={name}>
-                <div className={`recommend-photo photo-${i}`}/>
+            {recommendedProperties.map((property) => (
+              <article key={property.name}>
+                <div className={`recommend-photo photo-${property.image}`}/>
                 <div>
-                  <h3>{name}</h3>
-                  <p>⌖ &nbsp;{places[i]}</p>
-                  <span>{propertyTypeLabel}　 {selectedFilters.preferredFor}　 With Food　 Near Metro</span>
-                  <small>⌁ {selectedFilters.amenities}　♢ 24x7 Security</small>
+                  <h3>{property.name}</h3>
+                  <p>⌖ &nbsp;{property.location}</p>
+                  <span>{property.type}　 {property.preferredFor[0]}　 {property.matches.join(' · ')}</span>
+                  <small>⌁ {property.amenities.slice(0, 3).join(' · ')}　♢ 24x7 Security</small>
                 </div>
-                <b>{[9.2, 8.8, 8.5][i]}<small>AI Match Score</small></b>
+                <b>{(property.score / 10).toFixed(1)}<small>AI Match Score</small></b>
                 <strong>
-                  ₹{[7000, 6500, 18000][i].toLocaleString()} <small>/ month</small>
-                  <button onClick={() => onNavigate('Book a Visit')}>View Details</button>
+                  ₹{property.price.toLocaleString()} <small>/ month</small>
+                  <button onClick={() => setSelectedProperty({ ...property, index: property.image })}>View Details</button>
                 </strong>
               </article>
             ))}
@@ -1466,12 +1534,18 @@ function VisitPage({ onNavigate, onConfirm, onCancel, property = defaultVisitPro
       status: 'Upcoming',
       price: `₹${visitProperty.price.toLocaleString()}`,
       date: `${selectedDateLabel} at ${slot}`,
+      requestedDate: selectedDateLabel,
+      preferredTime: slot,
       location: visitProperty.location,
       guestName: visitorDetails.fullName,
       guestEmail: visitorDetails.emailAddress,
-      guestPhone: visitorDetails.mobileNumber
+      guestPhone: visitorDetails.mobileNumber,
+      message: visitorDetails.message,
+      studentCourse: userProfile?.course || 'Student',
+      studentCollege: userProfile?.college || 'Not provided',
+      propertyType: visitProperty.type === 'Flats' ? 'Flat' : visitProperty.type === 'Rooms' ? 'Room' : 'PG'
     })
-    onNavigate('My Bookings')
+    onNavigate('Booking Status')
   }
   const cancelBooking = () => onCancel({
     name: visitProperty.name,
@@ -1483,7 +1557,7 @@ function VisitPage({ onNavigate, onConfirm, onCancel, property = defaultVisitPro
     guestEmail: visitorDetails.emailAddress,
     guestPhone: visitorDetails.mobileNumber
   })
-  return <StudentChrome active="Book a Visit" onNavigate={onNavigate}><section className="visit-heading"><h1>{confirmed ? 'Visit Confirmed!' : 'Book a Visit'}</h1><p>{confirmed ? 'Your visit request is on its way to the PG owner.' : "Schedule a visit to see the property in person. It's free, easy and helps you make a better decision."}</p></section>{confirmed ? <section className="confirmation">Booking confirmed<h2>Booking request confirmed</h2><p>We have reserved {selectedDateLabel} at {slot} for your visit.</p><button onClick={() => onNavigate('My Bookings')}>View My Bookings</button></section> : <section className="visit-layout"><article className="visit-property"><div className="visit-photo"><span>Verified PG</span></div><h2>{visitProperty.name} <i>4.8 (128 reviews)</i></h2><p>{visitProperty.location}</p><h1>₹{visitProperty.price.toLocaleString()} <small>/ month</small></h1><div className="visit-tags"><span>{visitProperty.type === 'Flats' ? 'Flat' : visitProperty.type === 'Rooms' ? 'Room' : 'PG'}</span><span>With Food</span><span>Wi-Fi</span><span>AC</span></div><hr/><h3>About this property</h3><p>A safe and comfortable property with modern amenities, homely food and great connectivity to metro and markets.</p><a href="#property-details">View Full Details</a></article><article className="visit-form"><h2>Select Date & Time</h2><p>Choose a convenient date and time to visit the property.</p><div className="calendar-slots"><section className="calendar"><header><button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)}>‹</button><h3>{monthName}</h3><button type="button" aria-label="Next month" onClick={() => changeMonth(1)}>›</button></header><div className="week">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}</div><div className="days">{Array.from({ length: firstDay }, (_, index) => <span className="empty-day" key={`empty-${index}`} />)}{Array.from({ length: daysInMonth }, (_, index) => { const day = index + 1; return <button type="button" className={selectedDate === day ? 'selected' : ''} onClick={() => setSelectedDate(day)} key={day}>{day}</button> })}</div></section><section><h3>Available Time Slots</h3><div className="slots">{times.map((time) => <button type="button" className={slot === time ? 'active' : ''} onClick={() => setSlot(time)} key={time}>{time}</button>)}</div></section></div><hr/><h2>Your Details</h2><div className="details-inputs"><label>Full Name<input value={visitorDetails.fullName} onChange={(event) => updateVisitorDetail('fullName', event.target.value)} /></label><label>Mobile Number<input value={visitorDetails.mobileNumber} onChange={(event) => updateVisitorDetail('mobileNumber', event.target.value)} /></label><label>Email Address<input value={visitorDetails.emailAddress} onChange={(event) => updateVisitorDetail('emailAddress', event.target.value)} /></label></div><label className="message">Any Message (Optional)<textarea value={visitorDetails.message} onChange={(event) => updateVisitorDetail('message', event.target.value)} /></label></article><aside className="visit-summary"><h2>Visit Summary</h2><div><div className={`summary-photo photo-${visitProperty.index % 6}`} /><h3>{visitProperty.name}<small>4.8 (128 reviews)<br />{visitProperty.location}<br /><b>₹{visitProperty.price.toLocaleString()}</b> / month</small></h3></div><p>Selected Date <b>{selectedDateLabel}</b></p><p>Selected Time <b>{slot}</b></p><p>Your Name <b>{visitorDetails.fullName}</b></p><p>Email Address <b>{visitorDetails.emailAddress}</b></p><p>Mobile Number <b>{visitorDetails.mobileNumber}</b></p>{visitorDetails.message && <p>Message <b>{visitorDetails.message}</b></p>}<section><h3>Important Notes</h3><p>The PG owner will confirm your visit shortly.</p><p>You will receive a confirmation notification.</p><p>Be on time for a better experience.</p></section><button type="button" onClick={confirmBooking}>Confirm Booking</button><button type="button" onClick={cancelBooking}>Cancel Booking</button></aside></section>}<InfoStrip /></StudentChrome>
+  return <StudentChrome active="Book a Visit" onNavigate={onNavigate}><section className="visit-heading"><h1>{confirmed ? 'Visit Confirmed!' : 'Book a Visit'}</h1><p>{confirmed ? 'Your visit request is on its way to the PG owner.' : "Schedule a visit to see the property in person. It's free, easy and helps you make a better decision."}</p></section>{confirmed ? <section className="confirmation">Booking confirmed<h2>Booking request confirmed</h2><p>We have reserved {selectedDateLabel} at {slot} for your visit.</p><button onClick={() => onNavigate('Booking Status')}>View Booking Status</button></section> : <section className="visit-layout"><article className="visit-property"><div className="visit-photo"><span>Verified PG</span></div><h2>{visitProperty.name} <i>4.8 (128 reviews)</i></h2><p>{visitProperty.location}</p><h1>₹{visitProperty.price.toLocaleString()} <small>/ month</small></h1><div className="visit-tags"><span>{visitProperty.type === 'Flats' ? 'Flat' : visitProperty.type === 'Rooms' ? 'Room' : 'PG'}</span><span>With Food</span><span>Wi-Fi</span><span>AC</span></div><hr/><h3>About this property</h3><p>A safe and comfortable property with modern amenities, homely food and great connectivity to metro and markets.</p><a href="#property-details">View Full Details</a></article><article className="visit-form"><h2>Select Date & Time</h2><p>Choose a convenient date and time to visit the property.</p><div className="calendar-slots"><section className="calendar"><header><button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)}>‹</button><h3>{monthName}</h3><button type="button" aria-label="Next month" onClick={() => changeMonth(1)}>›</button></header><div className="week">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}</div><div className="days">{Array.from({ length: firstDay }, (_, index) => <span className="empty-day" key={`empty-${index}`} />)}{Array.from({ length: daysInMonth }, (_, index) => { const day = index + 1; return <button type="button" className={selectedDate === day ? 'selected' : ''} onClick={() => setSelectedDate(day)} key={day}>{day}</button> })}</div></section><section><h3>Available Time Slots</h3><div className="slots">{times.map((time) => <button type="button" className={slot === time ? 'active' : ''} onClick={() => setSlot(time)} key={time}>{time}</button>)}</div></section></div><hr/><h2>Your Details</h2><div className="details-inputs"><label>Full Name<input value={visitorDetails.fullName} onChange={(event) => updateVisitorDetail('fullName', event.target.value)} /></label><label>Mobile Number<input value={visitorDetails.mobileNumber} onChange={(event) => updateVisitorDetail('mobileNumber', event.target.value)} /></label><label>Email Address<input value={visitorDetails.emailAddress} onChange={(event) => updateVisitorDetail('emailAddress', event.target.value)} /></label></div><label className="message">Any Message (Optional)<textarea value={visitorDetails.message} onChange={(event) => updateVisitorDetail('message', event.target.value)} /></label></article><aside className="visit-summary"><h2>Visit Summary</h2><div><div className={`summary-photo photo-${visitProperty.index % 6}`} /><h3>{visitProperty.name}<small>4.8 (128 reviews)<br />{visitProperty.location}<br /><b>₹{visitProperty.price.toLocaleString()}</b> / month</small></h3></div><p>Selected Date <b>{selectedDateLabel}</b></p><p>Selected Time <b>{slot}</b></p><p>Your Name <b>{visitorDetails.fullName}</b></p><p>Email Address <b>{visitorDetails.emailAddress}</b></p><p>Mobile Number <b>{visitorDetails.mobileNumber}</b></p>{visitorDetails.message && <p>Message <b>{visitorDetails.message}</b></p>}<section><h3>Important Notes</h3><p>The PG owner will confirm your visit shortly.</p><p>You will receive a confirmation notification.</p><p>Be on time for a better experience.</p></section><button type="button" onClick={confirmBooking}>Confirm Booking</button><button type="button" onClick={cancelBooking}>Cancel Booking</button></aside></section>}<InfoStrip /></StudentChrome>
 }
 
 function SavedPage({ onNavigate, saved, onRemove }) {
@@ -1557,7 +1631,7 @@ function BookingsPage({ onNavigate, confirmedBookings = [] }) {
   const staticBookings = [{ name: 'Sunshine PG', status: 'Active', price: '₹7,500', date: '01 Aug 2025 – 31 Jul 2026', location: 'Niti Khand, Indirapuram, Ghaziabad' }, { name: 'Maple PG', status: 'Upcoming', price: '₹6,500', date: 'Move-in: 15 Sep 2025', location: 'Vaishali, Ghaziabad' }, { name: 'Green View PG', status: 'Completed', price: '₹6,000', date: '15 Jan 2025 – 30 Jun 2025', location: 'Raj Nagar, Ghaziabad' }]
   const bookings = [...confirmedBookings, ...staticBookings]
   const filteredBookings = tab === 'All' ? bookings : bookings.filter(({ status }) => tab === status)
-  return <StudentChrome active="My Bookings" onNavigate={onNavigate}><section className="booking-title"><div><h1>My Bookings</h1><p>Track your bookings, manage your stay and access all important details.</p></div><button onClick={() => onNavigate('PGs')}>⊕　Book a New PG</button></section><div className="booking-tabs">{['All Bookings (3)','Active (1)','Upcoming (1)','Past (1)','Cancelled (0)'].map(item => <button className={tab === item ? 'active' : ''} onClick={() => setTab(item)} key={item}>{item}</button>)}</div><section className="bookings-layout"><div className="booking-list">{bookings.map(([name,status,price,date], index) => <article className={`booking-card ${index === 0 ? 'expanded' : ''}`} key={name}><div className={`booking-img photo-${index}`}/><span className={`booking-status ${status.toLowerCase()}`}>{status}</span><div className="booking-info"><h2>{name}</h2><p>⌖　{places[index]}</p><small>▣　{index ? 'Shared Room' : 'Single Room'}　　⌁　Wi-Fi　　♜　Meals Included　　❄　AC</small></div><div className="booking-price"><b>{price}</b> / month<p>Booking ID: #SRN{12543 + index * 201}<br/>{date}</p><button>View Details</button></div>{index === 0 && <section className="booking-details"><h3>▣　Booking Details</h3><div><p>Move-in Date<b>01 Aug 2025</b></p><p>Lease End Date<b>31 Jul 2026</b></p><p>Stay Duration<b>12 Months</b></p><p>Monthly Rent<b>₹7,500</b></p><p>Security Deposit<b className="paid">₹7,500 (Paid)</b></p><p>Payment Status<b className="paid">On Time</b></p></div><div><p>Property Address<b>Sunshine PG, C-12, Niti Khand,<br/>Indirapuram, Ghaziabad</b></p><p>Owner Details<b>Rohit Sharma<br/>+91 98765 43210<br/>rohitpg@gmail.com</b></p></div><div><p>Facilities<b>☑ Furnished Room<br/>☑ Wi-Fi<br/>☑ Meals Included<br/>☑ Air Conditioning<br/>☑ 24/7 Security</b></p></div></section>}</article>)}</div><aside className="booking-side"><section><h2>Booking Status</h2><p>●　<b>Booking Confirmed</b><small>20 Jul 2025, 10:30 AM</small></p><p>●　<b>Deposit Paid</b><small>21 Jul 2025, 02:15 PM</small></p><p>◉　<b>Move-in Date</b><small>01 Aug 2025</small></p><p>○　Stay in Progress</p><p>○　Completed</p></section><section><h2>Quick Actions</h2><p>▣　Download Agreement</p><p>▤　Payment History</p><p>⚒　Request Maintenance</p><p>⊕　Extend Stay</p><p>⊗　Cancel Booking</p></section></aside></section></StudentChrome>
+  return <StudentChrome active="Booking Status" onNavigate={onNavigate}><section className="booking-title"><div><h1>Booking Status</h1><p>Track your bookings, manage your stay and access all important details.</p></div><button onClick={() => onNavigate('PGs')}>⊕　Book a New PG</button></section><div className="booking-tabs">{['All Bookings (3)','Active (1)','Upcoming (1)','Past (1)','Cancelled (0)'].map(item => <button className={tab === item ? 'active' : ''} onClick={() => setTab(item)} key={item}>{item}</button>)}</div><section className="bookings-layout"><div className="booking-list">{bookings.map(([name,status,price,date], index) => <article className={`booking-card ${index === 0 ? 'expanded' : ''}`} key={name}><div className={`booking-img photo-${index}`}/><span className={`booking-status ${status.toLowerCase()}`}>{status}</span><div className="booking-info"><h2>{name}</h2><p>⌖　{places[index]}</p><small>▣　{index ? 'Shared Room' : 'Single Room'}　　⌁　Wi-Fi　　♜　Meals Included　　❄　AC</small></div><div className="booking-price"><b>{price}</b> / month<p>Booking ID: #SRN{12543 + index * 201}<br/>{date}</p><button>View Details</button></div>{index === 0 && <section className="booking-details"><h3>▣　Booking Details</h3><div><p>Move-in Date<b>01 Aug 2025</b></p><p>Lease End Date<b>31 Jul 2026</b></p><p>Stay Duration<b>12 Months</b></p><p>Monthly Rent<b>₹7,500</b></p><p>Security Deposit<b className="paid">₹7,500 (Paid)</b></p><p>Payment Status<b className="paid">On Time</b></p></div><div><p>Property Address<b>Sunshine PG, C-12, Niti Khand,<br/>Indirapuram, Ghaziabad</b></p><p>Owner Details<b>Rohit Sharma<br/>+91 98765 43210<br/>rohitpg@gmail.com</b></p></div><div><p>Facilities<b>☑ Furnished Room<br/>☑ Wi-Fi<br/>☑ Meals Included<br/>☑ Air Conditioning<br/>☑ 24/7 Security</b></p></div></section>}</article>)}</div><aside className="booking-side"><section><h2>Booking Status</h2><p>●　<b>Booking Confirmed</b><small>20 Jul 2025, 10:30 AM</small></p><p>●　<b>Deposit Paid</b><small>21 Jul 2025, 02:15 PM</small></p><p>◉　<b>Move-in Date</b><small>01 Aug 2025</small></p><p>○　Stay in Progress</p><p>○　Completed</p></section><section><h2>Quick Actions</h2><p>▣　Download Agreement</p><p>▤　Payment History</p><p>⚒　Request Maintenance</p><p>⊕　Extend Stay</p><p>⊗　Cancel Booking</p></section></aside></section></StudentChrome>
 }
 
 function BookingsPageV2({ onNavigate, confirmedBookings = [] }) {
@@ -1570,8 +1644,8 @@ function BookingsPageV2({ onNavigate, confirmedBookings = [] }) {
   const bookings = [...confirmedBookings, ...staticBookings]
   const filteredBookings = tab === 'All' ? bookings : bookings.filter(({ status }) => status === tab)
   const tabs = ['All', 'Active', 'Upcoming', 'Completed', 'Cancelled']
-  return <StudentChrome active="My Bookings" onNavigate={onNavigate}>
-    <section className="booking-title"><div><h1>My Bookings</h1><p>Track your bookings, manage your stay and access all important details.</p></div><button onClick={() => onNavigate('PGs')}>Book a New PG</button></section>
+  return <StudentChrome active="Booking Status" onNavigate={onNavigate}>
+    <section className="booking-title"><div><h1>Booking Status</h1><p>Track your bookings, manage your stay and access all important details.</p></div><button onClick={() => onNavigate('PGs')}>Book a New PG</button></section>
     <div className="booking-tabs">{tabs.map((item) => <button className={tab === item ? 'active' : ''} onClick={() => setTab(item)} key={item}>{item} ({item === 'All' ? bookings.length : bookings.filter(({ status }) => status === item).length})</button>)}</div>
     <section className="bookings-layout"><div className="booking-list">{filteredBookings.map(({ name, status, price, date, location }, index) => <article className={`booking-card ${index === 0 ? 'expanded' : ''}`} key={`${name}-${date}`}>
       <div className={`booking-img photo-${index % 6}`} /><span className={`booking-status ${status.toLowerCase()}`}>{status}</span>
@@ -1747,7 +1821,7 @@ function ProfilePage({ onNavigate }) {
             <h2><Icon name="sparkle" size={16}/> Quick Actions</h2>
             <button className="quick-action-link" type="button" onClick={() => setActiveTab('Documents')}>Manage Documents</button>
             <button className="quick-action-link" type="button" onClick={() => onNavigate('Saved Properties')}>View Saved Properties</button>
-            <button className="quick-action-link" type="button" onClick={() => onNavigate('My Bookings')}>View My Bookings</button>
+            <button className="quick-action-link" type="button" onClick={() => onNavigate('Booking Status')}>View Booking Status</button>
           </section>
         </aside>
       </section>
@@ -1794,7 +1868,11 @@ function PreferencesPanel({ onStatus }) {
       updateUserProfile({
         lookingFor: draft.lookingFor,
         preferredLocation: draft.location,
-        budget: draft.budget
+        budget: draft.budget,
+        amenities: draft.amenities.join(', '),
+        electricity: draft.electricity,
+        water: draft.water,
+        surroundings: draft.surroundings
       })
     }
     onStatus('Preferences saved successfully.') 
@@ -1927,8 +2005,10 @@ function InfoStrip() { return <section className="info-strip"><span>🛡️ <b>V
 const ownerNav = [
   [<Icon name="grid" size={18}/>, 'Dashboard'],
   [<Icon name="building" size={18}/>, 'My Properties'],
-  [<Icon name="calendar" size={18}/>, 'Visit Requests', 5],
-  [<Icon name="calendar" size={18}/>, 'My Bookings'],
+  [<Icon name="plus" size={18}/>, 'Add Property'],
+  [<Icon name="calendar" size={18}/>, 'Visit Requests'],
+  [<Icon name="calendar" size={18}/>, 'Booking Status'],
+  [<Icon name="people" size={18}/>, 'Tenants'],
   [<Icon name="user" size={18}/>, 'Profile'],
   [<Icon name="settings" size={18}/>, 'Settings']
 ]
@@ -2018,8 +2098,8 @@ function OwnerPropertiesPage({ onNavigate, properties: propsProperties, setPrope
     
     <section className="owner-page-stats">
       <article><b><Icon name="building" size={21}/></b><span><strong>{properties.length}</strong><small>Total Properties</small></span></article>
-      <article><b><Icon name="people" size={21}/></b><span><strong>138</strong><small>Total Tenants</small></span></article>
-      <article><b><Icon name="calendar" size={21}/></b><span><strong>18</strong><small>Active Bookings</small></span></article>
+      <article><b><Icon name="people" size={21}/></b><span><strong>8</strong><small>Total Tenants</small></span></article>
+      <article><b><Icon name="calendar" size={21}/></b><span><strong>3</strong><small>Active Bookings</small></span></article>
       <article><b><Icon name="star" size={21}/></b><span><strong>4.8</strong><small>Average Rating</small></span></article>
     </section>
 
@@ -2688,7 +2768,7 @@ function AddPropertyPage({ onNavigate, onAddProperty }) {
 
   const handlePublish = (newProp, isDraft = false) => {
     if (onAddProperty) {
-      onAddProperty(newProp)
+      onAddProperty(newProp, isDraft)
     }
     setSubmittedProperty(newProp)
     setShowListing(false)
@@ -2927,7 +3007,7 @@ function OwnerBookingsPage({ onNavigate }) {
   return (
     <section className="booking-page-container">
       <OwnerHero 
-        title="My Bookings" 
+        title="Booking Status" 
         subtitle="Track, manage and stay connected with your tenants."
       />
 
@@ -3497,6 +3577,12 @@ const initialTenantsData = [
 
 function OwnerTenantsPage({ onNavigate }) {
   const [tenants, setTenants] = useState(initialTenantsData);
+  const [showAddTenant, setShowAddTenant] = useState(false);
+  const [tenantForm, setTenantForm] = useState({
+    name: '', phone: '', email: '', property: 'Sunshine PG', propertyLocation: 'Indirapuram, Ghaziabad',
+    roomNo: '', moveInDate: '', leaseEndDate: '', status: 'Active', monthlyRent: '', securityDeposit: '',
+    preferredOccupancy: 'Single', aadhaarDocument: '', leaseDocument: '', policeDocument: '', history: '',
+  });
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'active', 'moving', 'inactive'
   const [selectedProperty, setSelectedProperty] = useState('All Properties');
   const [propertyDropdownOpen, setPropertyDropdownOpen] = useState(false);
@@ -3514,6 +3600,63 @@ function OwnerTenantsPage({ onNavigate }) {
   const [messageTenant, setMessageTenant] = useState(null);
   const [messageText, setMessageText] = useState('');
   const [toastMsg, setToastMsg] = useState(null);
+
+  const tenantStats = {
+    total: tenants.length,
+    active: tenants.filter((tenant) => tenant.status === 'Active').length,
+    movingOut: tenants.filter((tenant) => tenant.status === 'Moving Out Soon').length,
+    inactive: tenants.filter((tenant) => tenant.status === 'Inactive').length,
+  };
+
+  const updateTenantForm = (field, value) => {
+    setTenantForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const formatTenantAmount = (value) => {
+    const amount = Number(String(value).replace(/[^0-9.]/g, ''));
+    return amount ? `₹${amount.toLocaleString('en-IN')}` : '—';
+  };
+
+  const handleAddTenant = (event) => {
+    event.preventDefault();
+    const newTenant = {
+      id: `tenant-${Date.now()}`,
+      name: tenantForm.name.trim(),
+      avatar: '',
+      phone: tenantForm.phone.trim(),
+      email: tenantForm.email.trim(),
+      property: tenantForm.property.trim(),
+      propertyLocation: tenantForm.propertyLocation.trim(),
+      roomNo: tenantForm.roomNo.trim(),
+      propertyImg: '',
+      moveInDate: tenantForm.moveInDate,
+      leaseEndDate: tenantForm.leaseEndDate,
+      status: tenantForm.status,
+      monthlyRent: formatTenantAmount(tenantForm.monthlyRent),
+      securityDeposit: formatTenantAmount(tenantForm.securityDeposit),
+      preferredOccupancy: tenantForm.preferredOccupancy,
+      aadhaarVerified: Boolean(tenantForm.aadhaarDocument),
+      documents: {
+        aadhaar: tenantForm.aadhaarDocument,
+        lease: tenantForm.leaseDocument,
+        police: tenantForm.policeDocument,
+      },
+      history: tenantForm.history.trim()
+        ? tenantForm.history.trim().split('\n').filter(Boolean)
+        : [`Tenant added on ${new Date().toLocaleDateString('en-GB')}`],
+    };
+    setTenants((current) => [newTenant, ...current]);
+    setSelectedTenant(newTenant);
+    setProfileTab('Details');
+    setProfileOpen(true);
+    setShowAddTenant(false);
+    setTenantForm({
+      name: '', phone: '', email: '', property: 'Sunshine PG', propertyLocation: 'Indirapuram, Ghaziabad',
+      roomNo: '', moveInDate: '', leaseEndDate: '', status: 'Active', monthlyRent: '', securityDeposit: '',
+      preferredOccupancy: 'Single', aadhaarDocument: '', leaseDocument: '', policeDocument: '', history: '',
+    });
+    showToast(`${newTenant.name} was added to your tenants.`);
+  };
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -3635,7 +3778,7 @@ function OwnerTenantsPage({ onNavigate }) {
         <article onClick={() => setActiveTab('all')} style={{ cursor: 'pointer' }}>
           <b className="stat-icon-purple"><Icon name="people" size={22}/></b>
           <span>
-            <strong>42</strong>
+              <strong>{tenantStats.total}</strong>
             <small>Total Tenants</small>
           </span>
         </article>
@@ -3643,7 +3786,7 @@ function OwnerTenantsPage({ onNavigate }) {
         <article onClick={() => setActiveTab('active')} style={{ cursor: 'pointer' }}>
           <b className="stat-icon-green"><Icon name="people" size={22}/></b>
           <span>
-            <strong>28</strong>
+              <strong>{tenantStats.active}</strong>
             <small>Active Tenants</small>
           </span>
         </article>
@@ -3651,7 +3794,7 @@ function OwnerTenantsPage({ onNavigate }) {
         <article onClick={() => setActiveTab('moving')} style={{ cursor: 'pointer' }}>
           <b className="stat-icon-blue"><Icon name="calendar" size={22}/></b>
           <span>
-            <strong>8</strong>
+              <strong>{tenantStats.movingOut}</strong>
             <small>Moving Out Soon</small>
           </span>
         </article>
@@ -3659,7 +3802,7 @@ function OwnerTenantsPage({ onNavigate }) {
         <article onClick={() => setActiveTab('inactive')} style={{ cursor: 'pointer' }}>
           <b className="stat-icon-red"><Icon name="people" size={22}/></b>
           <span>
-            <strong>6</strong>
+              <strong>{tenantStats.inactive}</strong>
             <small>Inactive / Past Tenants</small>
           </span>
         </article>
@@ -3667,38 +3810,126 @@ function OwnerTenantsPage({ onNavigate }) {
 
       {/* Top Bar with Tabs and Controls */}
       <div className="tenants-top-bar">
-        <div className="tenants-tabs-list">
+          <div
+            className="tenants-tabs-list"
+            style={{
+              overflow: 'hidden',
+              overflowY: 'hidden',
+              maxHeight: 'none',
+              height: 'auto',
+              scrollbarWidth: 'none',
+            }}
+          >
           <button
             type="button"
             className={`tenants-tab-item ${activeTab === 'all' ? 'active' : ''}`}
             onClick={() => setActiveTab('all')}
           >
-            All Tenants (42)
+                All Tenants ({tenantStats.total})
           </button>
           <button
             type="button"
             className={`tenants-tab-item ${activeTab === 'active' ? 'active' : ''}`}
             onClick={() => setActiveTab('active')}
           >
-            Active (28)
+                Active ({tenantStats.active})
           </button>
           <button
             type="button"
             className={`tenants-tab-item ${activeTab === 'moving' ? 'active' : ''}`}
             onClick={() => setActiveTab('moving')}
           >
-            Moving Out (8)
+                Moving Out ({tenantStats.movingOut})
           </button>
           <button
             type="button"
             className={`tenants-tab-item ${activeTab === 'inactive' ? 'active' : ''}`}
             onClick={() => setActiveTab('inactive')}
           >
-            Inactive (6)
+                Inactive ({tenantStats.inactive})
           </button>
         </div>
 
-        <div className="tenants-controls-group">
+          <button
+            type="button"
+            className="tenant-add-btn"
+            onClick={() => setShowAddTenant(true)}
+          >
+            <Icon name="plus" size={17} />
+            Add Tenant
+          </button>
+          <style>{`
+            .owner-page .tenants-top-bar { overflow: hidden !important; overflow-y: hidden !important; scrollbar-width: none; }
+            .owner-page .tenants-top-bar::-webkit-scrollbar, .owner-page .tenants-tabs-list::-webkit-scrollbar { display: none; }
+            .owner-page .tenants-tabs-list { overflow: hidden !important; overflow-y: hidden !important; max-height: none !important; height: auto !important; scrollbar-width: none; }
+            .tenant-legacy-controls, .tenant-property-selected-btn, .tenant-filter-btn, .tenant-filter-toggle, .tenant-filter-button { display: none !important; }
+            .owner-page span.tenant--row-idx, .owner-page span.tenant-row-idx { display: none !important; }
+            .tenant-prop-thump, .tenant-prop-thumb, .tenant-property-thumb, .tenant-property-thumbnail, .tenant-property-image, .tenant-table-card td:nth-child(3) img { display: none !important; }
+            .tenant-add-btn, .tenant-submit-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; border-radius:10px; padding:12px 17px; background:#553cff; color:#fff; font:inherit; font-weight:700; white-space:nowrap; cursor:pointer; box-shadow:0 8px 18px rgba(85,60,255,.2); }
+            .tenant-add-btn:hover, .tenant-submit-btn:hover { background:#4028e8; transform:translateY(-1px); }
+            .tenant-add-modal-backdrop { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:24px; background:rgba(8,16,55,.45); overflow-y:auto; }
+            .tenant-add-modal { width:min(850px,100%); max-height:min(90vh,860px); overflow-y:auto; border:1px solid #e5e8ff; border-radius:20px; padding:24px; background:#fff; box-shadow:0 24px 70px rgba(8,16,55,.28); }
+            .tenant-add-modal-header, .tenant-add-modal-actions { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+            .tenant-add-modal-header h2, .tenant-add-section h3 { margin:0; color:#10165d; }
+            .tenant-add-modal-header p { margin:5px 0 0; color:#64728f; }
+            .tenant-modal-close { width:36px; height:36px; border:0; border-radius:50%; background:#f0f2ff; color:#17205f; font-size:27px; line-height:1; cursor:pointer; }
+            .tenant-add-section { margin-top:22px; padding-top:18px; border-top:1px solid #edf0fa; }
+            .tenant-add-section h3 { font-size:16px; }
+            .tenant-add-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px 16px; margin-top:13px; }
+            .tenant-add-grid label, .tenant-history-input { display:grid; gap:7px; color:#26305e; font-size:13px; font-weight:650; }
+            .tenant-add-grid input, .tenant-add-grid select, .tenant-history-input textarea { width:100%; box-sizing:border-box; border:1px solid #dfe4f3; border-radius:8px; padding:10px 11px; background:#fff; color:#17205f; font:inherit; }
+            .tenant-history-input { margin-top:13px; } .tenant-history-input textarea { resize:vertical; }
+            .tenant-add-modal-actions { margin-top:24px; justify-content:flex-end; }
+            .tenant-cancel-btn { border:1px solid #d9dff1; border-radius:10px; padding:11px 16px; background:#fff; color:#26305e; font:inherit; font-weight:700; cursor:pointer; }
+            @media (max-width:720px) { .tenant-add-modal-backdrop { padding:12px; } .tenant-add-modal { padding:18px; } .tenant-add-grid { grid-template-columns:1fr; } }
+          `}</style>
+          {showAddTenant && (
+            <div className="tenant-add-modal-backdrop" role="presentation" onMouseDown={() => setShowAddTenant(false)}>
+              <form className="tenant-add-modal" onSubmit={handleAddTenant} onMouseDown={(event) => event.stopPropagation()}>
+                <div className="tenant-add-modal-header">
+                  <div>
+                    <h2>Add Tenant</h2>
+                    <p>Add the tenant's details, documents and tenancy history.</p>
+                  </div>
+                  <button type="button" className="tenant-modal-close" aria-label="Close add tenant form" onClick={() => setShowAddTenant(false)}>×</button>
+                </div>
+                <section className="tenant-add-section">
+                  <h3>Details</h3>
+                  <div className="tenant-add-grid">
+                    <label>Full name<input required value={tenantForm.name} onChange={(event) => updateTenantForm('name', event.target.value)} placeholder="Tenant name" /></label>
+                    <label>Phone number<input required value={tenantForm.phone} onChange={(event) => updateTenantForm('phone', event.target.value)} placeholder="+91 98765 43210" /></label>
+                    <label>Email address<input required type="email" value={tenantForm.email} onChange={(event) => updateTenantForm('email', event.target.value)} placeholder="tenant@email.com" /></label>
+                    <label>Property<input required value={tenantForm.property} onChange={(event) => updateTenantForm('property', event.target.value)} placeholder="Property name" /></label>
+                    <label>Property location<input required value={tenantForm.propertyLocation} onChange={(event) => updateTenantForm('propertyLocation', event.target.value)} placeholder="City, area" /></label>
+                    <label>Room number<input required value={tenantForm.roomNo} onChange={(event) => updateTenantForm('roomNo', event.target.value)} placeholder="e.g. 101" /></label>
+                    <label>Move-in date<input required type="date" value={tenantForm.moveInDate} onChange={(event) => updateTenantForm('moveInDate', event.target.value)} /></label>
+                    <label>Lease end date<input required type="date" value={tenantForm.leaseEndDate} onChange={(event) => updateTenantForm('leaseEndDate', event.target.value)} /></label>
+                    <label>Monthly rent<input required inputMode="numeric" value={tenantForm.monthlyRent} onChange={(event) => updateTenantForm('monthlyRent', event.target.value)} placeholder="7500" /></label>
+                    <label>Security deposit<input required inputMode="numeric" value={tenantForm.securityDeposit} onChange={(event) => updateTenantForm('securityDeposit', event.target.value)} placeholder="7500" /></label>
+                    <label>Status<select value={tenantForm.status} onChange={(event) => updateTenantForm('status', event.target.value)}><option>Active</option><option>Moving Out Soon</option><option>Inactive</option></select></label>
+                    <label>Occupancy<select value={tenantForm.preferredOccupancy} onChange={(event) => updateTenantForm('preferredOccupancy', event.target.value)}><option>Single</option><option>Double</option><option>Any</option></select></label>
+                  </div>
+                </section>
+                <section className="tenant-add-section">
+                  <h3>Documents</h3>
+                  <div className="tenant-add-grid tenant-doc-grid">
+                    <label>Aadhaar document<input type="file" accept=".pdf,image/*" onChange={(event) => updateTenantForm('aadhaarDocument', event.target.files?.[0]?.name || '')} /></label>
+                    <label>Lease agreement<input type="file" accept=".pdf,image/*" onChange={(event) => updateTenantForm('leaseDocument', event.target.files?.[0]?.name || '')} /></label>
+                    <label>Police verification<input type="file" accept=".pdf,image/*" onChange={(event) => updateTenantForm('policeDocument', event.target.files?.[0]?.name || '')} /></label>
+                  </div>
+                </section>
+                <section className="tenant-add-section">
+                  <h3>History</h3>
+                  <label className="tenant-history-input">Tenancy notes<textarea value={tenantForm.history} onChange={(event) => updateTenantForm('history', event.target.value)} placeholder="Add one history item per line" rows="3" /></label>
+                </section>
+                <div className="tenant-add-modal-actions">
+                  <button type="button" className="tenant-cancel-btn" onClick={() => setShowAddTenant(false)}>Cancel</button>
+                  <button type="submit" className="tenant-submit-btn"><Icon name="plus" size={16} /> Add Tenant</button>
+                </div>
+              </form>
+            </div>
+          )}
+          <div className="tenants-controls-group tenant-legacy-controls">
           {/* Property Filter Dropdown */}
           <div className="tenants-select-wrapper">
             <button
@@ -4307,7 +4538,7 @@ function OwnerTenantsPage({ onNavigate }) {
   );
 }
 
-function OwnerVisitRequestsPage() {
+function OwnerVisitRequestsPage({ incomingRequests = [], onStudentNotification, onRequestUpdate }) {
   const visitRequestsData = [
     {
       id: 1,
@@ -4411,12 +4642,23 @@ function OwnerVisitRequestsPage() {
     }
   ];
 
-  const [requests, setRequests] = useState(visitRequestsData);
+  // Requests are created only when a student confirms a visit booking.
+  const [requests, setRequests] = useState(() => [...incomingRequests]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [rescheduleId, setRescheduleId] = useState(null);
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
   const [toastMsg, setToastMsg] = useState(null);
+  const [expandedRequestId, setExpandedRequestId] = useState(null);
+
+  useEffect(() => {
+    if (!incomingRequests.length) return;
+    setRequests((current) => {
+      const currentIds = new Set(current.map((request) => String(request.id)));
+      const additions = incomingRequests.filter((request) => !currentIds.has(String(request.id)));
+      return additions.length ? [...additions, ...current] : current;
+    });
+  }, [incomingRequests]);
 
   const showToast = (msg, type = 'success') => {
     setToastMsg({ msg, type });
@@ -4424,13 +4666,33 @@ function OwnerVisitRequestsPage() {
   };
 
   const updateStatus = (id, status) => {
+    const request = requests.find((item) => item.id === id);
     setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    onRequestUpdate?.(id, { status });
+    if (request) {
+      const actionMessage = status === 'Accepted'
+        ? `Your visit to ${request.propertyName} on ${request.requestedDate} at ${request.preferredTime} has been accepted.`
+        : `Your visit request for ${request.propertyName} has been rejected by the owner.`;
+      onStudentNotification?.({
+        title: `Visit request ${status.toLowerCase()}`,
+        message: actionMessage
+      });
+    }
     showToast(status === 'Accepted' ? 'Visit request accepted!' : 'Visit request rejected.');
   };
 
   const handleReschedule = (id) => {
     if (!newDate || !newTime) return;
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, requestedDate: newDate, preferredTime: newTime, status: 'Pending' } : r));
+    const request = requests.find((item) => item.id === id);
+    const updates = { requestedDate: newDate, preferredTime: newTime, status: 'Pending' };
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+    onRequestUpdate?.(id, updates);
+    if (request) {
+      onStudentNotification?.({
+        title: 'Visit rescheduled',
+        message: `The owner suggested a new visit time for ${request.propertyName}: ${newDate} at ${newTime}.`
+      });
+    }
     setRescheduleId(null);
     setNewDate('');
     setNewTime('');
@@ -4597,9 +4859,6 @@ function OwnerVisitRequestsPage() {
                 )}
                 {(req.status === 'Accepted' || req.status === 'Rejected') && (
                   <>
-                    <button type="button" className="vr-btn vr-btn-view-details">
-                      View Details
-                    </button>
                     {req.status === 'Accepted' && (
                       <button
                         type="button"
@@ -4611,7 +4870,14 @@ function OwnerVisitRequestsPage() {
                     )}
                   </>
                 )}
+                <button type="button" className="vr-btn vr-btn-view-details" onClick={() => setExpandedRequestId((current) => current === req.id ? null : req.id)}>
+                  {expandedRequestId === req.id ? 'Hide Student Details' : 'Student Details'}
+                </button>
               </div>
+              {expandedRequestId === req.id && <section className="vr-student-details" aria-label={`Details for ${req.studentName}`}>
+                <header><strong>Student Details</strong><span>Visit request information</span></header>
+                <div><span><Icon name="people" size={15}/><b>Student</b>{req.studentName}</span><span><Icon name="mail" size={15}/><b>Contact</b>{req.studentPhone}</span><span><Icon name="building" size={15}/><b>College</b>{req.studentCollege}</span><span><Icon name="cap" size={15}/><b>Course</b>{req.studentCourse}</span><span><Icon name="calendar" size={15}/><b>Requested visit</b>{req.requestedDate} · {req.preferredTime}</span><span><Icon name="pin" size={15}/><b>Property</b>{req.propertyName}</span></div>
+              </section>}
             </article>
           ))
         )}
@@ -4872,7 +5138,125 @@ function OwnerProfilePage({ onNavigate }) {
           <div className="owner-card-header">
             <div className="owner-card-header-left">
               <span className="header-icon"><Icon name="user" size={18}/></span>
-              <h3>Personal Information</h3>
+          <h3 data-owner-profile-personal-heading="true">Personal Information</h3>
+          <script dangerouslySetInnerHTML={{ __html: `
+            (() => {
+              if (window.__aiSafeRentOwnerProfileSyncV2) return;
+              window.__aiSafeRentOwnerProfileSyncV2 = true;
+              const profileRoots = () => document.querySelectorAll(
+                '.owner-profile-banner, .owner-tool, .owner-sidebar-profile, .owner-sidebar-user, .owner-header-profile, .owner-settings-page, .settings-page, .settings-content'
+              );
+              const hasOwnerProfileField = (element) => {
+                const label = (element.closest('label')?.textContent || element.name || element.placeholder || '').toLowerCase();
+                return /name|email|phone|mobile|business|company|address|city|state|pincode/.test(label);
+              };
+              const replaceValue = (oldValue, newValue) => {
+                if (!oldValue || oldValue === newValue) return;
+                profileRoots().forEach((root) => {
+                  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+                  let node;
+                  while ((node = walker.nextNode())) {
+                    if (node.nodeValue.trim() === oldValue) node.nodeValue = node.nodeValue.replace(oldValue, newValue);
+                  }
+                });
+              };
+              const rememberAndSync = (event) => {
+                const element = event.target;
+                if (!element.matches('input, textarea, select') || !hasOwnerProfileField(element)) return;
+                const oldValue = element.dataset.ownerProfilePrevious || '';
+                const newValue = element.value.trim();
+                replaceValue(oldValue, newValue);
+                element.dataset.ownerProfilePrevious = newValue;
+                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+                const fieldKey = element.name || element.placeholder || ('field_' + Date.now());
+                saved[fieldKey] = { previous: saved[fieldKey]?.previous || oldValue, value: newValue };
+                localStorage.setItem('ai_saferent_owner_profile', JSON.stringify(saved));
+              };
+              document.addEventListener('focusin', (event) => {
+                const element = event.target;
+                if (element.matches?.('input, textarea, select') && hasOwnerProfileField(element)) {
+                  element.dataset.ownerProfilePrevious = element.value.trim();
+                }
+              });
+              document.addEventListener('input', rememberAndSync);
+              document.addEventListener('change', rememberAndSync);
+              const syncSavedProfile = () => {
+                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+                Object.values(saved).forEach((record) => {
+                  if (record && typeof record === 'object') replaceValue(record.previous, record.value);
+                });
+              };
+              const syncSettingsForm = () => {
+                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+                document.querySelectorAll('.owner-settings-page input, .owner-settings-page textarea, .settings-page input, .settings-page textarea, .settings-content input, .settings-content textarea').forEach((element) => {
+                  const label = (element.closest('label')?.textContent || element.name || element.placeholder || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                  const match = Object.entries(saved).find(([key, record]) => {
+                    const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return record && typeof record === 'object' && record.value && (normalizedKey.includes(label) || label.includes(normalizedKey));
+                  });
+                  if (match) setProfileField(element, match[1].value);
+                });
+              };
+              syncSavedProfile();
+              const clearDefaultProfileSummary = () => {
+                if (localStorage.getItem('ai_saferent_owner_profile_summary_cleared')) return;
+                const emptyByDefault = new Set([
+                  'Date of Birth', 'Gender', 'Address', 'Alternate Phone', 'Business Type', 'Business Name',
+                  'Years of Experience', 'Total Properties', 'Primary Location', 'Areas Covered', 'About Me',
+                ]);
+                let cleared = false;
+                document.querySelectorAll('body *').forEach((label) => {
+                  if (label.children.length || !emptyByDefault.has(label.textContent.trim())) return;
+                  const value = label.nextElementSibling || Array.from(label.parentElement?.children || []).find((child) => child !== label);
+                  if (value) {
+                    value.textContent = '';
+                    cleared = true;
+                  }
+                });
+                if (cleared) localStorage.setItem('ai_saferent_owner_profile_summary_cleared', 'true');
+              };
+              clearDefaultProfileSummary();
+              setTimeout(clearDefaultProfileSummary, 100);
+              const setProfileField = (element, value) => {
+                if (!element || element.value === value) return;
+                const prototype = element.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+                const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+                if (valueSetter) valueSetter.call(element, value);
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+              };
+              const findSignupDetails = () => {
+                const found = { name: '', email: '', phone: '' };
+                const inspect = (value) => {
+                  if (!value || typeof value !== 'object') return;
+                  Object.entries(value).forEach(([key, item]) => {
+                    const normalizedKey = key.toLowerCase().replace(/[_-]/g, '');
+                    if (!found.name && /^(name|fullname|displayname|username)$/.test(normalizedKey) && typeof item === 'string') found.name = item;
+                    if (!found.email && normalizedKey === 'email' && typeof item === 'string') found.email = item;
+                    if (!found.phone && /^(phone|phonenumber|mobile|mobilenumber)$/.test(normalizedKey) && typeof item === 'string') found.phone = item;
+                    if (item && typeof item === 'object') inspect(item);
+                  });
+                };
+                for (let index = 0; index < localStorage.length; index += 1) {
+                  try { inspect(JSON.parse(localStorage.getItem(localStorage.key(index)) || '{}')); } catch (_) { /* Ignore non-JSON storage values. */ }
+                }
+                return found;
+              };
+              if (!localStorage.getItem('ai_saferent_owner_profile_defaults_applied')) {
+                const signup = findSignupDetails();
+                document.querySelectorAll('input, textarea').forEach((element) => {
+                  const label = (element.closest('label')?.textContent || element.name || element.placeholder || '').toLowerCase();
+                  if (/full name|fullname/.test(label)) setProfileField(element, signup.name);
+                  else if (/phone|mobile/.test(label)) setProfileField(element, signup.phone);
+                  else if (/email/.test(label)) setProfileField(element, signup.email);
+                  else if (/business|company|address|city|state|pincode|gst|about|bio|role|website/.test(label)) setProfileField(element, '');
+                });
+                localStorage.setItem('ai_saferent_owner_profile_defaults_applied', 'true');
+              }
+              syncSettingsForm();
+              new MutationObserver(() => { syncSavedProfile(); syncSettingsForm(); }).observe(document.body, { childList: true, subtree: true });
+            })();
+          ` }} />
             </div>
             {editPersonal ? (
               <button type="button" className="owner-card-edit-btn save" onClick={savePersonal}>Save</button>
@@ -5221,7 +5605,7 @@ function OwnerProfilePage({ onNavigate }) {
   )
 }
 
-function OwnerDashboard({ onLogout }) {
+function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, onRequestUpdate, onPropertyPublished }) {
   const { ownerProfile } = useOwnerProfile()
   const [menu, setMenu] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -5250,9 +5634,10 @@ function OwnerDashboard({ onLogout }) {
     showToast(`Property "${propToDelete?.name || 'Listing'}" deleted successfully!`)
   }
 
-  const handleAddProperty = (newProp) => {
+  const handleAddProperty = (newProp, isDraft = false) => {
     setProperties((prev) => [newProp, ...prev])
-    showToast(`Property "${newProp.name}" published successfully!`)
+    if (!isDraft && newProp.status === 'Active') onPropertyPublished?.(newProp)
+    showToast(`Property "${newProp.name}" ${isDraft ? 'saved as a draft' : 'published successfully'}!`)
   }
 
   return <div className="owner-dashboard">
@@ -5296,16 +5681,63 @@ function OwnerDashboard({ onLogout }) {
       {toastMessage && <div className="owner-status-banner">✓ {toastMessage}</div>}
 
       {active === 'Dashboard' && <>
-        <section className="owner-welcome">
+      <section className="owner-welcome">
+        <span data-owner-welcome-live="true" />
+        <style>{`.owner-live-date-value{margin:6px 0 0;color:#5e6d92;font-size:13px;font-weight:600}.owner-live-date-value::before{content:'Today · ';color:#563dff}`}</style>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (() => {
+            if (window.__aiSafeRentOwnerWelcomeLive) return;
+            window.__aiSafeRentOwnerWelcomeLive = true;
+            const ownerName = () => {
+              try {
+                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+                const record = Object.entries(saved).find(([key]) => /full name|name/i.test(key));
+                return record && record[1] && typeof record[1] === 'object' ? record[1].value : '';
+              } catch (_) { return ''; }
+            };
+            const refreshOwnerWelcome = () => {
+              const name = ownerName();
+              if (name) {
+                document.querySelectorAll('.owner-welcome *').forEach((element) => {
+                  if (!element.children.length && /Rohit Sharma/i.test(element.textContent.trim())) element.textContent = name;
+                });
+              }
+              const now = new Date();
+              const dateTime = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                + ' · ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              document.querySelectorAll('.owner-today-card, .today-card, [class*="today-card"]').forEach((card) => {
+                let liveDate = card.querySelector('.owner-live-date-value');
+                if (!liveDate) {
+                  liveDate = document.createElement('p');
+                  liveDate.className = 'owner-live-date-value';
+                  card.appendChild(liveDate);
+                }
+                liveDate.textContent = dateTime;
+              });
+            };
+            refreshOwnerWelcome();
+            window.setInterval(refreshOwnerWelcome, 1000);
+          })();
+        ` }} />
           <div>
             <span className="owner-eyebrow">OWNER OVERVIEW</span>
-            <h1>Welcome back, Rohit!</h1>
+          <h1>
+            Welcome back, {(() => {
+              try {
+                const profile = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+                const nameRecord = Object.entries(profile).find(([key]) => /full name|^name$/i.test(key));
+                return nameRecord?.[1]?.value || 'Owner';
+              } catch (_) {
+                return 'Owner';
+              }
+            })()}!
+          </h1>
             <p>Manage your properties, connect with tenants, and grow your business with AI SafeRent.</p>
           </div>
           <div className="today">
             <b><Icon name="calendar" size={18}/></b>
             <span>
-              <strong>Thursday, 23 Sep 2026</strong>
+          <strong>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}</strong>
               <small>Here's what's happening with your properties today.</small>
             </span>
           </div>
@@ -5319,12 +5751,12 @@ function OwnerDashboard({ onLogout }) {
           </article>
           <article>
             <b><Icon name="calendar" size={19}/></b>
-            <strong>28<small>Total Bookings</small></strong>
+            <strong>6<small>Total Bookings</small></strong>
             <em>↑ 12%</em>
           </article>
           <article>
             <b><Icon name="eyeOpen" size={19}/></b>
-            <strong>1,245<small>Profile Views</small></strong>
+            <strong>2<small>Profile Views</small></strong>
             <em>↑ 40%</em>
           </article>
           <article>
@@ -5455,9 +5887,9 @@ function OwnerDashboard({ onLogout }) {
       {active === 'My Properties' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
       {active === 'Add Property' && <AddPropertyPage onNavigate={setActive} onAddProperty={handleAddProperty}/>} 
       {active === 'Booking' && <OwnerBookingsPage onNavigate={setActive}/>} 
-      {active === 'My Bookings' && <OwnerBookingsPage onNavigate={setActive}/>} 
+      {active === 'Booking Status' && <OwnerBookingsPage onNavigate={setActive}/>} 
       {active === 'Tenants' && <OwnerTenantsPage onNavigate={setActive}/>} 
-      {active === 'Visit Requests' && <OwnerVisitRequestsPage/>} 
+      {active === 'Visit Requests' && <OwnerVisitRequestsPage incomingRequests={visitRequests} onStudentNotification={onStudentNotification} onRequestUpdate={onRequestUpdate}/>} 
       {active === 'Messages' && <OwnerCollabsPage/>} 
       {active === 'Collabs' && <OwnerCollabsPage/>} 
       {active === 'Reviews' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
@@ -5469,6 +5901,81 @@ function OwnerDashboard({ onLogout }) {
 }
 
 function App() {
+  const ownerSettingsProfileSyncEnabled = true;
+  if (typeof window !== 'undefined' && !window.__aiSafeRentOwnerSettingsBridge) {
+    window.__aiSafeRentOwnerSettingsBridge = true;
+    const normalizeOwnerField = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const ownerFieldLabel = (element) => normalizeOwnerField(
+      element.closest('label')?.textContent
+      || element.parentElement?.querySelector('label')?.textContent
+      || element.previousElementSibling?.textContent
+      || element.name
+      || element.placeholder
+      || ''
+    );
+    const isOwnerProfileField = (label) => /fullname|name|email|phone|mobile|dateofbirth|gender|address|alternatephone|business|company|experience|properties|location|areascovered|about|bio|gst|pincode|state|city/.test(label);
+    const saveOwnerProfileField = (event) => {
+      const element = event.target;
+      if (!element.matches?.('input, textarea, select')) return;
+      const label = ownerFieldLabel(element);
+      if (!isOwnerProfileField(label)) return;
+      const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+      saved[label] = { value: element.value, previous: '' };
+      localStorage.setItem('ai_saferent_owner_profile', JSON.stringify(saved));
+    };
+    window.addEventListener('input', saveOwnerProfileField, true);
+    window.addEventListener('change', saveOwnerProfileField, true);
+    const syncAutofilledLoginFields = (root) => {
+      const form = root?.closest?.('form') || root;
+      if (!form?.querySelectorAll) return;
+      form.querySelectorAll('input[type="email"], input[autocomplete="email"], input[type="password"], input[autocomplete="current-password"]').forEach((field) => {
+        if (field.value) {
+          const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+          nativeSetter?.call(field, field.value);
+          field._valueTracker?.setValue('');
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+          field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    };
+    window.addEventListener('submit', (event) => syncAutofilledLoginFields(event.target), true);
+    window.addEventListener('click', (event) => {
+      const control = event.target.closest?.('button, input[type="submit"]');
+      if (control && /login|sign in/i.test(control.textContent || control.value || '')) syncAutofilledLoginFields(control);
+    }, true);
+    window.setTimeout(() => syncAutofilledLoginFields(document), 200);
+    window.setTimeout(() => syncAutofilledLoginFields(document), 800);
+  }
+  if (typeof window !== 'undefined') {
+    window.requestAnimationFrame(() => {
+      const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
+      const normalized = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const findSavedValue = (label) => {
+        const key = normalized(label);
+        const entry = Object.entries(saved).find(([storedKey, record]) => {
+          const stored = normalized(storedKey);
+          return record && typeof record === 'object' && (stored === key || stored.includes(key) || key.includes(stored));
+        });
+        return entry ? entry[1].value : undefined;
+      };
+      document.querySelectorAll('input, textarea, select').forEach((element) => {
+        const label = element.closest('label')?.textContent
+          || element.parentElement?.querySelector('label')?.textContent
+          || element.previousElementSibling?.textContent
+          || element.name
+          || element.placeholder
+          || '';
+        const value = findSavedValue(label);
+        if (value !== undefined && element.value !== value) element.value = value;
+      });
+      document.querySelectorAll('body *').forEach((labelElement) => {
+        if (labelElement.children.length) return;
+        const value = findSavedValue(labelElement.textContent.trim());
+        const output = labelElement.nextElementSibling;
+        if (value !== undefined && output && !output.children.length) output.textContent = value;
+      });
+    });
+  }
   const { updateUserProfile } = useStudentUser()
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('tenant')
@@ -5498,29 +6005,108 @@ function App() {
   const [searchFilters, setSearchFilters] = useState(defaultSearchFilters)
   const [savedProperties, setSavedProperties] = useState([])
   const [confirmedBookings, setConfirmedBookings] = useState([])
+  const [publishedProperties, setPublishedProperties] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('ai_saferent_published_properties') || '[]')
+    } catch (error) {
+      return []
+    }
+  })
+  const [ownerVisitRequests, setOwnerVisitRequests] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('ai_saferent_owner_visit_requests') || '[]')
+    } catch (error) {
+      return []
+    }
+  })
+  const [studentNotifications, setStudentNotifications] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('ai_saferent_student_notifications') || '[]')
+    } catch (error) {
+      return []
+    }
+  })
   const [selectedVisitProperty, setSelectedVisitProperty] = useState(defaultVisitProperty)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ai_saferent_owner_visit_requests', JSON.stringify(ownerVisitRequests))
+    } catch (error) {}
+  }, [ownerVisitRequests])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ai_saferent_student_notifications', JSON.stringify(studentNotifications))
+    } catch (error) {}
+  }, [studentNotifications])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ai_saferent_published_properties', JSON.stringify(publishedProperties))
+    } catch (error) {}
+  }, [publishedProperties])
+
+  const addPublishedProperty = (property) => {
+    setPublishedProperties((current) => current.some((item) => String(item.id) === String(property.id)) ? current : [property, ...current])
+  }
+
+  const addStudentNotification = ({ title, message }) => {
+    setStudentNotifications((current) => [{
+      id: `visit-update-${Date.now()}`,
+      title,
+      message,
+      createdAt: 'Just now'
+    }, ...current])
+  }
+
+  const updateOwnerVisitRequest = (requestId, updates) => {
+    setOwnerVisitRequests((current) => current.map((request) => request.id === requestId ? { ...request, ...updates } : request))
+  }
+
+  const addOwnerVisitRequest = (booking) => {
+    const request = {
+      id: `student-visit-${Date.now()}`,
+      studentName: booking.guestName || 'Student',
+      studentCourse: booking.studentCourse || 'Student',
+      studentCollege: booking.studentCollege || 'Not provided',
+      studentRating: 'New',
+      studentReviews: 0,
+      studentPhone: booking.guestPhone || 'Not provided',
+      propertyName: booking.name,
+      propertyLocation: booking.location,
+      propertyPrice: `${booking.price || '₹0'} / month`,
+      propertyType: booking.propertyType || 'PG',
+      propertyGender: 'Open to all',
+      propertyImg: '/student-hero.png',
+      requestedDate: booking.requestedDate || booking.date,
+      preferredTime: booking.preferredTime || 'Not specified',
+      message: booking.message || 'I would like to visit this property.',
+      status: 'Pending'
+    }
+    setOwnerVisitRequests((current) => [request, ...current])
+  }
   const toggleSavedProperty = (name) => setSavedProperties((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
   const studentNavigate = (destination, filters, property) => {
     if (destination === 'Book a Visit') setSelectedVisitProperty(property || defaultVisitProperty)
     if (filters) {
       setSearchFilters((current) => ({ ...current, ...filters }))
     }
-    const routes = { Home: 'dashboard', PGs: 'pgs', Flats: 'flats', Rooms: 'rooms', Explore: 'explore', 'AI Recommendations': 'recommendations', 'Book a Visit': 'visit', 'Saved Properties': 'saved', 'My Bookings': 'bookings', Profile: 'profile', Settings: 'settings' }
+    const routes = { Home: 'dashboard', PGs: 'pgs', Flats: 'flats', Rooms: 'rooms', Explore: 'explore', 'AI Recommendations': 'recommendations', 'Book a Visit': 'visit', 'Saved Properties': 'saved', 'Booking Status': 'bookings', Profile: 'profile', Settings: 'settings' }
     setPage(routes[destination] || 'dashboard')
   }
 
-  if (page === 'dashboard') return <StudentDashboard onLogout={() => setPage('login')} onNavigate={studentNavigate} />
-  if (page === 'pgs') return <ListingsPage type="PGs" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
-  if (page === 'flats') return <ListingsPage type="Flats" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
-  if (page === 'rooms') return <ListingsPage type="Rooms" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} />
-  if (page === 'explore') return <ExplorePage onNavigate={studentNavigate} />
+  if (page === 'dashboard') return <StudentDashboard onLogout={() => setPage('login')} onNavigate={studentNavigate} notifications={studentNotifications} onClearNotifications={() => setStudentNotifications([])} />
+  if (page === 'pgs') return <ListingsPage type="PGs" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} publishedProperties={publishedProperties} />
+  if (page === 'flats') return <ListingsPage type="Flats" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} publishedProperties={publishedProperties} />
+  if (page === 'rooms') return <ListingsPage type="Rooms" onNavigate={studentNavigate} savedNames={savedProperties} onToggleSaved={toggleSavedProperty} publishedProperties={publishedProperties} />
+  if (page === 'explore') return <ExplorePage onNavigate={studentNavigate} publishedProperties={publishedProperties} />
   if (page === 'recommendations') return <RecommendationsPage onNavigate={studentNavigate} filters={searchFilters} />
-  if (page === 'visit') return <VisitPage property={selectedVisitProperty} onNavigate={studentNavigate} onConfirm={(booking) => setConfirmedBookings((current) => [booking, ...current])} onCancel={(booking) => { setConfirmedBookings((current) => [booking, ...current]); setPage('bookings') }} />
+  if (page === 'visit') return <VisitPage property={selectedVisitProperty} onNavigate={studentNavigate} onConfirm={(booking) => { setConfirmedBookings((current) => [booking, ...current]); addOwnerVisitRequest(booking) }} onCancel={(booking) => { setConfirmedBookings((current) => [booking, ...current]); setPage('bookings') }} />
   if (page === 'saved') return <SavedPageV2 onNavigate={studentNavigate} saved={savedProperties} onRemove={toggleSavedProperty} />
   if (page === 'bookings') return <BookingsPageV2 onNavigate={studentNavigate} confirmedBookings={confirmedBookings} />
   if (page === 'profile') return <ProfilePage onNavigate={studentNavigate} />
   if (page === 'settings') return <SettingsPage onNavigate={studentNavigate} onLogout={() => setPage('login')} />
-  if (page === 'owner-dashboard') return <OwnerDashboard onLogout={() => setPage('login')} />
+  if (page === 'owner-dashboard') return <OwnerDashboard onLogout={() => setPage('login')} visitRequests={ownerVisitRequests} onStudentNotification={addStudentNotification} onRequestUpdate={updateOwnerVisitRequest} onPropertyPublished={addPublishedProperty} />
 
   const validateSignup = () => {
     const errs = {}
@@ -5650,7 +6236,7 @@ function App() {
       </section>
 
       <section className="login-side">
-        <form className="login-card" onSubmit={submitAuth} noValidate>
+        <form className={`login-card ${authMode === 'signup' ? 'signup-card' : ''}`} onSubmit={submitAuth} noValidate>
           <header>
             <h2>{authMode === 'login' ? <>Welcome to <span>AI SafeRent</span></> : <>Join <span>AI SafeRent</span></>}</h2>
             <p>{authMode === 'login' ? 'Login to continue' : 'Create your free account'}</p>
@@ -5676,7 +6262,7 @@ function App() {
           </div>
 
           {authMode === 'signup' && (
-            <div>
+            <div className="auth-input-group signup-name-field">
               <label className={`field ${errors.name ? 'has-error' : ''}`}>
                 <Icon name="user"/>
                 <input
@@ -5691,7 +6277,7 @@ function App() {
             </div>
           )}
 
-          <div>
+          <div className="auth-input-group auth-email-field">
             <label className={`field ${errors.email ? 'has-error' : ''}`}>
               <Icon name="mail"/>
               <input
@@ -5706,7 +6292,7 @@ function App() {
           </div>
 
           {authMode === 'signup' && (
-            <div>
+            <div className="auth-input-group signup-phone-field">
               <label className={`field ${errors.phone ? 'has-error' : ''}`}>
                 <Icon name="phone"/>
                 <input
@@ -5721,7 +6307,7 @@ function App() {
             </div>
           )}
 
-          <div>
+          <div className="auth-input-group auth-password-field">
             <label className={`field ${errors.password ? 'has-error' : ''}`}>
               <Icon name="lock"/>
               <input
@@ -5747,7 +6333,7 @@ function App() {
               <a href="#forgot" onClick={async (e) => { e.preventDefault(); if (!authForm.email.trim()) { setErrors({ email: 'Enter your email first to reset your password.' }); return } try { const result = await requestPasswordReset(authForm.email.trim()); setAuthSuccess(result.message) } catch (error) { setErrors({ general: error.message || 'Unable to send reset email.' }) } }}>Forgot password?</a>
             </div>
           ) : (
-            <div>
+            <div className="signup-agreement">
               <div className="form-options">
                 <label className="remember">
                   <input type="checkbox" checked={authForm.agree} onChange={(e) => handleFieldChange('agree', e.target.checked)}/>

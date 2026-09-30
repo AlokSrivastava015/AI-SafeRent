@@ -47,6 +47,36 @@ class Profile(Base, Timestamped):
     business_name: Mapped[str | None] = mapped_column(String(180)); business_type: Mapped[str | None] = mapped_column(String(80)); alternate_phone: Mapped[str | None] = mapped_column(String(32)); experience_years: Mapped[int | None] = mapped_column(Integer)
 
 
+class OwnerProfile(Base, Timestamped):
+    """Business information for a user whose shared profile role is owner."""
+    __tablename__ = "owner_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True
+    )
+    business_name: Mapped[str | None] = mapped_column(String(180))
+    business_type: Mapped[str | None] = mapped_column(String(80))
+    alternate_phone: Mapped[str | None] = mapped_column(String(32))
+    experience_years: Mapped[int | None] = mapped_column(Integer)
+    gst_number: Mapped[str | None] = mapped_column(String(32), unique=True)
+    is_business_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class StudentProfile(Base, Timestamped):
+    """Academic and stay details for a user whose shared profile role is student."""
+    __tablename__ = "student_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True
+    )
+    college: Mapped[str | None] = mapped_column(String(180))
+    course: Mapped[str | None] = mapped_column(String(120))
+    academic_year: Mapped[str | None] = mapped_column(String(32))
+    preferred_location: Mapped[str | None] = mapped_column(String(180))
+    move_in_date: Mapped[date | None] = mapped_column(Date)
+    is_identity_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
 class Property(Base, Timestamped):
     __tablename__ = "properties"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
