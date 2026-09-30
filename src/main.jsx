@@ -295,10 +295,34 @@ function StudentDashboard({ onLogout, onNavigate, notifications = [], onClearNot
 }
 
 const listingNames = {
-  PGs: ['Sunrise PG for Girls','Comfort Stay PG','Urban Nest PG','Shree Shyam PG','Elite Stays PG','Haven Co-Living','Maple Women’s PG','Campus Corner PG','Greenview PG','The Scholar’s Nest','Metro Stay PG','Harmony Homes PG'],
+  PGs: ['Krishna PG for Girls','Shashi Girls PG','PGhouse','Exotica Girls PG','Shree Radhey PG Only for Girls','MyGuest1 PG','Noida Women PG','Vizima Living Girls hostel and PG','Heritage PG in Indirapuram',"K M Goyal's Boys PG House","Derek's PG"],
   Flats: ['2 BHK Apartment','1 BHK Flat','3 BHK Apartment','1 BHK Builder Floor','3 BHK + Study','Skyline 2 BHK','Park View Flat','Bluebell Residency','The Urban Loft','Serene 1 BHK','Lakeview Apartment','Cityscape 3 BHK'],
-  Rooms: ['Private Room in Indirapuram','Furnished Single Room','Cozy Room Near Metro','Sunlit Studio Room','Premium Private Room','Shared Room for Students','Executive Room','Budget Friendly Room','Quiet Study Room','Balcony View Room','Modern Co-Living Room','Comfort Single Room']
+  Rooms: ['Nirvana Stays','Furnished Single Room','Cozy Room Near Metro','Sunlit Studio Room','Premium Private Room','Shared Room for Students','Executive Room','Budget Friendly Room','Quiet Study Room','Balcony View Room','Modern Co-Living Room','Comfort Single Room']
 }
+const nirvanaStaysImages = ['/nirvana-stays-1.png', '/nirvana-stays-2.png', '/nirvana-stays-3.png', '/nirvana-stays-4.png']
+const nirvanaStaysLocation = 'Crossing Republik'
+const krishnaPgImages = ['/krishna-pg-1.png', '/krishna-pg-2.png', '/krishna-pg-3.png', '/krishna-pg-4.png', '/krishna-pg-5.png', '/krishna-pg-6.png']
+const krishnaPgLocation = 'Crossing Republik'
+const shashiGirlsPgImages = ['/shashi-girls-pg-1.png', '/shashi-girls-pg-2.png', '/shashi-girls-pg-3.png', '/shashi-girls-pg-4.png', '/shashi-girls-pg-5.png', '/shashi-girls-pg-6.png']
+const shashiGirlsPgLocation = 'Crossings Republik Road'
+const pghouseImages = ['/pghouse-1.png', '/pghouse-2.png', '/pghouse-3.png', '/pghouse-4.png', '/pghouse-5.png', '/pghouse-6.png']
+const pghouseLocation = 'Crossings Republik'
+const exoticaGirlsPgImages = ['/exotica-girls-pg-1.png', '/exotica-girls-pg-2.png', '/exotica-girls-pg-3.png', '/exotica-girls-pg-4.png']
+const exoticaGirlsPgLocation = 'Niti Khand 2'
+const shreeRadheyPgImages = ['/shree-radhey-pg-1.png', '/shree-radhey-pg-2.png', '/shree-radhey-pg-3.png', '/shree-radhey-pg-4.png', '/shree-radhey-pg-5.png']
+const shreeRadheyPgLocation = 'Shakti Khand 4'
+const myGuest1PgImages = ['/myguest1-pg-1.png', '/myguest1-pg-2.png', '/myguest1-pg-3.png', '/myguest1-pg-4.png', '/myguest1-pg-5.png', '/myguest1-pg-6.png', '/myguest1-pg-7.png']
+const myGuest1PgLocation = 'Shipra Suncity'
+const noidaWomenPgImages = ['/noida-women-pg-1.png', '/noida-women-pg-2.png', '/noida-women-pg-3.png']
+const noidaWomenPgLocation = 'Sector 62'
+const vizimaLivingPgImages = ['/vizima-living-pg-1.png', '/vizima-living-pg-2.png', '/vizima-living-pg-3.png', '/vizima-living-pg-4.png', '/vizima-living-pg-5.png']
+const vizimaLivingPgLocation = 'Sector 126'
+const heritagePgImages = ['/heritage-pg-1.png', '/heritage-pg-2.png', '/heritage-pg-3.png', '/heritage-pg-4.png']
+const heritagePgLocation = 'Ahinsa Khand 2'
+const kmGoyalPgImages = ['/km-goyal-boys-pg-1.png', '/km-goyal-boys-pg-2.png', '/km-goyal-boys-pg-3.png', '/km-goyal-boys-pg-4.png', '/km-goyal-boys-pg-5.png']
+const kmGoyalPgLocation = 'Sector 12, Noida'
+const dereksPgImages = ['/dereks-pg-1.png', '/dereks-pg-2.png', '/dereks-pg-3.png', '/dereks-pg-4.png']
+const dereksPgLocation = 'Gaur City 2'
 const places = ['Niti Khand, Indirapuram','Vaishali, Ghaziabad','Shakti Khand, Indirapuram','Raj Nagar, Ghaziabad','Ahinsa Khand, Indirapuram','Shipra Suncity, Indirapuram']
 const defaultVisitProperty = { name: 'Sunrise PG for Girls', type: 'PG', index: 0, location: 'Niti Khand, Indirapuram, Ghaziabad', price: 7000 }
 
@@ -313,12 +337,26 @@ function StudentChrome({ active, onNavigate, children }) {
 }
 
 function ListingCard({ name, type, index, onVisit, onDetails, propertyRecord }) {
-  const price = propertyRecord?.price ?? (type === 'Flats' ? [18000,12000,25000,14500,28000,20000,16500,22000,19500,11000,24000,30000][index] : type === 'Rooms' ? [9000,7500,8500,11000,12000,6000,13500,5500,7000,10000,9500,8000][index] : [7000,6500,8000,5500,9000,7500,8500,6800,7200,6200,7800,8800][index])
-  const property = propertyRecord ? { ...propertyRecord, index, type } : { name, index, location: places[index % places.length], price, type }
+  const price = propertyRecord?.price ?? (type === 'Flats' ? [18000,12000,25000,14500,28000,20000,16500,22000,19500,11000,24000,30000][index] ?? 18000 : type === 'Rooms' ? [9000,7500,8500,11000,12000,6000,13500,5500,7000,10000,9500,8000][index] ?? 9000 : [7000,6500,8000,5500,9000,7500,8500,6800,7200,6200,7800,8800][index] ?? 7000)
+  const isNirvanaStays = name === 'Nirvana Stays' || propertyRecord?.name === 'Nirvana Stays'
+  const isKrishnaPg = name === 'Krishna PG for Girls' || propertyRecord?.name === 'Krishna PG for Girls'
+  const isShashiGirlsPg = name === 'Shashi Girls PG' || propertyRecord?.name === 'Shashi Girls PG'
+  const isPgHouse = name === 'PGhouse' || propertyRecord?.name === 'PGhouse'
+  const isExoticaGirlsPg = name === 'Exotica Girls PG' || propertyRecord?.name === 'Exotica Girls PG'
+  const isShreeRadheyPg = name === 'Shree Radhey PG Only for Girls' || propertyRecord?.name === 'Shree Radhey PG Only for Girls'
+  const isMyGuest1Pg = name === 'MyGuest1 PG' || propertyRecord?.name === 'MyGuest1 PG'
+  const isNoidaWomenPg = name === 'Noida Women PG' || propertyRecord?.name === 'Noida Women PG'
+  const isVizimaLivingPg = name === 'Vizima Living Girls hostel and PG' || propertyRecord?.name === 'Vizima Living Girls hostel and PG'
+  const isHeritagePg = name === 'Heritage PG in Indirapuram' || propertyRecord?.name === 'Heritage PG in Indirapuram'
+  const isKmGoyalPg = name === "K M Goyal's Boys PG House" || propertyRecord?.name === "K M Goyal's Boys PG House"
+  const isDereksPg = name === "Derek's PG" || propertyRecord?.name === "Derek's PG"
+  const propertyRecordDetails = { name, index, location: isDereksPg ? dereksPgLocation : isKmGoyalPg ? kmGoyalPgLocation : isHeritagePg ? heritagePgLocation : isVizimaLivingPg ? vizimaLivingPgLocation : isNoidaWomenPg ? noidaWomenPgLocation : isMyGuest1Pg ? myGuest1PgLocation : isShreeRadheyPg ? shreeRadheyPgLocation : isExoticaGirlsPg ? exoticaGirlsPgLocation : isPgHouse ? pghouseLocation : isShashiGirlsPg ? shashiGirlsPgLocation : isKrishnaPg ? krishnaPgLocation : isNirvanaStays ? nirvanaStaysLocation : places[index % places.length], price, type, ...(isNirvanaStays ? { images: nirvanaStaysImages } : {}), ...(isKrishnaPg ? { images: krishnaPgImages, ownerName: 'Vandana' } : {}), ...(isShashiGirlsPg ? { images: shashiGirlsPgImages, ownerName: 'Shashi Joshi' } : {}), ...(isPgHouse ? { images: pghouseImages, ownerName: 'Yash' } : {}), ...(isExoticaGirlsPg ? { images: exoticaGirlsPgImages, ownerName: 'Naren', ownerPhone: '9643700051' } : {}), ...(isShreeRadheyPg ? { images: shreeRadheyPgImages, ownerName: 'Aman', ownerPhone: '7303606648' } : {}), ...(isMyGuest1Pg ? { images: myGuest1PgImages, ownerName: 'Rahul', ownerPhone: '98110 72781' } : {}), ...(isNoidaWomenPg ? { images: noidaWomenPgImages, ownerName: 'Owner', ownerPhone: '93107 99092' } : {}), ...(isVizimaLivingPg ? { images: vizimaLivingPgImages, ownerName: 'Owner', ownerPhone: '96259 59990' } : {}), ...(isHeritagePg ? { images: heritagePgImages, ownerName: 'Owner', ownerPhone: '98180 57960' } : {}), ...(isKmGoyalPg ? { images: kmGoyalPgImages, ownerName: 'Owner', ownerPhone: '98997 99000' } : {}), ...(isDereksPg ? { images: dereksPgImages, ownerName: 'Owner', ownerPhone: '9910731715' } : {}) }
+  const property = propertyRecord ? { ...propertyRecord, index, type } : propertyRecordDetails
   const title = propertyRecord?.name || name
-  const location = propertyRecord?.location || places[index % places.length]
+  const location = propertyRecord?.location || (isDereksPg ? dereksPgLocation : isKmGoyalPg ? kmGoyalPgLocation : isHeritagePg ? heritagePgLocation : isVizimaLivingPg ? vizimaLivingPgLocation : isNoidaWomenPg ? noidaWomenPgLocation : isMyGuest1Pg ? myGuest1PgLocation : isShreeRadheyPg ? shreeRadheyPgLocation : isExoticaGirlsPg ? exoticaGirlsPgLocation : isPgHouse ? pghouseLocation : isShashiGirlsPg ? shashiGirlsPgLocation : isKrishnaPg ? krishnaPgLocation : isNirvanaStays ? nirvanaStaysLocation : places[index % places.length])
   const tags = propertyRecord?.amenities ? propertyRecord.amenities.split(' · ').slice(0, 3) : [type === 'PGs' ? 'With Food' : 'Furnished', 'Wi-Fi', index % 2 ? 'AC' : 'Attached Bath']
-  const imageStyle = propertyRecord?.img ? { backgroundImage: `url(${propertyRecord.img})` } : undefined
+  const cardImages = isDereksPg ? dereksPgImages : isKmGoyalPg ? kmGoyalPgImages : isHeritagePg ? heritagePgImages : isVizimaLivingPg ? vizimaLivingPgImages : isNoidaWomenPg ? noidaWomenPgImages : isMyGuest1Pg ? myGuest1PgImages : isShreeRadheyPg ? shreeRadheyPgImages : isExoticaGirlsPg ? exoticaGirlsPgImages : isPgHouse ? pghouseImages : isShashiGirlsPg ? shashiGirlsPgImages : isKrishnaPg ? krishnaPgImages : isNirvanaStays ? nirvanaStaysImages : undefined
+  const imageStyle = propertyRecord?.img ? { backgroundImage: `url(${propertyRecord.img})` } : cardImages ? { backgroundImage: `url(${cardImages[0]})` } : undefined
   return <article className="listing-card"><div className={`listing-photo photo-${index % 6}`} style={imageStyle}><span>{propertyRecord ? 'New listing' : index % 3 === 0 ? 'Verified' : index % 3 === 1 ? 'Popular' : 'Near Metro'}</span><button>♡</button></div><div className="listing-body"><h3>{title}</h3><p>⌖ &nbsp;{location}</p><div className="listing-price">₹{price.toLocaleString()} <small>/ month</small><i>★ 4.{(index + 4) % 10} ({72 + index * 7})</i></div><div className="listing-tags">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div><div className="listing-actions"><button onClick={() => onDetails(property)}>View Details</button><button onClick={() => onVisit(property)}>Book a Visit</button></div></div></article>
 }
 
@@ -538,14 +576,21 @@ function ExplorePage({ onNavigate }) {
           {listingsToShow.slice(0, 5).map((name, i) => {
             const propType = selected === 'All' ? (i < 2 ? 'PG' : i < 4 ? 'Flat' : 'Room') : selected.replace(/s$/, '')
             const price = [7000, 18000, 6500, 25000, 9000][i] || 8000
-            const propertyItem = { name, index: i, location: places[i % places.length], price, type: propType }
+            const isNirvanaStays = name === 'Nirvana Stays'
+            const isKrishnaPg = name === 'Krishna PG for Girls'
+            const isShashiGirlsPg = name === 'Shashi Girls PG'
+            const isPgHouse = name === 'PGhouse'
+            const isExoticaGirlsPg = name === 'Exotica Girls PG'
+            const listingImages = isExoticaGirlsPg ? exoticaGirlsPgImages : isPgHouse ? pghouseImages : isShashiGirlsPg ? shashiGirlsPgImages : isKrishnaPg ? krishnaPgImages : isNirvanaStays ? nirvanaStaysImages : undefined
+            const propertyItem = { name, index: i, location: isExoticaGirlsPg ? exoticaGirlsPgLocation : isPgHouse ? pghouseLocation : isShashiGirlsPg ? shashiGirlsPgLocation : isKrishnaPg ? krishnaPgLocation : isNirvanaStays ? nirvanaStaysLocation : places[i % places.length], price, type: propType, ...(listingImages ? { images: listingImages } : {}), ...(isKrishnaPg ? { ownerName: 'Vandana' } : {}), ...(isShashiGirlsPg ? { ownerName: 'Shashi Joshi' } : {}), ...(isPgHouse ? { ownerName: 'Yash' } : {}), ...(isExoticaGirlsPg ? { ownerName: 'Naren', ownerPhone: '9643700051' } : {}) }
+            const imageStyle = listingImages ? { backgroundImage: `url(${listingImages[0]})` } : undefined
             return (
               <article key={name}>
-                <div className={`tiny-photo photo-${i % 6}`}/>
+                <div className={`tiny-photo photo-${i % 6}`} style={imageStyle}/>
                 <span>
                   <strong>{name}</strong>
                   <small>
-                    ⌖ &nbsp;{places[i % places.length]}<br/>
+                    ⌖ &nbsp;{propertyItem.location}<br/>
                     ★ 4.{(i + 4) % 10} ({76 + i * 12})<br/>
                     <b>₹{price.toLocaleString()} </b>/ month
                   </small>
@@ -1232,6 +1277,11 @@ function PreferencesModal({ values, onClose, onSave }) {
 }
 
 function PropertyDetailsModal({ property, onClose, onBookVisit }) {
+  const [activeImage, setActiveImage] = useState(0)
+  const galleryImages = property.images?.length ? property.images : null
+  const changeImage = (direction) => setActiveImage((current) => galleryImages
+    ? (current + direction + galleryImages.length) % galleryImages.length
+    : (current + direction + 10) % 10)
   const amenities = ['Wi-Fi', 'Meals Included', 'AC (Selected Room)', 'Attached Bathroom', 'Laundry', 'Common Kitchen', 'Study Area', '24/7 Security', 'Power Backup', 'RO Water', 'Refrigerator', 'Housekeeping']
   return (
     <div className="property-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -1241,14 +1291,16 @@ function PropertyDetailsModal({ property, onClose, onBookVisit }) {
           <div className="property-gallery">
             <div className="property-gallery-main">
               <span>92% Match</span>
-              <i>‹</i>
-              <div className={`property-detail-image photo-${property.index % 6}`} />
-              <i>›</i>
-              <small>1/10</small>
+              <button type="button" className="gallery-arrow" onClick={() => changeImage(-1)} aria-label="Show previous photo">‹</button>
+              <div className={`property-detail-image ${galleryImages ? '' : `photo-${(property.index + activeImage) % 6}`}`} style={galleryImages ? { backgroundImage: `url(${galleryImages[activeImage]})` } : undefined} />
+              <button type="button" className="gallery-arrow" onClick={() => changeImage(1)} aria-label="Show next photo">›</button>
+              <small>{activeImage + 1}/{galleryImages?.length || 10}</small>
             </div>
             <div className="property-thumbnails">
-              {[0, 1, 2, 3, 4].map((image) => <div className={`photo-${(property.index + image) % 6}`} key={image} />)}
-              <b>+6<br/><small>More Photos</small></b>
+              {galleryImages
+                ? galleryImages.map((image, index) => <button type="button" className={activeImage === index ? 'selected' : ''} style={{ backgroundImage: `url(${image})` }} onClick={() => setActiveImage(index)} aria-label={`Show photo ${index + 1}`} key={image} />)
+                : [0, 1, 2, 3, 4].map((image) => <button type="button" className={`photo-${(property.index + image) % 6}`} onClick={() => setActiveImage(image)} aria-label={`Show photo ${image + 1}`} key={image} />)}
+              {!galleryImages && <b>+6<br/><small>More Photos</small></b>}
             </div>
             <nav className="property-detail-tabs">
               <button className="active">Overview</button>
@@ -1287,7 +1339,7 @@ function PropertyDetailsModal({ property, onClose, onBookVisit }) {
             </section>
             <section className="owner-contact">
               <h3>Contact Owner</h3>
-              <div><b>A</b><span><strong>Priya Sharma</strong><small>● Online</small></span></div>
+              <div><b>{(property.ownerName || 'Priya Sharma').charAt(0).toUpperCase()}</b><span><strong>{property.ownerName || 'Priya Sharma'}</strong><small>{property.ownerPhone ? `☎ ${property.ownerPhone}` : '● Online'}</small></span></div>
               <button>☎ Call Now</button>
               <button>▣ Message</button>
             </section>
