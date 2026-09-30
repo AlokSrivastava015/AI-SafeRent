@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, createContext, useContext } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Component } from 'react'
 import './styles.css'
 import AIMapExplorer from './AIMapExplorer'
 import { login as loginWithApi, requestPasswordReset, signUp as signUpWithApi } from './api/auth'
@@ -56,24 +57,24 @@ const profileToApi = (profile) => {
 
 
 export const initialOwnerProfile = {
-  name: 'Rohit Sharma',
-  role: 'Property Owner',
-  phone: '+91 98765 43210',
-  altPhone: '+91 87654 32109',
-  email: 'rohitsharma@gmail.com',
-  dob: '12 March 1995',
-  gender: 'Male',
-  address: 'Indirapuram, Ghaziabad, Uttar Pradesh',
-  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-  businessType: 'Individual Owner',
-  businessName: 'Sharma Properties',
-  experience: '5+ Years',
-  totalProperties: 8,
-  primaryLocation: 'Indirapuram, Ghaziabad',
-  areasCovered: 'Indirapuram, Vaishali, Vasundhara, Kaushambi',
-  about: 'I provide clean, safe and fully furnished PG accommodations for students and working professionals. My focus is on creating a comfortable and secure living environment.',
-  contactTime: '9:00 AM – 8:00 PM',
-  communicationMode: 'Call / WhatsApp / Email',
+  name: '',
+  role: 'PG Owner',
+  phone: '',
+  altPhone: '',
+  email: '',
+  dob: '',
+  gender: '',
+  address: '',
+  avatar: '',
+  businessType: '',
+  businessName: '',
+  experience: '',
+  totalProperties: '',
+  primaryLocation: '',
+  areasCovered: '',
+  about: '',
+  contactTime: '',
+  communicationMode: '',
   notifications: {
     visitRequests: true,
     newBookings: true,
@@ -81,9 +82,9 @@ export const initialOwnerProfile = {
     reviews: false
   },
   stats: {
-    properties: 8,
-    bookings: 24,
-    rating: 4.7
+    properties: 0,
+    bookings: 0,
+    rating: 0
   }
 }
 
@@ -94,11 +95,45 @@ const OwnerProfileContext = createContext({
 
 export const useOwnerProfile = () => useContext(OwnerProfileContext)
 
+class AppErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f5f7ff', color: '#10165d', fontFamily: 'Arial, sans-serif' }}>
+          <section style={{ maxWidth: 520, padding: 32, borderRadius: 18, background: '#fff', boxShadow: '0 14px 45px rgba(21, 32, 92, .14)', textAlign: 'center' }}>
+            <h1 style={{ marginTop: 0 }}>AI SafeRent needs a refresh</h1>
+            <p>The app recovered from a temporary browser-data error. Refreshing will safely reload your dashboard.</p>
+            <button type="button" onClick={() => window.location.reload()} style={{ border: 0, borderRadius: 9, padding: '12px 18px', background: '#553cff', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Refresh AI SafeRent</button>
+          </section>
+        </main>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export function OwnerProfileProvider({ children }) {
   const [ownerProfile, setOwnerProfile] = useState(() => {
     try {
       const saved = localStorage.getItem('ai_saferent_owner_profile')
-      return saved ? JSON.parse(saved) : initialOwnerProfile
+      const parsed = saved ? JSON.parse(saved) : null
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return initialOwnerProfile
+      if (parsed.name === 'Rohit Sharma' && parsed.email === 'rohitsharma@gmail.com') return initialOwnerProfile
+      return {
+        ...initialOwnerProfile,
+        ...parsed,
+        notifications: { ...initialOwnerProfile.notifications, ...(parsed.notifications || {}) },
+        stats: { ...initialOwnerProfile.stats, ...(parsed.stats || {}) }
+      }
     } catch (e) {
       return initialOwnerProfile
     }
@@ -1222,6 +1257,20 @@ function PreferencesModal({ values, onClose, onSave }) {
 
 function PropertyDetailsModal({ property, onClose, onBookVisit }) {
   const amenities = ['Wi-Fi', 'Meals Included', 'AC (Selected Room)', 'Attached Bathroom', 'Laundry', 'Common Kitchen', 'Study Area', '24/7 Security', 'Power Backup', 'RO Water', 'Refrigerator', 'Housekeeping']
+  const isMellowsPg = property.name === "Mellow's PG"
+  const isKMGoyalPg = property.name === "K M Goyal's Boys PG"
+  const isHeritagePg = property.name === 'Heritage PG'
+  const isMyGuestPg = property.name === 'MyGuest1 PG'
+  const isShreeRadheyPg = property.name === 'Shree Radhey PG'
+  const mellowPhotos = Array.from({ length: 8 }, (_, index) => `/mellows-pg-${index}.png`)
+  const kmGoyalPhotos = Array.from({ length: 7 }, (_, index) => `/km-goyal-pg-${index}.png`)
+  const heritagePhotos = Array.from({ length: 5 }, (_, index) => `/heritage-pg-${index}.png`)
+  const myGuestPhotos = Array.from({ length: 7 }, (_, index) => `/myguest1-pg-${index}.png`)
+  const shreeRadheyPhotos = Array.from({ length: 7 }, (_, index) => `/shree-radhey-pg-${index}.png`)
+  const galleryPhotos = isMellowsPg ? mellowPhotos : isKMGoyalPg ? kmGoyalPhotos : isHeritagePg ? heritagePhotos : isMyGuestPg ? myGuestPhotos : isShreeRadheyPg ? shreeRadheyPhotos : []
+  const [activePhoto, setActivePhoto] = useState(0)
+  const nextPhoto = () => galleryPhotos.length && setActivePhoto((current) => (current + 1) % galleryPhotos.length)
+  const previousPhoto = () => galleryPhotos.length && setActivePhoto((current) => (current - 1 + galleryPhotos.length) % galleryPhotos.length)
   return (
     <div className="property-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <section className="property-modal" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
@@ -1230,14 +1279,14 @@ function PropertyDetailsModal({ property, onClose, onBookVisit }) {
           <div className="property-gallery">
             <div className="property-gallery-main">
               <span>92% Match</span>
-              <i>‹</i>
-              <div className={`property-detail-image photo-${property.index % 6}`} />
-              <i>›</i>
-              <small>1/10</small>
+              <button type="button" className="property-gallery-arrow previous" onClick={previousPhoto} aria-label="Previous image">‹</button>
+              {(isMellowsPg || isKMGoyalPg || isHeritagePg || isMyGuestPg || isShreeRadheyPg) ? <img src={galleryPhotos[activePhoto]} alt={`${property.name} photo ${activePhoto + 1}`} className="property-detail-image-photo" /> : <div className={`property-detail-image photo-${property.index % 6}`} />}
+              <button type="button" className="property-gallery-arrow next" onClick={nextPhoto} aria-label="Next image">›</button>
+              <small>{(isMellowsPg || isKMGoyalPg || isHeritagePg || isMyGuestPg || isShreeRadheyPg) ? `${activePhoto + 1}/${galleryPhotos.length}` : '1/10'}</small>
             </div>
             <div className="property-thumbnails">
-              {[0, 1, 2, 3, 4].map((image) => <div className={`photo-${(property.index + image) % 6}`} key={image} />)}
-              <b>+6<br/><small>More Photos</small></b>
+              {(isMellowsPg || isKMGoyalPg || isHeritagePg || isMyGuestPg || isShreeRadheyPg) ? galleryPhotos.slice(0, 5).map((photo, image) => <button type="button" className={activePhoto === image ? 'active' : ''} onClick={() => setActivePhoto(image)} key={photo} aria-label={`Show ${property.name} photo ${image + 1}`}><img src={photo} alt="" /></button>) : [0, 1, 2, 3, 4].map((image) => <div className={`photo-${(property.index + image) % 6}`} key={image} />)}
+              {(isMellowsPg || isKMGoyalPg || isMyGuestPg || isShreeRadheyPg) ? <button type="button" onClick={nextPhoto}>+{galleryPhotos.length - 5}<br/><small>More Photos</small></button> : isHeritagePg ? <button type="button" onClick={nextPhoto}>All<br/><small>Photos</small></button> : <b>+6<br/><small>More Photos</small></b>}
             </div>
             <nav className="property-detail-tabs">
               <button className="active">Overview</button>
@@ -1316,13 +1365,13 @@ function PropertyDetailsModal({ property, onClose, onBookVisit }) {
 }
 
 const recommendationCatalog = [
-  { name: 'Sunrise PG for Girls', location: 'Indirapuram, Ghaziabad', price: 7000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Attached Bath', 'Food', 'Metro / Bus', 'College / University'], image: 0, safety: true },
-  { name: 'Comfort Stay PG', location: 'Indirapuram, Ghaziabad', price: 6500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Laundry', 'Metro / Bus', 'Restaurants / Cafes'], image: 1, safety: true },
+  { name: "Mellow's PG", location: 'GH-7, Crossings Republic, Ghaziabad', price: 7000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Attached Bath', 'Food', 'Metro / Bus', 'College / University'], image: 0, safety: true },
+  { name: "K M Goyal's Boys PG", location: 'Mahagun Moscot, Crossings Republic, Ghaziabad', price: 6500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Laundry', 'Metro / Bus', 'Restaurants / Cafes'], image: 1, safety: true },
   { name: 'Urban Nest 2BHK', location: 'Vaishali, Ghaziabad', price: 18000, type: 'Flat', preferredFor: ['Single', 'Family'], amenities: ['Wi-Fi', 'AC', 'Parking', 'Metro / Bus', 'Restaurants / Cafes'], image: 2, safety: true },
   { name: 'Study Haven Room', location: 'Raj Nagar, Ghaziabad', price: 9000, type: 'Room', preferredFor: ['Single'], amenities: ['Wi-Fi', 'Study Area', 'Attached Bath', 'College / University'], image: 3, safety: true },
-  { name: 'Maple Girls PG', location: 'Vaishali, Ghaziabad', price: 8000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Food', 'Laundry', '24/7 Security'], image: 4, safety: true },
-  { name: 'Campus Corner PG', location: 'Raj Nagar, Ghaziabad', price: 7500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Study Area', 'College / University', '24/7 Security'], image: 5, safety: true },
-  { name: 'Greenview PG', location: 'Indirapuram, Ghaziabad', price: 9000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Laundry', 'Metro / Bus', '24/7 Security'], image: 0, safety: true }
+  { name: 'Heritage PG', location: 'Mahagun Moscot, Crossings Republic, Ghaziabad', price: 8000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Food', 'Laundry', '24/7 Security'], image: 4, safety: true },
+  { name: 'Shree Radhey PG', location: 'Paramaunt, Crossings Republic, Ghaziabad', price: 7500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Study Area', 'College / University', '24/7 Security'], image: 5, safety: true },
+  { name: 'MyGuest1 PG', location: 'SuperTech Livingston, Crossings Republic, Ghaziabad', price: 9000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Laundry', 'Metro / Bus', '24/7 Security'], image: 0, safety: true }
 ]
 
 const preferenceTokens = (value = '') => String(value).toLowerCase().split(/[,/·]/).map((item) => item.trim()).filter(Boolean)
@@ -1401,20 +1450,6 @@ function RecommendationsPage({ onNavigate, filters }) {
     document.addEventListener('click', openPreferences)
     return () => document.removeEventListener('click', openPreferences)
   }, [])
-
-  useEffect(() => {
-    const openPropertyDetails = (event) => {
-      const button = event.target.closest('.recommend-list article > strong button')
-      if (!button) return
-      event.preventDefault()
-      event.stopPropagation()
-      const card = button.closest('article')
-      const index = [...card.parentElement.children].indexOf(card)
-      setSelectedProperty({ name: [...listingNames.PGs.slice(0, 2), '2 BHK Apartment'][index], index, location: places[index], price: [7000, 6500, 18000][index], type: propertyTypeLabel })
-    }
-    document.addEventListener('click', openPropertyDetails, true)
-    return () => document.removeEventListener('click', openPropertyDetails, true)
-  }, [propertyTypeLabel])
 
   useEffect(() => {
     if (!showPreferences) return undefined
@@ -1497,7 +1532,7 @@ function RecommendationsPage({ onNavigate, filters }) {
             {recommendedProperties.length === 0 && <p className="recommend-empty">Save your preferences to see your 5 recommended PGs.</p>}
             {recommendedProperties.map((property) => (
               <article key={property.name}>
-                <div className={`recommend-photo photo-${property.image}`}/>
+                <div className={`recommend-photo photo-${property.image}`} style={property.name === "K M Goyal's Boys PG" ? { backgroundImage: "url('/km-goyal-pg-0.png')" } : property.name === 'Heritage PG' ? { backgroundImage: "url('/heritage-pg-0.png')" } : property.name === 'MyGuest1 PG' ? { backgroundImage: "url('/myguest1-pg-0.png')" } : property.name === 'Shree Radhey PG' ? { backgroundImage: "url('/shree-radhey-pg-0.png')" } : undefined}/>
                 <div>
                   <h3>{property.name}</h3>
                   <p>⌖ &nbsp;{property.location}</p>
@@ -2107,7 +2142,7 @@ const initialOwnerProperties = [
   { id: 7, name: 'Starlight Executive Boys PG', location: 'Kaushambi, Ghaziabad', type: 'Boys Only', price: 6800, priceFormatted: '₹6,800 / month', rooms: '14 Rooms', tenants: '28 Tenants', amenities: 'Power Backup · Laundry · Wi-Fi', imageClass: 'image-6', img: '/student-hero.png', status: 'Active' }
 ]
 
-function OwnerPropertiesPage({ onNavigate, properties: propsProperties, setProperties: propsSetProperties }) {
+function OwnerPropertiesPage({ onNavigate, properties: propsProperties, setProperties: propsSetProperties, onPropertyDeleted, onPropertyUpdated }) {
   const [localProperties, setLocalProperties] = useState(initialOwnerProperties)
   const properties = propsProperties || localProperties
   const setProperties = propsSetProperties || setLocalProperties
@@ -2155,6 +2190,7 @@ function OwnerPropertiesPage({ onNavigate, properties: propsProperties, setPrope
 
   const saveEditedProperty = (updated) => {
     setProperties(properties.map(p => p.id === updated.id ? updated : p))
+    onPropertyUpdated?.(updated)
     setEditProperty(null)
     showToast(`Property "${updated.name}" updated successfully!`)
   }
@@ -2162,6 +2198,7 @@ function OwnerPropertiesPage({ onNavigate, properties: propsProperties, setPrope
   const deleteProperty = (id) => {
     const propToDelete = properties.find(p => p.id === id)
     setProperties(properties.filter(p => p.id !== id))
+    onPropertyDeleted?.(id)
     setEditProperty(null)
     showToast(`Property "${propToDelete?.name || 'Listing'}" deleted successfully!`)
   }
@@ -5021,7 +5058,61 @@ function OwnerCollabsPage() {
 }
 
 
+function OwnerProfileEditor() {
+  const { ownerProfile, updateOwnerProfile } = useOwnerProfile()
+  const [form, setForm] = useState(() => ({ ...initialOwnerProfile, ...ownerProfile }))
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setForm({ ...initialOwnerProfile, ...ownerProfile })
+  }, [ownerProfile])
+
+  const change = (field, value) => setForm((current) => ({ ...current, [field]: value }))
+  const save = (event) => {
+    event.preventDefault()
+    updateOwnerProfile(form)
+    setSaved(true)
+    window.setTimeout(() => setSaved(false), 3000)
+  }
+  const personalFields = [
+    ['name', 'Full Name', 'text'], ['email', 'Email Address', 'email'], ['phone', 'Phone Number', 'tel'],
+    ['altPhone', 'Alternate Phone', 'tel'], ['dob', 'Date of Birth', 'date'], ['gender', 'Gender', 'text'], ['address', 'Address', 'text']
+  ]
+  const businessFields = [
+    ['businessName', 'Business Name', 'text'], ['businessType', 'Business Type', 'text'], ['experience', 'Years of Experience', 'text'],
+    ['totalProperties', 'Total Properties', 'number'], ['primaryLocation', 'Primary Location', 'text'], ['areasCovered', 'Areas Covered', 'text'],
+    ['contactTime', 'Preferred Contact Time', 'text'], ['communicationMode', 'Communication Mode', 'text']
+  ]
+  return (
+    <section className="owner-profile-page" style={{ maxWidth: 1180, margin: '0 auto' }}>
+      <div className="owner-profile-hero">
+        <div className="owner-profile-hero-left"><div className="owner-profile-hero-icon"><Icon name="user" size={24}/></div><div><h1>Owner Profile</h1><p>Complete your profile once. Your saved details appear throughout the owner dashboard.</p></div></div>
+      </div>
+      {saved && <div className="owner-status-banner">✓ Profile saved. Your owner dashboard has been updated.</div>}
+      <form onSubmit={save}>
+        <section className="owner-section-card" style={{ marginBottom: 20 }}>
+          <div className="owner-card-header"><div className="owner-card-header-left"><span className="header-icon"><Icon name="user" size={18}/></span><h3>Personal Information</h3></div></div>
+          <p style={{ margin: '0 0 18px', color: '#64749b' }}>Your name, email and contact details.</p>
+          <div className="owner-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 16 }}>
+            {personalFields.map(([key, label, type]) => <label key={key}>{label}<input type={type} value={form[key] || ''} onChange={(event) => change(key, event.target.value)} placeholder={`Enter ${label.toLowerCase()}`} /></label>)}
+          </div>
+        </section>
+        <section className="owner-section-card" style={{ marginBottom: 20 }}>
+          <div className="owner-card-header"><div className="owner-card-header-left"><span className="header-icon"><Icon name="building" size={18}/></span><h3>Business Information</h3></div></div>
+          <p style={{ margin: '0 0 18px', color: '#64749b' }}>Add your PG business details when you are ready.</p>
+          <div className="owner-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 16 }}>
+            {businessFields.map(([key, label, type]) => <label key={key}>{label}<input type={type} value={form[key] || ''} onChange={(event) => change(key, event.target.value)} placeholder={`Enter ${label.toLowerCase()}`} /></label>)}
+            <label style={{ gridColumn: '1 / -1' }}>About Your Business<textarea value={form.about || ''} onChange={(event) => change('about', event.target.value)} placeholder="Tell students about your accommodation business" rows={4}/></label>
+          </div>
+        </section>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button type="submit" className="owner-edit-main-btn"><Icon name="check" size={16}/> Save Profile</button></div>
+      </form>
+    </section>
+  )
+}
+
 function OwnerProfilePage({ onNavigate }) {
+  return <OwnerProfileEditor />
   const { ownerProfile, updateOwnerProfile } = useOwnerProfile()
   const [editPersonal, setEditPersonal] = useState(false)
   const [editBusiness, setEditBusiness] = useState(false)
@@ -5126,10 +5217,18 @@ function OwnerProfilePage({ onNavigate }) {
   }
 
   const toggleAllEdit = () => {
-    const nextState = !(editPersonal || editBusiness || editPrefs)
-    setEditPersonal(nextState)
-    setEditBusiness(nextState)
-    setEditPrefs(nextState)
+    const isEditing = editPersonal || editBusiness || editPrefs
+    if (isEditing) {
+      updateOwnerProfile({ ...personalForm, ...businessForm, ...prefsForm })
+      setEditPersonal(false)
+      setEditBusiness(false)
+      setEditPrefs(false)
+      notify('Profile changes saved successfully!')
+      return
+    }
+    setEditPersonal(true)
+    setEditBusiness(true)
+    setEditPrefs(true)
   }
 
   return (
@@ -5565,13 +5664,27 @@ function OwnerProfilePage({ onNavigate }) {
   )
 }
 
-function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, onRequestUpdate, onPropertyPublished }) {
+function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, onRequestUpdate, onPropertyPublished, onPropertyRemoved, onPropertyUpdated }) {
   const { ownerProfile } = useOwnerProfile()
   const [menu, setMenu] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [query, setQuery] = useState('')
-  const [active, setActive] = useState('Dashboard')
-  const [properties, setProperties] = useState(initialOwnerProperties)
+  const [active, setActive] = useState(() => {
+    try {
+      const savedSection = localStorage.getItem('ai_saferent_owner_section')
+      return ownerNav.some(([, label]) => label === savedSection) ? savedSection : 'Dashboard'
+    } catch {
+      return 'Dashboard'
+    }
+  })
+  const [properties, setProperties] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('ai_saferent_owner_properties') || 'null')
+      return Array.isArray(stored) ? stored : initialOwnerProperties
+    } catch {
+      return initialOwnerProperties
+    }
+  })
   const [viewProperty, setViewProperty] = useState(null)
   const [editProperty, setEditProperty] = useState(null)
   const [toastMessage, setToastMessage] = useState(null)
@@ -5583,6 +5696,7 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
 
   const saveEditedProperty = (updated) => {
     setProperties(properties.map(p => p.id === updated.id ? updated : p))
+    onPropertyUpdated?.(updated)
     setEditProperty(null)
     showToast(`Property "${updated.name}" updated successfully!`)
   }
@@ -5590,6 +5704,7 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
   const deleteProperty = (id) => {
     const propToDelete = properties.find(p => p.id === id)
     setProperties(properties.filter(p => p.id !== id))
+    onPropertyRemoved?.(id)
     setEditProperty(null)
     showToast(`Property "${propToDelete?.name || 'Listing'}" deleted successfully!`)
   }
@@ -5599,6 +5714,14 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
     if (!isDraft && newProp.status === 'Active') onPropertyPublished?.(newProp)
     showToast(`Property "${newProp.name}" ${isDraft ? 'saved as a draft' : 'published successfully'}!`)
   }
+
+  useEffect(() => {
+    try { localStorage.setItem('ai_saferent_owner_properties', JSON.stringify(properties)) } catch (error) {}
+  }, [properties])
+
+  useEffect(() => {
+    try { localStorage.setItem('ai_saferent_owner_section', active) } catch (error) {}
+  }, [active])
 
   return <div className="owner-dashboard">
     <aside className={`owner-sidebar ${menu ? 'show' : ''}`}>
@@ -5799,7 +5922,7 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
           />
         )}
       </>}
-      {active === 'My Properties' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive}/>} 
+      {active === 'My Properties' && <OwnerPropertiesPage properties={properties} setProperties={setProperties} onNavigate={setActive} onPropertyDeleted={onPropertyRemoved} onPropertyUpdated={onPropertyUpdated}/>} 
       {active === 'Add Property' && <AddPropertyPage onNavigate={setActive} onAddProperty={handleAddProperty}/>} 
       {active === 'Booking' && <OwnerBookingsPage onNavigate={setActive}/>} 
       {active === 'Booking Status' && <OwnerBookingsPage onNavigate={setActive}/>} 
@@ -5817,6 +5940,7 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
 
 function App() {
   const { setAccountUserProfile, getCachedUserProfile } = useStudentUser()
+  const { updateOwnerProfile } = useOwnerProfile()
   const loadAccountProfile = async (email) => {
     const cachedProfile = getCachedUserProfile(email)
     try {
@@ -5840,7 +5964,15 @@ function App() {
   })
   const [errors, setErrors] = useState({})
   const [authSuccess, setAuthSuccess] = useState('')
-  const [page, setPage] = useState('login')
+  const [page, setPage] = useState(() => {
+    try {
+      const savedPage = localStorage.getItem('ai_saferent_current_page')
+      const validPages = ['dashboard', 'pgs', 'flats', 'rooms', 'explore', 'recommendations', 'visit', 'saved', 'bookings', 'profile', 'settings', 'owner-dashboard']
+      return validPages.includes(savedPage) ? savedPage : 'login'
+    } catch {
+      return 'login'
+    }
+  })
 
   useEffect(() => { const timer = setTimeout(() => setLoading(false), 1500); return () => clearTimeout(timer) }, [])
   const benefits = [['shield', 'Verified', 'Properties'], ['people', 'Safer', 'Neighborhoods'], ['pin', 'AI', 'Recommendations'], ['leaf', 'Better', 'Living']]
@@ -5895,8 +6027,23 @@ function App() {
     } catch (error) {}
   }, [publishedProperties])
 
+  useEffect(() => {
+    try {
+      if (page === 'login') localStorage.removeItem('ai_saferent_current_page')
+      else localStorage.setItem('ai_saferent_current_page', page)
+    } catch (error) {}
+  }, [page])
+
   const addPublishedProperty = (property) => {
     setPublishedProperties((current) => current.some((item) => String(item.id) === String(property.id)) ? current : [property, ...current])
+  }
+
+  const updatePublishedProperty = (property) => {
+    setPublishedProperties((current) => current.map((item) => String(item.id) === String(property.id) ? { ...item, ...property } : item))
+  }
+
+  const removePublishedProperty = (propertyId) => {
+    setPublishedProperties((current) => current.filter((item) => String(item.id) !== String(propertyId)))
   }
 
   const addStudentNotification = ({ title, message }) => {
@@ -5955,7 +6102,7 @@ function App() {
   if (page === 'bookings') return <BookingsPageV2 onNavigate={studentNavigate} confirmedBookings={confirmedBookings} />
   if (page === 'profile') return <ProfilePage onNavigate={studentNavigate} />
   if (page === 'settings') return <SettingsPage onNavigate={studentNavigate} onLogout={() => setPage('login')} />
-  if (page === 'owner-dashboard') return <OwnerDashboard onLogout={() => setPage('login')} visitRequests={ownerVisitRequests} onStudentNotification={addStudentNotification} onRequestUpdate={updateOwnerVisitRequest} onPropertyPublished={addPublishedProperty} />
+  if (page === 'owner-dashboard') return <OwnerDashboard onLogout={() => setPage('login')} visitRequests={ownerVisitRequests} onStudentNotification={addStudentNotification} onRequestUpdate={updateOwnerVisitRequest} onPropertyPublished={addPublishedProperty} onPropertyRemoved={removePublishedProperty} onPropertyUpdated={updatePublishedProperty} />
 
   const validateSignup = () => {
     const errs = {}
@@ -6044,6 +6191,7 @@ function App() {
         const result = await signUpWithApi({ full_name: authForm.name.trim(), email: accountEmail, phone: authForm.phone.trim(), password: authForm.password, role: role === 'tenant' ? 'student' : 'owner' })
         const newProfile = { ...initialUserProfile, name: authForm.name.trim(), email: accountEmail, phone: authForm.phone.trim(), role: role === 'tenant' ? 'Student' : 'Property Owner' }
         setAccountUserProfile(newProfile)
+        if (role === 'owner') updateOwnerProfile({ name: authForm.name.trim(), email: accountEmail, phone: authForm.phone.trim(), role: 'PG Owner' })
         setErrors({})
         setAuthForm((prev) => ({ ...prev, password: '', agree: false }))
         if (result.session) {
@@ -6238,9 +6386,11 @@ function App() {
 }
 
 createRoot(document.getElementById('root')).render(
-  <OwnerProfileProvider>
-    <StudentUserProvider>
-      <App />
-    </StudentUserProvider>
-  </OwnerProfileProvider>
+  <AppErrorBoundary>
+    <OwnerProfileProvider>
+      <StudentUserProvider>
+        <App />
+      </StudentUserProvider>
+    </OwnerProfileProvider>
+  </AppErrorBoundary>
 )
