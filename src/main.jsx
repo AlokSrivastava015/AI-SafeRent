@@ -3,19 +3,55 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 import AIMapExplorer from './AIMapExplorer'
 import { login as loginWithApi, requestPasswordReset, signUp as signUpWithApi } from './api/auth'
+import { getProfile as fetchUserProfile, updateProfile as saveUserProfile } from './api/profile'
 
 export const initialUserProfile = {
-  name: 'Aman Verma',
-  email: 'amanverma@gmail.com',
-  phone: '+91 9876543210',
-  dob: '15 March 2005',
-  gender: 'Male',
-  location: 'Indirapuram, Ghaziabad, Uttar Pradesh',
-  college: 'ABES Institute of Technology',
-  course: 'B.Tech (Information Technology)',
-  year: '3rd Year',
+  name: '',
+  email: '',
+  phone: '',
+  dob: '',
+  gender: '',
+  location: '',
+  college: '',
+  course: '',
+  year: '',
   role: 'Student',
-  bio: 'Looking for a safe and comfortable place to stay while I build my future.'
+  bio: ''
+}
+
+const studentProfileStorageKey = (email) => `ai_saferent_user_profile:${String(email || '').trim().toLowerCase()}`
+const isProfileComplete = (profile) => ['name', 'email', 'phone', 'dob', 'gender', 'location', 'college', 'course', 'year'].every((field) => String(profile?.[field] || '').trim())
+const profileFromApi = (profile, cached = {}) => ({
+  ...initialUserProfile,
+  ...cached,
+  name: profile.full_name || '',
+  email: profile.email || '',
+  phone: profile.phone || '',
+  dob: profile.date_of_birth || '',
+  gender: profile.gender || '',
+  location: profile.address || [profile.city, profile.state].filter(Boolean).join(', '),
+  college: profile.college || '',
+  course: profile.course || '',
+  year: profile.academic_year || '',
+  role: profile.role === 'owner' ? 'Property Owner' : 'Student',
+  bio: profile.bio || ''
+})
+
+const profileToApi = (profile) => {
+  const locationParts = String(profile.location || '').split(',').map((part) => part.trim()).filter(Boolean)
+  return {
+    full_name: profile.name,
+    phone: profile.phone || null,
+    date_of_birth: profile.dob || null,
+    gender: profile.gender || null,
+    address: profile.location || null,
+    city: locationParts.length > 1 ? locationParts[locationParts.length - 2] : locationParts[0] || null,
+    state: locationParts.length > 2 ? locationParts[locationParts.length - 1] : null,
+    college: profile.college || null,
+    course: profile.course || null,
+    academic_year: profile.year || null,
+    bio: profile.bio || null
+  }
 }
 
 
@@ -87,33 +123,49 @@ export function OwnerProfileProvider({ children }) {
 
 const StudentUserContext = createContext({
   userProfile: initialUserProfile,
-  updateUserProfile: () => {}
+  updateUserProfile: () => {},
+  setAccountUserProfile: () => {},
+  getCachedUserProfile: () => null
 })
 
 export const useStudentUser = () => useContext(StudentUserContext)
 
 export function StudentUserProvider({ children }) {
-  const [userProfile, setUserProfile] = useState(() => {
+  const [userProfile, setUserProfile] = useState(initialUserProfile)
+
+  const getCachedUserProfile = (email) => {
+    if (!email) return null
     try {
-      const saved = localStorage.getItem('ai_saferent_user_profile')
-      return saved ? JSON.parse(saved) : initialUserProfile
+      const saved = localStorage.getItem(studentProfileStorageKey(email))
+      return saved ? JSON.parse(saved) : null
     } catch (e) {
-      return initialUserProfile
+      return null
     }
-  })
+  }
+
+  const setAccountUserProfile = (profile) => {
+    const updated = { ...initialUserProfile, ...profile }
+    setUserProfile(updated)
+    if (!updated.email) return
+    try {
+      localStorage.setItem(studentProfileStorageKey(updated.email), JSON.stringify(updated))
+    } catch (e) {}
+  }
 
   const updateUserProfile = (newValues) => {
     setUserProfile((prev) => {
       const updated = { ...prev, ...newValues }
-      try {
-        localStorage.setItem('ai_saferent_user_profile', JSON.stringify(updated))
-      } catch (e) {}
+      if (updated.email) {
+        try {
+          localStorage.setItem(studentProfileStorageKey(updated.email), JSON.stringify(updated))
+        } catch (e) {}
+      }
       return updated
     })
   }
 
   return (
-    <StudentUserContext.Provider value={{ userProfile, updateUserProfile }}>
+    <StudentUserContext.Provider value={{ userProfile, updateUserProfile, setAccountUserProfile, getCachedUserProfile }}>
       {children}
     </StudentUserContext.Provider>
   )
@@ -196,6 +248,13 @@ function StudentDashboard({ onLogout, onNavigate, notifications = [], onClearNot
   const [budget, setBudget] = useState('₹ 0 – ₹ 30,000')
   const [preferredFor, setPreferredFor] = useState('Anyone')
   const [amenities, setAmenities] = useState('Wi-Fi, AC, Attached Bath')
+  const dashboardNotifications = isProfileComplete(userProfile) ? notifications : [{
+    id: 'complete-profile',
+    title: 'Complete your profile',
+    message: 'Add your personal and student details to complete your account.',
+    createdAt: 'Action required',
+    action: 'Profile'
+  }, ...notifications]
   const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
   const handleSearch = () => {
     onNavigate('AI Recommendations', {
@@ -207,11 +266,11 @@ function StudentDashboard({ onLogout, onNavigate, notifications = [], onClearNot
     })
   }
   const initial = userProfile?.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'A'
-  const firstName = userProfile?.name ? userProfile.name.trim().split(' ')[0] : 'Aman'
+  const firstName = userProfile?.name ? userProfile.name.trim().split(' ')[0] : 'there'
   const displayRole = userProfile?.role ? `${userProfile.role}/Tenant` : 'Student/Tenant'
 
   return <div className="dashboard">
-    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account"><button className="notification" aria-label="Notifications" onClick={() => setShowNotifications((open) => !open)}><Icon name="bell" size={18}/>{notifications.length > 0 && <i>{notifications.length > 9 ? '9+' : notifications.length}</i>}</button>{showNotifications && <section className="student-notification-menu" aria-label="Visit notifications"><header><strong>Notifications</strong>{notifications.length > 0 && <button type="button" onClick={onClearNotifications}>Mark all read</button>}</header>{notifications.length ? notifications.map((notification) => <article key={notification.id}><b>{notification.title}</b><span>{notification.message}</span><small>{notification.createdAt}</small></article>) : <p>No new notifications.</p>}</section>}<span className="avatar" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }}>{initial}</span><span className="account-copy" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }}>Hi, {firstName}<small>{displayRole}</small></span></div></header>
+    <header className="dash-header"><a className="brand dash-brand" href="#"><span className="brand-mark"><Icon name="home" size={31}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><div className="dash-account"><button className="notification" aria-label="Notifications" onClick={() => setShowNotifications((open) => !open)}><Icon name="bell" size={18}/>{dashboardNotifications.length > 0 && <i>{dashboardNotifications.length > 9 ? '9+' : dashboardNotifications.length}</i>}</button>{showNotifications && <section className="student-notification-menu" aria-label="Notifications"><header><strong>Notifications</strong>{notifications.length > 0 && <button type="button" onClick={onClearNotifications}>Mark all read</button>}</header>{dashboardNotifications.length ? dashboardNotifications.map((notification) => <article key={notification.id}><b>{notification.title}</b><span>{notification.message}</span><small>{notification.createdAt}</small>{notification.action === 'Profile' && <button className="complete-profile-action" type="button" onClick={() => { setShowNotifications(false); onNavigate('Profile') }}>Complete profile</button>}</article>) : <p>No new notifications.</p>}</section>}<span className="avatar" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }}>{initial}</span><span className="account-copy" onClick={() => onNavigate('Profile')} style={{ cursor: 'pointer' }}>Hi, {firstName}<small>{displayRole}</small></span></div></header>
     <StudentSidebar active="Home" onNavigate={onNavigate} menu={menu} onClose={() => setMenu(false)} />
     <main className="dash-main">
       <section className="dash-hero"><div className="dash-hero-copy"><span className="eyebrow">Verified Spaces. Happy Places.</span><h1>Safest places.<br/>Better spaces.<em>Yours to call home.</em></h1><p>PGs, Flats & Rooms for Students<br/>and Working Professionals.</p><div className="trust-row"><span><Icon name="shield" size={14}/> Safe</span><span><Icon name="check" size={14}/> Verified</span><span><Icon name="home" size={14}/> Affordable</span><span><Icon name="settings" size={14}/> Trusted</span></div></div></section>
@@ -1261,7 +1320,9 @@ const recommendationCatalog = [
   { name: 'Comfort Stay PG', location: 'Indirapuram, Ghaziabad', price: 6500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Laundry', 'Metro / Bus', 'Restaurants / Cafes'], image: 1, safety: true },
   { name: 'Urban Nest 2BHK', location: 'Vaishali, Ghaziabad', price: 18000, type: 'Flat', preferredFor: ['Single', 'Family'], amenities: ['Wi-Fi', 'AC', 'Parking', 'Metro / Bus', 'Restaurants / Cafes'], image: 2, safety: true },
   { name: 'Study Haven Room', location: 'Raj Nagar, Ghaziabad', price: 9000, type: 'Room', preferredFor: ['Single'], amenities: ['Wi-Fi', 'Study Area', 'Attached Bath', 'College / University'], image: 3, safety: true },
-  { name: 'Maple Girls PG', location: 'Vaishali, Ghaziabad', price: 8000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Food', 'Laundry', '24/7 Security'], image: 4, safety: true }
+  { name: 'Maple Girls PG', location: 'Vaishali, Ghaziabad', price: 8000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Food', 'Laundry', '24/7 Security'], image: 4, safety: true },
+  { name: 'Campus Corner PG', location: 'Raj Nagar, Ghaziabad', price: 7500, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'Food', 'Study Area', 'College / University', '24/7 Security'], image: 5, safety: true },
+  { name: 'Greenview PG', location: 'Indirapuram, Ghaziabad', price: 9000, type: 'PG', preferredFor: ['Single', 'Double Sharing'], amenities: ['Wi-Fi', 'AC', 'Laundry', 'Metro / Bus', '24/7 Security'], image: 0, safety: true }
 ]
 
 const preferenceTokens = (value = '') => String(value).toLowerCase().split(/[,/·]/).map((item) => item.trim()).filter(Boolean)
@@ -1276,7 +1337,7 @@ function rankRecommendations(filters) {
   const requestedAmenities = preferenceTokens(filters.amenities)
   const { min, max } = budgetLimits(filters.budget)
 
-  return recommendationCatalog.map((property) => {
+  return recommendationCatalog.filter((property) => property.type === 'PG').map((property) => {
     const matches = []
     let score = 55
     if (location && property.location.toLowerCase().includes(location)) { score += 18; matches.push('Preferred location') }
@@ -1287,7 +1348,7 @@ function rankRecommendations(filters) {
     if (amenityMatches.length) { score += Math.min(8, amenityMatches.length * 3); matches.push(...amenityMatches.slice(0, 2)) }
     if (property.safety) score += 3
     return { ...property, score: Math.min(99, score), matches: matches.slice(0, 3) }
-  }).sort((first, second) => second.score - first.score).slice(0, 3)
+  }).sort((first, second) => second.score - first.score).slice(0, 5)
 }
 
 function RecommendationsPage({ onNavigate, filters }) {
@@ -1308,10 +1369,27 @@ function RecommendationsPage({ onNavigate, filters }) {
     preferredFor: userProfile?.preferredFor || userProfile?.recommendationPreferences?.preferredFor || filters?.preferredFor || defaultFilters.preferredFor,
     amenities: userProfile?.amenities || userProfile?.recommendationPreferences?.amenities || filters?.amenities || defaultFilters.amenities
   }))
+  const [hasSavedPreferences, setHasSavedPreferences] = useState(false)
   const [showPreferences, setShowPreferences] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const propertyTypeLabel = selectedFilters.propertyType === 'Flat' ? 'Flat' : selectedFilters.propertyType === 'Room' ? 'Room' : selectedFilters.propertyType
-  const recommendedProperties = rankRecommendations(selectedFilters)
+  const recommendedProperties = hasSavedPreferences ? rankRecommendations(selectedFilters) : []
+  const overallMatchScore = hasSavedPreferences && recommendedProperties.length
+    ? Math.round(recommendedProperties.reduce((sum, property) => sum + property.score, 0) / recommendedProperties.length)
+    : 0
+  const matchBreakdown = hasSavedPreferences && recommendedProperties.length
+    ? [
+        { label: '📍 Location & Connectivity', value: Math.min(100, Math.round(recommendedProperties[0].score * 0.95)) },
+        { label: '🛡️ Safety & Surroundings', value: Math.min(100, Math.round(recommendedProperties[0].score * 0.9)) },
+        { label: '💰 Budget Alignment', value: Math.min(100, Math.round(recommendedProperties[0].score * 0.85)) },
+        { label: '⚡ Amenities & Utilities', value: Math.min(100, Math.round(recommendedProperties[0].score * 0.8)) }
+      ]
+    : [
+        { label: '📍 Location & Connectivity', value: 0 },
+        { label: '🛡️ Safety & Surroundings', value: 0 },
+        { label: '💰 Budget Alignment', value: 0 },
+        { label: '⚡ Amenities & Utilities', value: 0 }
+      ]
 
   useEffect(() => {
     const openPreferences = (event) => {
@@ -1345,10 +1423,12 @@ function RecommendationsPage({ onNavigate, filters }) {
     const modalRoot = createRoot(host)
     const closeModal = () => setShowPreferences(false)
     modalRoot.render(<PreferencesModal values={selectedFilters} onClose={closeModal} onSave={(nextFilters) => {
+      setHasSavedPreferences(true)
       setSelectedFilters((current) => {
         const savedPreferences = { ...current, ...nextFilters }
         updateUserProfile({
           recommendationPreferences: savedPreferences,
+          recommendationPreferencesSaved: true,
           preferredLocation: savedPreferences.location,
           lookingFor: savedPreferences.propertyType,
           budget: savedPreferences.budget,
@@ -1414,6 +1494,7 @@ function RecommendationsPage({ onNavigate, filters }) {
           <h2 className="top-recs">Top AI Recommendations <small>Properties selected just for you based on AI analysis.</small></h2>
 
           <section className="recommend-list">
+            {recommendedProperties.length === 0 && <p className="recommend-empty">Save your preferences to see your 5 recommended PGs.</p>}
             {recommendedProperties.map((property) => (
               <article key={property.name}>
                 <div className={`recommend-photo photo-${property.image}`}/>
@@ -1440,27 +1521,17 @@ function RecommendationsPage({ onNavigate, filters }) {
                 <p>AI calculated match score against your search filters &amp; verified PG attributes.</p>
               </div>
               <div className="match-score-badge">
-                <span className="match-badge-pct">92%</span>
+                <span className="match-badge-pct">{overallMatchScore}%</span>
                 <span className="match-badge-lbl">Overall Match</span>
               </div>
             </div>
             <div className="match-breakdown-grid">
-              <div className="match-bar-item">
-                <div className="match-bar-info"><span>📍 Location &amp; Connectivity</span><b>100%</b></div>
-                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '100%', background: '#4f46e5' }}/></div>
-              </div>
-              <div className="match-bar-item">
-                <div className="match-bar-info"><span>🛡️ Safety &amp; Surroundings</span><b>95%</b></div>
-                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '95%', background: '#10b981' }}/></div>
-              </div>
-              <div className="match-bar-item">
-                <div className="match-bar-info"><span>💰 Budget Alignment</span><b>90%</b></div>
-                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '90%', background: '#f59e0b' }}/></div>
-              </div>
-              <div className="match-bar-item">
-                <div className="match-bar-info"><span>⚡ Amenities &amp; Utilities</span><b>85%</b></div>
-                <div className="match-bar-track"><div className="match-bar-fill" style={{ width: '85%', background: '#8b5cf6' }}/></div>
-              </div>
+              {matchBreakdown.map((item, index) => (
+                <div className="match-bar-item" key={item.label}>
+                  <div className="match-bar-info"><span>{item.label}</span><b>{item.value}%</b></div>
+                  <div className="match-bar-track"><div className="match-bar-fill" style={{ width: `${item.value}%`, background: ['#4f46e5', '#10b981', '#f59e0b', '#8b5cf6'][index % 4] }}/></div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -1657,7 +1728,7 @@ function BookingsPageV2({ onNavigate, confirmedBookings = [] }) {
 }
 
 function ProfilePage({ onNavigate }) {
-  const { userProfile, updateUserProfile } = useStudentUser()
+  const { userProfile, updateUserProfile, setAccountUserProfile } = useStudentUser()
   const [activeTab, setActiveTab] = useState('Profile')
   const [documents, setDocuments] = useState({ identity: null, address: null })
   const [status, setStatus] = useState('')
@@ -1685,7 +1756,7 @@ function ProfilePage({ onNavigate }) {
     ['Notifications', <Icon name="bell" size={16}/>]
   ]
 
-  const handleSavePersonalInfo = (savedRows) => {
+  const handleSavePersonalInfo = async (savedRows) => {
     const map = {}
     savedRows.forEach((row) => {
       const parts = row.split('|')
@@ -1703,9 +1774,16 @@ function ProfilePage({ onNavigate }) {
       if (label === 'Year') map.year = val
       if (label === 'About You' || label === 'Bio') map.bio = val
     })
-    updateUserProfile(map)
+    const nextProfile = { ...userProfile, ...map }
+    try {
+      const savedProfile = await saveUserProfile(profileToApi(nextProfile))
+      setAccountUserProfile(profileFromApi(savedProfile, nextProfile))
+      setStatus('Personal information saved to your account.')
+    } catch (error) {
+      updateUserProfile(map)
+      setStatus(`Could not sync your profile to your account. It was saved on this device. ${error.message}`)
+    }
     setEditPersonalActive(false)
-    setStatus('Personal information saved and updated successfully.')
   }
 
   const handleSavePreferences = (savedRows) => {
@@ -1728,27 +1806,27 @@ function ProfilePage({ onNavigate }) {
   }
 
   const personalRows = [
-    `Full Name|${userProfile?.name || 'Aman Verma'}`,
-    `Role|${userProfile?.role || 'Student'}`,
-    `Email Address|${userProfile?.email || 'amanverma@gmail.com'}`,
-    `Mobile Number|${userProfile?.phone || '+91 9876543210'}`,
-    `Date of Birth|${userProfile?.dob || '15 March 2005'}`,
-    `Gender|${userProfile?.gender || 'Male'}`,
-    `Current Location|${userProfile?.location || 'Indirapuram, Ghaziabad, Uttar Pradesh'}`,
-    `College/University|${userProfile?.college || 'ABES Institute of Technology'}`,
-    `Course|${userProfile?.course || 'B.Tech (Information Technology)'}`,
-    `Year|${userProfile?.year || '3rd Year'}`,
-    `About You|${userProfile?.bio || 'Looking for a safe and comfortable place to stay while I build my future.'}`
+    `Full Name|${userProfile?.name || ''}`,
+    `Role|${userProfile?.role || ''}`,
+    `Email Address|${userProfile?.email || ''}`,
+    `Mobile Number|${userProfile?.phone || ''}`,
+    `Date of Birth|${userProfile?.dob || ''}`,
+    `Gender|${userProfile?.gender || ''}`,
+    `Current Location|${userProfile?.location || ''}`,
+    `College/University|${userProfile?.college || ''}`,
+    `Course|${userProfile?.course || ''}`,
+    `Year|${userProfile?.year || ''}`,
+    `About You|${userProfile?.bio || ''}`
   ]
 
   const preferenceRows = [
-    `Looking For|${userProfile?.lookingFor || 'PG / Flat (Both)'}`,
-    `Preferred Location|${userProfile?.preferredLocation || 'Indirapuram, Ghaziabad'}`,
-    `Budget Range|${userProfile?.budget || '₹5,000 - ₹15,000'}`,
-    `Preferred For|${userProfile?.preferredFor || 'Boys Only'}`,
-    `Move-in Date|${userProfile?.moveInDate || 'October 2025'}`,
-    `Amenities Preference|${userProfile?.amenities || 'Wi-Fi, AC, Attached Bath, Food'}`,
-    `Lifestyle Preference|${userProfile?.lifestyle || 'Study Friendly, Quiet Environment'}`
+    `Looking For|${userProfile?.lookingFor || ''}`,
+    `Preferred Location|${userProfile?.preferredLocation || ''}`,
+    `Budget Range|${userProfile?.budget || ''}`,
+    `Preferred For|${userProfile?.preferredFor || ''}`,
+    `Move-in Date|${userProfile?.moveInDate || ''}`,
+    `Amenities Preference|${userProfile?.amenities || ''}`,
+    `Lifestyle Preference|${userProfile?.lifestyle || ''}`
   ]
 
   const initial = userProfile?.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'A'
@@ -1772,11 +1850,11 @@ function ProfilePage({ onNavigate }) {
       <section className="profile-layout">
         <aside className="profile-card">
           <b>{initial}</b>
-          <h2>{userProfile?.name || 'Aman Verma'}</h2>
-          <p>{userProfile?.role || 'Student'}</p>
-          <p>{userProfile?.college || 'ABES Institute of Technology'}</p>
-          <p>{userProfile?.location || 'Indirapuram, Ghaziabad'}</p>
-          <blockquote>{userProfile?.bio || 'Looking for a safe and comfortable place to stay while I build my future.'}</blockquote>
+          <h2>{userProfile?.name}</h2>
+          <p>{userProfile?.role}</p>
+          <p>{userProfile?.college}</p>
+          <p>{userProfile?.location}</p>
+          <blockquote>{userProfile?.bio}</blockquote>
           <div>
             <span><b>12</b>Properties Viewed</span>
             <span><b>5</b>Saved</span>
@@ -1942,7 +2020,7 @@ function DataCard({ title, rows, onEdit, onSave, isEditing: controlledIsEditing,
       return <p key={label}>
         <span>{label}</span>
         {isEditing ? (
-          <input value={value} onChange={(event) => updateRow(index, event.target.value)} aria-label={label} />
+          <input type={label === 'Date of Birth' ? 'date' : 'text'} value={value} onChange={(event) => updateRow(index, event.target.value)} aria-label={label} disabled={label === 'Email Address' || label === 'Role'} />
         ) : (
           <b>{value}</b>
         )}
@@ -5139,124 +5217,6 @@ function OwnerProfilePage({ onNavigate }) {
             <div className="owner-card-header-left">
               <span className="header-icon"><Icon name="user" size={18}/></span>
           <h3 data-owner-profile-personal-heading="true">Personal Information</h3>
-          <script dangerouslySetInnerHTML={{ __html: `
-            (() => {
-              if (window.__aiSafeRentOwnerProfileSyncV2) return;
-              window.__aiSafeRentOwnerProfileSyncV2 = true;
-              const profileRoots = () => document.querySelectorAll(
-                '.owner-profile-banner, .owner-tool, .owner-sidebar-profile, .owner-sidebar-user, .owner-header-profile, .owner-settings-page, .settings-page, .settings-content'
-              );
-              const hasOwnerProfileField = (element) => {
-                const label = (element.closest('label')?.textContent || element.name || element.placeholder || '').toLowerCase();
-                return /name|email|phone|mobile|business|company|address|city|state|pincode/.test(label);
-              };
-              const replaceValue = (oldValue, newValue) => {
-                if (!oldValue || oldValue === newValue) return;
-                profileRoots().forEach((root) => {
-                  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-                  let node;
-                  while ((node = walker.nextNode())) {
-                    if (node.nodeValue.trim() === oldValue) node.nodeValue = node.nodeValue.replace(oldValue, newValue);
-                  }
-                });
-              };
-              const rememberAndSync = (event) => {
-                const element = event.target;
-                if (!element.matches('input, textarea, select') || !hasOwnerProfileField(element)) return;
-                const oldValue = element.dataset.ownerProfilePrevious || '';
-                const newValue = element.value.trim();
-                replaceValue(oldValue, newValue);
-                element.dataset.ownerProfilePrevious = newValue;
-                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-                const fieldKey = element.name || element.placeholder || ('field_' + Date.now());
-                saved[fieldKey] = { previous: saved[fieldKey]?.previous || oldValue, value: newValue };
-                localStorage.setItem('ai_saferent_owner_profile', JSON.stringify(saved));
-              };
-              document.addEventListener('focusin', (event) => {
-                const element = event.target;
-                if (element.matches?.('input, textarea, select') && hasOwnerProfileField(element)) {
-                  element.dataset.ownerProfilePrevious = element.value.trim();
-                }
-              });
-              document.addEventListener('input', rememberAndSync);
-              document.addEventListener('change', rememberAndSync);
-              const syncSavedProfile = () => {
-                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-                Object.values(saved).forEach((record) => {
-                  if (record && typeof record === 'object') replaceValue(record.previous, record.value);
-                });
-              };
-              const syncSettingsForm = () => {
-                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-                document.querySelectorAll('.owner-settings-page input, .owner-settings-page textarea, .settings-page input, .settings-page textarea, .settings-content input, .settings-content textarea').forEach((element) => {
-                  const label = (element.closest('label')?.textContent || element.name || element.placeholder || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                  const match = Object.entries(saved).find(([key, record]) => {
-                    const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return record && typeof record === 'object' && record.value && (normalizedKey.includes(label) || label.includes(normalizedKey));
-                  });
-                  if (match) setProfileField(element, match[1].value);
-                });
-              };
-              syncSavedProfile();
-              const clearDefaultProfileSummary = () => {
-                if (localStorage.getItem('ai_saferent_owner_profile_summary_cleared')) return;
-                const emptyByDefault = new Set([
-                  'Date of Birth', 'Gender', 'Address', 'Alternate Phone', 'Business Type', 'Business Name',
-                  'Years of Experience', 'Total Properties', 'Primary Location', 'Areas Covered', 'About Me',
-                ]);
-                let cleared = false;
-                document.querySelectorAll('body *').forEach((label) => {
-                  if (label.children.length || !emptyByDefault.has(label.textContent.trim())) return;
-                  const value = label.nextElementSibling || Array.from(label.parentElement?.children || []).find((child) => child !== label);
-                  if (value) {
-                    value.textContent = '';
-                    cleared = true;
-                  }
-                });
-                if (cleared) localStorage.setItem('ai_saferent_owner_profile_summary_cleared', 'true');
-              };
-              clearDefaultProfileSummary();
-              setTimeout(clearDefaultProfileSummary, 100);
-              const setProfileField = (element, value) => {
-                if (!element || element.value === value) return;
-                const prototype = element.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-                const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
-                if (valueSetter) valueSetter.call(element, value);
-                element.dispatchEvent(new Event('input', { bubbles: true }));
-                element.dispatchEvent(new Event('change', { bubbles: true }));
-              };
-              const findSignupDetails = () => {
-                const found = { name: '', email: '', phone: '' };
-                const inspect = (value) => {
-                  if (!value || typeof value !== 'object') return;
-                  Object.entries(value).forEach(([key, item]) => {
-                    const normalizedKey = key.toLowerCase().replace(/[_-]/g, '');
-                    if (!found.name && /^(name|fullname|displayname|username)$/.test(normalizedKey) && typeof item === 'string') found.name = item;
-                    if (!found.email && normalizedKey === 'email' && typeof item === 'string') found.email = item;
-                    if (!found.phone && /^(phone|phonenumber|mobile|mobilenumber)$/.test(normalizedKey) && typeof item === 'string') found.phone = item;
-                    if (item && typeof item === 'object') inspect(item);
-                  });
-                };
-                for (let index = 0; index < localStorage.length; index += 1) {
-                  try { inspect(JSON.parse(localStorage.getItem(localStorage.key(index)) || '{}')); } catch (_) { /* Ignore non-JSON storage values. */ }
-                }
-                return found;
-              };
-              if (!localStorage.getItem('ai_saferent_owner_profile_defaults_applied')) {
-                const signup = findSignupDetails();
-                document.querySelectorAll('input, textarea').forEach((element) => {
-                  const label = (element.closest('label')?.textContent || element.name || element.placeholder || '').toLowerCase();
-                  if (/full name|fullname/.test(label)) setProfileField(element, signup.name);
-                  else if (/phone|mobile/.test(label)) setProfileField(element, signup.phone);
-                  else if (/email/.test(label)) setProfileField(element, signup.email);
-                  else if (/business|company|address|city|state|pincode|gst|about|bio|role|website/.test(label)) setProfileField(element, '');
-                });
-                localStorage.setItem('ai_saferent_owner_profile_defaults_applied', 'true');
-              }
-              syncSettingsForm();
-              new MutationObserver(() => { syncSavedProfile(); syncSettingsForm(); }).observe(document.body, { childList: true, subtree: true });
-            })();
-          ` }} />
             </div>
             {editPersonal ? (
               <button type="button" className="owner-card-edit-btn save" onClick={savePersonal}>Save</button>
@@ -5682,55 +5642,10 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
 
       {active === 'Dashboard' && <>
       <section className="owner-welcome">
-        <span data-owner-welcome-live="true" />
-        <style>{`.owner-live-date-value{margin:6px 0 0;color:#5e6d92;font-size:13px;font-weight:600}.owner-live-date-value::before{content:'Today · ';color:#563dff}`}</style>
-        <script dangerouslySetInnerHTML={{ __html: `
-          (() => {
-            if (window.__aiSafeRentOwnerWelcomeLive) return;
-            window.__aiSafeRentOwnerWelcomeLive = true;
-            const ownerName = () => {
-              try {
-                const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-                const record = Object.entries(saved).find(([key]) => /full name|name/i.test(key));
-                return record && record[1] && typeof record[1] === 'object' ? record[1].value : '';
-              } catch (_) { return ''; }
-            };
-            const refreshOwnerWelcome = () => {
-              const name = ownerName();
-              if (name) {
-                document.querySelectorAll('.owner-welcome *').forEach((element) => {
-                  if (!element.children.length && /Rohit Sharma/i.test(element.textContent.trim())) element.textContent = name;
-                });
-              }
-              const now = new Date();
-              const dateTime = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-                + ' · ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              document.querySelectorAll('.owner-today-card, .today-card, [class*="today-card"]').forEach((card) => {
-                let liveDate = card.querySelector('.owner-live-date-value');
-                if (!liveDate) {
-                  liveDate = document.createElement('p');
-                  liveDate.className = 'owner-live-date-value';
-                  card.appendChild(liveDate);
-                }
-                liveDate.textContent = dateTime;
-              });
-            };
-            refreshOwnerWelcome();
-            window.setInterval(refreshOwnerWelcome, 1000);
-          })();
-        ` }} />
-          <div>
+        <div>
             <span className="owner-eyebrow">OWNER OVERVIEW</span>
           <h1>
-            Welcome back, {(() => {
-              try {
-                const profile = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-                const nameRecord = Object.entries(profile).find(([key]) => /full name|^name$/i.test(key));
-                return nameRecord?.[1]?.value || 'Owner';
-              } catch (_) {
-                return 'Owner';
-              }
-            })()}!
+            Welcome back, {ownerProfile?.name || 'Owner'}!
           </h1>
             <p>Manage your properties, connect with tenants, and grow your business with AI SafeRent.</p>
           </div>
@@ -5901,82 +5816,16 @@ function OwnerDashboard({ onLogout, visitRequests = [], onStudentNotification, o
 }
 
 function App() {
-  const ownerSettingsProfileSyncEnabled = true;
-  if (typeof window !== 'undefined' && !window.__aiSafeRentOwnerSettingsBridge) {
-    window.__aiSafeRentOwnerSettingsBridge = true;
-    const normalizeOwnerField = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const ownerFieldLabel = (element) => normalizeOwnerField(
-      element.closest('label')?.textContent
-      || element.parentElement?.querySelector('label')?.textContent
-      || element.previousElementSibling?.textContent
-      || element.name
-      || element.placeholder
-      || ''
-    );
-    const isOwnerProfileField = (label) => /fullname|name|email|phone|mobile|dateofbirth|gender|address|alternatephone|business|company|experience|properties|location|areascovered|about|bio|gst|pincode|state|city/.test(label);
-    const saveOwnerProfileField = (event) => {
-      const element = event.target;
-      if (!element.matches?.('input, textarea, select')) return;
-      const label = ownerFieldLabel(element);
-      if (!isOwnerProfileField(label)) return;
-      const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-      saved[label] = { value: element.value, previous: '' };
-      localStorage.setItem('ai_saferent_owner_profile', JSON.stringify(saved));
-    };
-    window.addEventListener('input', saveOwnerProfileField, true);
-    window.addEventListener('change', saveOwnerProfileField, true);
-    const syncAutofilledLoginFields = (root) => {
-      const form = root?.closest?.('form') || root;
-      if (!form?.querySelectorAll) return;
-      form.querySelectorAll('input[type="email"], input[autocomplete="email"], input[type="password"], input[autocomplete="current-password"]').forEach((field) => {
-        if (field.value) {
-          const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-          nativeSetter?.call(field, field.value);
-          field._valueTracker?.setValue('');
-          field.dispatchEvent(new Event('input', { bubbles: true }));
-          field.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
-    };
-    window.addEventListener('submit', (event) => syncAutofilledLoginFields(event.target), true);
-    window.addEventListener('click', (event) => {
-      const control = event.target.closest?.('button, input[type="submit"]');
-      if (control && /login|sign in/i.test(control.textContent || control.value || '')) syncAutofilledLoginFields(control);
-    }, true);
-    window.setTimeout(() => syncAutofilledLoginFields(document), 200);
-    window.setTimeout(() => syncAutofilledLoginFields(document), 800);
+  const { setAccountUserProfile, getCachedUserProfile } = useStudentUser()
+  const loadAccountProfile = async (email) => {
+    const cachedProfile = getCachedUserProfile(email)
+    try {
+      const accountProfile = await fetchUserProfile()
+      setAccountUserProfile(profileFromApi(accountProfile, cachedProfile || {}))
+    } catch {
+      setAccountUserProfile(cachedProfile || { ...initialUserProfile, email })
+    }
   }
-  if (typeof window !== 'undefined') {
-    window.requestAnimationFrame(() => {
-      const saved = JSON.parse(localStorage.getItem('ai_saferent_owner_profile') || '{}');
-      const normalized = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const findSavedValue = (label) => {
-        const key = normalized(label);
-        const entry = Object.entries(saved).find(([storedKey, record]) => {
-          const stored = normalized(storedKey);
-          return record && typeof record === 'object' && (stored === key || stored.includes(key) || key.includes(stored));
-        });
-        return entry ? entry[1].value : undefined;
-      };
-      document.querySelectorAll('input, textarea, select').forEach((element) => {
-        const label = element.closest('label')?.textContent
-          || element.parentElement?.querySelector('label')?.textContent
-          || element.previousElementSibling?.textContent
-          || element.name
-          || element.placeholder
-          || '';
-        const value = findSavedValue(label);
-        if (value !== undefined && element.value !== value) element.value = value;
-      });
-      document.querySelectorAll('body *').forEach((labelElement) => {
-        if (labelElement.children.length) return;
-        const value = findSavedValue(labelElement.textContent.trim());
-        const output = labelElement.nextElementSibling;
-        if (value !== undefined && output && !output.children.length) output.textContent = value;
-      });
-    });
-  }
-  const { updateUserProfile } = useStudentUser()
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState('tenant')
   const [authMode, setAuthMode] = useState('login')
@@ -6191,11 +6040,16 @@ function App() {
       }
 
       try {
-        const result = await signUpWithApi({ full_name: authForm.name.trim(), email: authForm.email.trim(), password: authForm.password, role: role === 'tenant' ? 'student' : 'owner' })
-        if (updateUserProfile) updateUserProfile({ name: authForm.name.trim(), email: authForm.email.trim(), phone: authForm.phone.trim() })
+        const accountEmail = authForm.email.trim().toLowerCase()
+        const result = await signUpWithApi({ full_name: authForm.name.trim(), email: accountEmail, phone: authForm.phone.trim(), password: authForm.password, role: role === 'tenant' ? 'student' : 'owner' })
+        const newProfile = { ...initialUserProfile, name: authForm.name.trim(), email: accountEmail, phone: authForm.phone.trim(), role: role === 'tenant' ? 'Student' : 'Property Owner' }
+        setAccountUserProfile(newProfile)
         setErrors({})
         setAuthForm((prev) => ({ ...prev, password: '', agree: false }))
-        if (result.session) setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
+        if (result.session) {
+          await loadAccountProfile(accountEmail)
+          setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
+        }
         else { setAuthSuccess('Account created. Check your email to confirm it, then log in.'); setAuthMode('login') }
       } catch (error) { setErrors({ general: error.message || 'Unable to create your account. Please try again.' }) }
     } else {
@@ -6207,7 +6061,8 @@ function App() {
       }
 
       try {
-        await loginWithApi({ email: authForm.email.trim(), password: authForm.password })
+        const session = await loginWithApi({ email: authForm.email.trim(), password: authForm.password })
+        await loadAccountProfile(session?.email || authForm.email.trim())
         setErrors({})
         setPage(role === 'tenant' ? 'dashboard' : 'owner-dashboard')
       } catch (error) { setErrors({ general: error.message || 'Invalid email or password.' }) }
