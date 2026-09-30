@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 import AIMapExplorer from './AIMapExplorer'
 import { login as loginWithApi, requestPasswordReset, signUp as signUpWithApi } from './api/auth'
+import { searchProperties } from './api/properties'
 
 export const initialUserProfile = {
   name: 'Aman Verma',
@@ -172,12 +173,6 @@ function Preloader() {
 
 const navItems = [[<Icon name="home" size={18}/>, 'Home'], [<Icon name="sparkle" size={18}/>, 'AI Recommendations'], [<Icon name="compass" size={18}/>, 'Explore'], [<Icon name="calendar" size={18}/>, 'Book a Visit'], [<Icon name="calendar" size={18}/>, 'Booking Status'], [<Icon name="heart" size={18}/>, 'Saved Properties'], [<Icon name="people" size={18}/>, 'Profile'], [<Icon name="settings" size={18}/>, 'Settings']]
 const categories = [[<Icon name="people" size={22}/>, 'PG for Girls'], [<Icon name="people" size={22}/>, 'PG for Boys'], [<Icon name="building" size={22}/>, 'Flats'], [<Icon name="room" size={22}/>, '1 RK / Studio'], [<Icon name="room" size={22}/>, 'Rooms'], [<Icon name="people" size={22}/>, 'Findmates']]
-const properties = [
-  ['The Blossom House', 'Indirapuram, Ghaziabad', '₹7,500', 'PG for Girls'],
-  ['Urban Nest 2BHK', 'Vaishali, Ghaziabad', '₹18,000', '2BHK Flat'],
-  ['Cozy Private Room', 'Raj Nagar, Ghaziabad', '₹5,000', 'Private Room'],
-]
-
 function StudentSidebar({ active, onNavigate, menu, onClose }) {
   const [exploreOpen, setExploreOpen] = useState(['Explore', 'PGs', 'Flats', 'Rooms'].includes(active))
   const select = (name) => { onNavigate(name); onClose?.() }
@@ -192,10 +187,26 @@ function StudentDashboard({ onLogout, onNavigate, notifications = [], onClearNot
   const [liked, setLiked] = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [search, setSearch] = useState('Indirapuram, Ghaziabad')
+  const [featuredProperties, setFeaturedProperties] = useState([])
+  const [propertiesLoading, setPropertiesLoading] = useState(true)
+  const [propertiesError, setPropertiesError] = useState('')
   const [selectedType, setSelectedType] = useState('PG')
   const [budget, setBudget] = useState('₹ 0 – ₹ 30,000')
   const [preferredFor, setPreferredFor] = useState('Anyone')
   const [amenities, setAmenities] = useState('Wi-Fi, AC, Attached Bath')
+  const loadFeaturedProperties = async () => {
+    setPropertiesLoading(true)
+    setPropertiesError('')
+    try {
+      const result = await searchProperties({ limit: 3 })
+      setFeaturedProperties(result?.items || [])
+    } catch (error) {
+      setPropertiesError(error.message || 'Unable to load properties.')
+    } finally {
+      setPropertiesLoading(false)
+    }
+  }
+  useEffect(() => { loadFeaturedProperties() }, [])
   const toggleLike = (name) => setLiked((list) => list.includes(name) ? list.filter((item) => item !== name) : [...list, name])
   const handleSearch = () => {
     onNavigate('AI Recommendations', {
@@ -216,7 +227,7 @@ function StudentDashboard({ onLogout, onNavigate, notifications = [], onClearNot
     <main className="dash-main">
       <section className="dash-hero"><div className="dash-hero-copy"><span className="eyebrow">Verified Spaces. Happy Places.</span><h1>Safest places.<br/>Better spaces.<em>Yours to call home.</em></h1><p>PGs, Flats & Rooms for Students<br/>and Working Professionals.</p><div className="trust-row"><span><Icon name="shield" size={14}/> Safe</span><span><Icon name="check" size={14}/> Verified</span><span><Icon name="home" size={14}/> Affordable</span><span><Icon name="settings" size={14}/> Trusted</span></div></div></section>
         <section className="search-panel"><div className="search-tabs"><button type="button" className={selectedType === 'PG' ? 'chosen' : ''} onClick={() => setSelectedType('PG')}><Icon name="grid" size={14}/> PG</button><button type="button" className={selectedType === 'Flat' ? 'chosen' : ''} onClick={() => setSelectedType('Flat')}><Icon name="building" size={14}/> Flat</button><button type="button" className={selectedType === 'Room' ? 'chosen' : ''} onClick={() => setSelectedType('Room')}><Icon name="room" size={14}/> Room</button></div><div className="search-inputs"><label>Where do you want to live?<b>⌖</b><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Enter locality / city"/></label><label>Budget<select value={budget} onChange={(e) => setBudget(e.target.value)}><option>₹ 0 – ₹ 30,000</option><option>₹ 5,000 – ₹ 15,000</option><option>₹ 15,000 – ₹ 25,000</option><option>₹ 25,000 – ₹ 50,000</option></select></label><label>Preferred for<select value={preferredFor} onChange={(e) => setPreferredFor(e.target.value)}><option>Anyone</option><option>Girls</option><option>Boys</option><option>No Preference</option></select></label><label>Amenities<select value={amenities} onChange={(e) => setAmenities(e.target.value)}><option>Wi-Fi, AC, Attached Bath</option><option>Wi-Fi, AC</option><option>Wi-Fi, Attached Bath</option><option>AC, Parking</option></select></label><button type="button" className="search-button" aria-label="Search" onClick={handleSearch}>⌕</button></div></section>
-      <section className="dash-grid"><div className="main-feed"><section className="panel looking"><div className="section-title"><h3>What are you looking for?</h3><a href="#">View all</a></div><div className="categories">{categories.map(([icon, title]) => <button key={title}><b>{icon}</b><span>{title}</span></button>)}</div></section><section className="panel recommendations"><div className="section-title"><h3>Recommended for you</h3><a href="#">View all</a></div><div className="property-row">{properties.map(([name, place, price, tag], index) => <article className="property-card" key={name}><div className={`property-image property-${index}`}><span>{tag}</span><button onClick={() => toggleLike(name)}>{liked.includes(name) ? '♥' : '♡'}</button></div><h4>{name}</h4><p>{place}</p><strong>{price} <small>/ month</small></strong><div className="rating">★ 4.{7 - index} <span>({128 - index * 23})</span></div><div className="tags"><i>Wi-Fi</i><i>Food</i><i>Security</i></div></article>)}</div></section></div><aside className="nearby panel"><div className="section-title"><h3>Explore around you</h3><a href="#">View on map</a></div><div className="map"><i className="pin one">⌖</i><i className="pin two">⌖</i><i className="pin three">⌖</i><b>Sunny PG<small>Indirapuram<br/>₹7,000 / month</small><button>Book Visit</button></b></div><div className="quick-actions"><article><b>▣</b><span><strong>Book a Visit</strong>Schedule a free visit to your favorite place</span></article><article><b>♧</b><span><strong>Find a Findmate</strong>Connect with verified people looking to stay</span></article><article><b>▣</b><span><strong>Pay Rent</strong>Secure online payments with receipts</span></article><article><b>⚒</b><span><strong>Maintenance</strong>Raise a request & get it resolved quickly</span></article></div></aside></section>
+      <section className="dash-grid"><div className="main-feed"><section className="panel looking"><div className="section-title"><h3>What are you looking for?</h3><a href="#">View all</a></div><div className="categories">{categories.map(([icon, title]) => <button key={title}><b>{icon}</b><span>{title}</span></button>)}</div></section><section className="panel recommendations"><div className="section-title"><h3>Recommended for you</h3><a href="#">View all</a></div><div className="property-row">{propertiesLoading ? <p>Loading properties…</p> : propertiesError ? <p role="status">{propertiesError} <button type="button" onClick={loadFeaturedProperties}>Try again</button></p> : featuredProperties.length ? featuredProperties.map((property, index) => { const name = property.title; const place = [property.locality, property.city].filter(Boolean).join(', '); const price = `₹${Number(property.monthly_rent).toLocaleString('en-IN')}`; return <article className="property-card" key={property.id}><div className={`property-image property-${index}`}><span>{String(property.property_type).replaceAll('_', ' ')}</span><button onClick={() => toggleLike(name)}>{liked.includes(name) ? '♥' : '♡'}</button></div><h4>{name}</h4><p>{place || property.address}</p><strong>{price} <small>/ month</small></strong><div className="tags"><i>{property.is_verified ? 'Verified' : 'Listed'}</i><i>{property.is_available ? 'Available' : 'Unavailable'}</i></div></article> }) : <p>No available properties yet.</p>}</div></section></div><aside className="nearby panel"><div className="section-title"><h3>Explore around you</h3><a href="#">View on map</a></div><div className="map"><i className="pin one">⌖</i><i className="pin two">⌖</i><i className="pin three">⌖</i><b>Sunny PG<small>Indirapuram<br/>₹7,000 / month</small><button>Book Visit</button></b></div><div className="quick-actions"><article><b>▣</b><span><strong>Book a Visit</strong>Schedule a free visit to your favorite place</span></article><article><b>♧</b><span><strong>Find a Findmate</strong>Connect with verified people looking to stay</span></article><article><b>▣</b><span><strong>Pay Rent</strong>Secure online payments with receipts</span></article><article><b>⚒</b><span><strong>Maintenance</strong>Raise a request & get it resolved quickly</span></article></div></aside></section>
       <section className="value-row"><article><b>✿</b><strong>100% Verified</strong><span>Every listing is verified<br/>for your safety</span></article><article><b>✧</b><strong>Smart Recommendations</strong><span>AI-powered suggestions<br/>just for you</span></article><article><b>♢</b><strong>Safe & Secure</strong><span>Safety score, photos<br/>& reviews you can trust</span></article><article><b>▣</b><strong>Easy & Fast</strong><span>Book visits & move in<br/>hassle-free</span></article></section>
       <section className="bottom-row"><article className="score-card panel" id="score"><div><h3>Our Unique<br/>Neighborhood DNA Score</h3><p>We score every property on what<br/>matters most to you.</p><a href="#">Learn more →</a></div><b>8.7<small>/10</small></b></article><article className="testimonial panel"><div><h3>What our community says</h3><p>“AI SafeRent helped me find a PG that feels like home. The safety score and reviews are super helpful!”</p><small>— Ananya, Student</small></div></article></section>
       <footer className="dash-footer"><a className="brand footer-brand" href="#"><span className="brand-mark"><Icon name="home" size={28}/></span><span><strong>AI Safe<span>Rent</span></strong><small>Find Safe Homes. Live Better.</small></span></a><nav><a href="#">About Us</a><a href="#">Careers</a><a href="#">Blog</a><a href="#">Contact Us</a><a href="#">Terms & Conditions</a><a href="#">Privacy Policy</a><a href="#">FAQs</a></nav><div className="footer-social"><span>◎</span><span>in</span><span>♥</span><span>▶</span><small>© 2026 AI SafeRent. All rights reserved.</small></div></footer>
